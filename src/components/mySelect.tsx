@@ -1,6 +1,12 @@
 'use client'
 
-export default function MySelect({ label, options = [], className = '', ...rest }) {
+interface Props extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string
+  options?: string[]
+  className?: string
+}
+
+export default function MySelect({ label, options = [], className = '', ...rest }: Props) {
   return (
     <div className="flex items-center gap-2">
       {label && <label className="font-bold text-xs whitespace-nowrap">{label}</label>}

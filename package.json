@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Shared UI components for Next.js projects",
   "exports": {
-    "./MyBox": "./src/components/MyBox.jsx",
+    "./MyBox": "./src/components/myBox.tsx",
     "./MyButton": "./src/components/myButton.tsx",
     "./MyCheckbox": "./src/components/myCheckbox.tsx",
     "./MyConfirmDialog": "./src/components/myConfirmDialog.tsx",
@@ -16,7 +16,7 @@
     "./MyPagination": "./src/components/myPagination.tsx",
     "./MyPopup": "./src/components/myPopup.tsx",
     "./MySchoolLogo": "./src/components/mySchool-logo.tsx",
-    "./MySelect": "./src/components/MySelect.jsx",
+    "./MySelect": "./src/components/mySelect.tsx",
     "./MyTextarea": "./src/components/myTextarea.tsx",
     "./MyToggle": "./src/components/myToggle.tsx"
   },
