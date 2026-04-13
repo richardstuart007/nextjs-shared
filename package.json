@@ -1,0 +1,11 @@
+{
+  "name": "nextjs-shared",
+  "version": "1.0.0",
+  "description": "Shared UI components for Next.js projects",
+  "exports": {
+    "./MyBox": "./MyBox.jsx",
+    "./MyButton": "./MyButton.jsx",
+    "./MyInput": "./MyInput.jsx",
+    "./MySelect": "./MySelect.jsx"
+  }
+}
