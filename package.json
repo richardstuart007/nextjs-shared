@@ -20,6 +20,8 @@
     "./MyTextarea": "./src/components/myTextarea.tsx",
     "./MyToggle": "./src/components/myToggle.tsx",
     "./table_fetch": "./src/tables/tableGeneric/table_fetch.ts",
+    "./table_fetch_join": "./src/tables/tableGeneric/table_fetch_join.ts",
+    "./table_query": "./src/tables/tableGeneric/table_query.ts",
     "./table_write": "./src/tables/tableGeneric/table_write.ts",
     "./table_update": "./src/tables/tableGeneric/table_update.ts",
     "./table_delete": "./src/tables/tableGeneric/table_delete.ts",
