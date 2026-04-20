@@ -34,7 +34,8 @@ export async function fetchFiltered({
   limit,
   offset,
   distinctColumns = [],
-  caller
+  caller,
+  skipCache = false
 }: {
   table: string
   joins?: JoinParams[]
@@ -44,6 +45,7 @@ export async function fetchFiltered({
   offset?: number
   distinctColumns?: string[]
   caller: string
+  skipCache?: boolean
 }): Promise<any[]> {
   const functionName = 'fetchFiltered'
 
@@ -61,8 +63,10 @@ export async function fetchFiltered({
   const baseCacheKey = joinSuffix ? `${readableSql} ${joinSuffix}` : readableSql
   const cacheKey = offset ? `${baseCacheKey} OFFSET ${offset}` : baseCacheKey
 
-  const cachedData = cache_get<any>(cacheKey, functionName)
-  if (cachedData) return cachedData
+  if (!skipCache) {
+    const cachedData = cache_get<any>(cacheKey, functionName)
+    if (cachedData) return cachedData
+  }
 
   const data = await table_fetch_pages_filtered({
     table,
@@ -74,6 +78,8 @@ export async function fetchFiltered({
     distinctColumns,
     caller
   })
-  cache_set(cacheKey, data, caller)
+  if (!skipCache) {
+    cache_set(cacheKey, data, caller)
+  }
   return data
 }

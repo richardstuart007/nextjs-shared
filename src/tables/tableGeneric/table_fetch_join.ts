@@ -23,6 +23,7 @@ export type table_fetch_join_Props = {
   distinct?: boolean
   columns?: string[]
   limit?: number
+  skipCache?: boolean
 }
 
 const functionName = 'table_fetch_join'
@@ -35,7 +36,8 @@ export async function table_fetch_join({
   orderBy,
   distinct = false,
   columns,
-  limit
+  limit,
+  skipCache = false
 }: table_fetch_join_Props): Promise<any[]> {
   // Build the SQL with placeholders
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
@@ -60,8 +62,10 @@ export async function table_fetch_join({
   // Build readable SQL for cache key
   //
   const readableSql = buildSql_Readable(sqlWithJoins, values)
-  const cachedData = cache_get<any>(readableSql, functionName)
-  if (cachedData) return cachedData
+  if (!skipCache) {
+    const cachedData = cache_get<any>(readableSql, functionName)
+    if (cachedData) return cachedData
+  }
 
   const data = await table_fetch_join_query({
     caller,
@@ -73,7 +77,9 @@ export async function table_fetch_join({
     columns,
     limit
   })
-  cache_set(readableSql, data, caller)
+  if (!skipCache) {
+    cache_set(readableSql, data, caller)
+  }
   return data
 }
 
