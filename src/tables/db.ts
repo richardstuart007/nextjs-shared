@@ -1,8 +1,15 @@
-import { Client } from 'pg'
-import { sql as vercelSql } from '@vercel/postgres'
+import { Pool } from '@neondatabase/serverless'
 import { write_Logging } from './tableGeneric/write_logging'
+
 //
-// Placeholder for the `query` method
+// Single DB connection (works locally + prod)
+//
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL
+})
+
+//
+// Query options
 //
 type QueryOptions = {
   query: string
@@ -10,126 +17,76 @@ type QueryOptions = {
   functionName?: string
   caller: string
 }
+
 let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
   query: async () => Promise.resolve()
 }
+
 //-------------------------------------------------------------------------
-// Export an async function named sql to initialize and return the sql handler
+// Public API
 //-------------------------------------------------------------------------
 export async function sql() {
   await createDbQueryHandler()
   return sqlHandler
 }
+
 //-------------------------------------------------------------------------
-// Choose between Vercel's Postgres handler and local Postgres handler
+// Unified DB handler (NO branching)
 //-------------------------------------------------------------------------
 async function createDbQueryHandler(): Promise<void> {
-  //.........................................................................
-  // Use VERCEL Postgres handler
-  //.........................................................................
-  if (process.env.NEXT_PUBLIC_APPENV_DBHANDLER === 'VERCEL_PG') {
-    sqlHandler.query = async ({
-      query,
-      params = [],
-      functionName = 'Vercel_Unknown',
-      caller = ''
-    }: QueryOptions) => {
-      //
-      // Remove redundant spaces
-      //
-      query = query.replace(/\s+/g, ' ').trim()
-      //
-      //  Logging
-      //
-      await log_query(functionName, query, params, caller)
-      //
-      //  Run query
-      //
-      try {
-        const result = await vercelSql.query(query, params)
-        return result
-      } catch (error) {
-        const errorMessage = (error as Error).message
-        if (functionName !== 'write_Logging') {
-          write_Logging({
-            lg_caller: caller,
-            lg_functionname: functionName,
-            lg_msg: errorMessage,
-            lg_severity: 'E'
-          })
-        }
-        console.error('Error executing Vercel query:', error)
-        throw error
-      }
-    }
-    //.........................................................................
-    // Use local Postgres handler
-    //.........................................................................
-  } else {
-    // Use local Postgres handler
-    sqlHandler.query = async ({
-      query,
-      params = [],
-      functionName = 'localhost_Unknown',
-      caller = ''
-    }: QueryOptions) => {
-      const client = new Client({
-        connectionString: process.env.POSTGRES_URL
-      })
+  sqlHandler.query = async ({
+    query,
+    params = [],
+    functionName = 'db_query',
+    caller = ''
+  }: QueryOptions) => {
+    //
+    // clean query
+    //
+    query = query.replace(/\s+/g, ' ').trim()
 
-      try {
-        //
-        // Remove redundant spaces
-        //
-        query = query.replace(/\s+/g, ' ').trim()
-        //
-        //  Logging
-        //
-        await log_query(functionName, query, params, caller)
-        //
-        //  Run query
-        //
-        await client.connect()
-        const result = await client.query(query, params)
-        return result
-      } catch (error) {
-        const errorMessage = (error as Error).message
-        if (functionName !== 'write_Logging') {
-          write_Logging({
-            lg_caller: caller,
-            lg_functionname: functionName,
-            lg_msg: errorMessage,
-            lg_severity: 'E'
-          })
-        }
-        console.error('Error:', errorMessage)
-        throw error
-      } finally {
-        await client.end()
+    //
+    // logging
+    //
+    await log_query(functionName, query, params, caller)
+
+    try {
+      //
+      // TRUE parameterised query (safe, fast, standard Postgres)
+      //
+      const result = await pool.query(query, params)
+      return result
+    } catch (error) {
+      const errorMessage = (error as Error).message
+
+      if (functionName !== 'write_Logging') {
+        write_Logging({
+          lg_caller: caller,
+          lg_functionname: functionName,
+          lg_msg: errorMessage,
+          lg_severity: 'E'
+        })
       }
+
+      console.error('DB error:', error)
+      throw error
     }
   }
 }
-//---------------------------------------------------------------------
-//  logging
-//---------------------------------------------------------------------
+
+//-------------------------------------------------------------------------
+// logging
+//-------------------------------------------------------------------------
 async function log_query(
   functionName: string,
   query: string,
   params: any[],
   caller: string
 ): Promise<void> {
-  //
-  //  Do not recursive for logging
-  //
   if (functionName === 'write_Logging') return
-  //
-  //  Values (if any)
-  //
+
   const valuesJson = params?.length ? `, Values: ${JSON.stringify(params).replace(/"/g, "'")}` : ''
-  //
-  //  Logging
-  //
+
   write_Logging({
     lg_functionname: functionName,
     lg_msg: `DB_SQL | ${query}${valuesJson}`,

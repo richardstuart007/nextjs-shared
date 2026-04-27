@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Shared UI components for Next.js projects",
   "exports": {
     "./MyBox": "./src/components/myBox.tsx",
@@ -48,14 +48,14 @@
     "./db": "./src/tables/db.ts"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "pg": "^8.13.1",
-    "@vercel/postgres": "^0.10.0"
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/postgres": "^0.10.0",
+    "clsx": "^2.1.1"
   },
   "peerDependencies": {
-    "react": ">=19",
+    "@heroicons/react": "^2.1.5",
     "next": ">=16",
-    "@heroicons/react": "^2.1.5"
+    "react": ">=19"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
