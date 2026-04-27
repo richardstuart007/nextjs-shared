@@ -47,17 +47,16 @@
     "./db": "./src/tables/db.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
-    "@vercel/postgres": "^0.10.0",
+    "@neondatabase/serverless": "^0.10.4",
     "clsx": "^2.1.1",
-    "pg": "^8.20.0"
+    "pg": "^8.13.3"
   },
   "peerDependencies": {
     "@heroicons/react": "^2.1.5",
+    "@neondatabase/serverless": "^0.10.4",
     "next": "^16.2.4",
-    "react": ">=19",
     "pg": "^8.13.3",
-    "@neondatabase/serverless": "^0.10.4"
+    "react": ">=19"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
