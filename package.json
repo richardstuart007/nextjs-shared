@@ -15,7 +15,6 @@
     "./MyMergeClasses": "./src/components/myMergeClasses.ts",
     "./MyPagination": "./src/components/myPagination.tsx",
     "./MyPopup": "./src/components/myPopup.tsx",
-    "./MySchoolLogo": "./src/components/mySchool-logo.tsx",
     "./MySelect": "./src/components/mySelect.tsx",
     "./MyTextarea": "./src/components/myTextarea.tsx",
     "./MyToggle": "./src/components/myToggle.tsx",
@@ -56,7 +55,9 @@
   "peerDependencies": {
     "@heroicons/react": "^2.1.5",
     "next": "^16.2.4",
-    "react": ">=19"
+    "react": ">=19",
+    "pg": "^8.13.3",
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
