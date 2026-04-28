@@ -1,4 +1,4 @@
-import { myMergeClasses } from './myMergeClasses'
+import { myMergeClasses } from './MyMergeClasses'
 
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
   overrideClass?: string

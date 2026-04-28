@@ -1,5 +1,5 @@
 'use client'
-import { myMergeClasses } from './myMergeClasses'
+import { myMergeClasses } from './MyMergeClasses'
 import Link from 'next/link'
 
 interface LinkHref {
@@ -17,7 +17,13 @@ interface Props {
   [rest: string]: any
 }
 
-export function MyLink({ children, overrideClass = '', href, caller: _caller = '', ...rest }: Props) {
+export function MyLink({
+  children,
+  overrideClass = '',
+  href,
+  caller: _caller = '',
+  ...rest
+}: Props) {
   //
   // Default Class
   //

@@ -1,8 +1,8 @@
 // src/ui/components/myCheckbox.tsx
 import { useState, useMemo } from 'react'
-import { myMergeClasses } from './myMergeClasses'
-import { MyInput } from './myInput'
-import { MyButton } from './myButton'
+import { myMergeClasses } from './MyMergeClasses'
+import { MyInput } from './MyInput'
+import { MyButton } from './MyButton'
 
 //
 //  Define the options

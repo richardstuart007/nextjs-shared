@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { MyButton } from './myButton'
+import { MyButton } from './MyButton'
 
 interface PopupProps {
   isOpen: boolean
