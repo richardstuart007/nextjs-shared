@@ -20,9 +20,9 @@ export async function write_Logging({
   const functionName = 'write_Logging'
   try {
     //
-    // Skip logging for 'I' severity in non-Dev mode
+    // Skip 'I' severity when globally suppressed
     //
-    if (lg_severity === 'I' && process.env.NEXT_PUBLIC_APPENV_ISDEV === 'false') {
+    if (lg_severity === 'I' && process.env.NEXT_PUBLIC_APPENV_LOG_I === 'false') {
       return false
     }
     //

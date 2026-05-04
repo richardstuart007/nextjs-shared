@@ -9,6 +9,7 @@ type QueryOptions = {
   params?: any[]
   functionName?: string
   caller: string
+  noLog?: boolean
 }
 let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
   query: async () => Promise.resolve()
@@ -38,7 +39,8 @@ async function createDbQueryHandler(): Promise<void> {
       query,
       params = [],
       functionName = 'Neon_Unknown',
-      caller = ''
+      caller = '',
+      noLog = false
     }: QueryOptions) => {
       //
       // Remove redundant spaces
@@ -47,7 +49,7 @@ async function createDbQueryHandler(): Promise<void> {
       //
       //  Logging
       //
-      await log_query(functionName, query, params, caller)
+      if (!noLog) await log_query(functionName, query, params, caller)
       //
       //  Run query
       //
@@ -77,7 +79,8 @@ async function createDbQueryHandler(): Promise<void> {
       query,
       params = [],
       functionName = 'localhost_Unknown',
-      caller = ''
+      caller = '',
+      noLog = false
     }: QueryOptions) => {
       const client = new Client({
         connectionString: process.env.POSTGRES_URL
@@ -91,7 +94,7 @@ async function createDbQueryHandler(): Promise<void> {
         //
         //  Logging
         //
-        await log_query(functionName, query, params, caller)
+        if (!noLog) await log_query(functionName, query, params, caller)
         //
         //  Run query
         //

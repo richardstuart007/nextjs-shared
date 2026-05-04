@@ -22,6 +22,7 @@ export type table_fetch_Props = {
   columns?: string[]
   limit?: number
   skipCache?: boolean
+  noLog?: boolean
 }
 
 const functionName = 'table_fetch'
@@ -34,7 +35,8 @@ export async function table_fetch({
   distinct = false,
   columns,
   limit,
-  skipCache = false
+  skipCache = false,
+  noLog = false
 }: table_fetch_Props): Promise<any[]> {
   // Build the SQL with placeholders
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
@@ -61,7 +63,8 @@ export async function table_fetch({
     orderBy,
     distinct,
     columns,
-    limit
+    limit,
+    noLog
   })
   if (!skipCache) {
     cache_set(readableSql, data, caller)
@@ -79,7 +82,8 @@ async function table_fetch_query({
   orderBy,
   distinct = false,
   columns,
-  limit
+  limit,
+  noLog = false
 }: table_fetch_Props): Promise<any[]> {
   try {
     //
@@ -100,13 +104,14 @@ async function table_fetch_query({
     //
     // Log the SQL
     //
-    const sqlMsg = `STRING_SQL | ${readableSql}`
-    write_Logging({
-      lg_caller: caller,
-      lg_functionname: functionName,
-      lg_msg: sqlMsg,
-      lg_severity: 'I'
-    })
+    if (!noLog) {
+      write_Logging({
+        lg_caller: caller,
+        lg_functionname: functionName,
+        lg_msg: `STRING_SQL | ${readableSql}`,
+        lg_severity: 'I'
+      })
+    }
     //
     // Execute the query
     //
@@ -115,7 +120,8 @@ async function table_fetch_query({
       query: sqlQuery,
       params: values,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      noLog
     })
     //
     // Return rows

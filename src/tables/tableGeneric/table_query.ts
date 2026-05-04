@@ -14,6 +14,7 @@ export type table_query_Props = {
   caller: string
   query: string
   params?: (string | number | null | boolean)[]
+  noLog?: boolean
 }
 
 const functionName = 'table_query'
@@ -21,20 +22,22 @@ const functionName = 'table_query'
 export async function table_query({
   caller,
   query,
-  params = []
+  params = [],
+  noLog = false
 }: table_query_Props): Promise<any[]> {
   try {
     //
     // Log the SQL
     //
-    const readableSql = buildSql_Readable(query, params as (string | number)[])
-    const sqlMsg = `STRING_SQL | ${readableSql}`
-    write_Logging({
-      lg_caller: caller,
-      lg_functionname: functionName,
-      lg_msg: sqlMsg,
-      lg_severity: 'I'
-    })
+    if (!noLog) {
+      const readableSql = buildSql_Readable(query, params as (string | number)[])
+      write_Logging({
+        lg_caller: caller,
+        lg_functionname: functionName,
+        lg_msg: `STRING_SQL | ${readableSql}`,
+        lg_severity: 'I'
+      })
+    }
     //
     // Execute the query
     //
@@ -43,7 +46,8 @@ export async function table_query({
       query,
       params,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      noLog
     })
     //
     // Return rows

@@ -10,12 +10,14 @@ interface Props {
   table: string
   whereColumnValuePairs?: ColumnValuePair[]
   caller?: string
+  noLog?: boolean
 }
 
 export async function table_count({
   table,
   whereColumnValuePairs,
-  caller = ''
+  caller = '',
+  noLog = false
 }: Props): Promise<number> {
   const functionName = 'table_count'
   //
@@ -50,10 +52,11 @@ export async function table_count({
     //
     const db = await sql()
     const data = await db.query({
-      caller: caller, // FIXED: Changed from '' to caller
+      caller: caller,
       query: sqlQuery,
       params: values,
-      functionName: functionName
+      functionName: functionName,
+      noLog
     })
     //
     // Return the count

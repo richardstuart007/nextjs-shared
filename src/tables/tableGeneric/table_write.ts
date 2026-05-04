@@ -17,9 +17,10 @@ interface Props {
   caller: string
   table: string
   columnValuePairs: ColumnValuePair[]
+  noLog?: boolean
 }
 
-export async function table_write({ table, columnValuePairs, caller }: Props): Promise<any[]> {
+export async function table_write({ table, columnValuePairs, caller, noLog = false }: Props): Promise<any[]> {
   const functionName = 'table_write'
   //
   // Prepare the columns and parameterized placeholders for the INSERT statement
@@ -43,7 +44,8 @@ export async function table_write({ table, columnValuePairs, caller }: Props): P
       query: sqlQuery,
       params: values,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      noLog
     })
     //
     // Clear cache entries for this table

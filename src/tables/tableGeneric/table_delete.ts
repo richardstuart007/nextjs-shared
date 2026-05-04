@@ -12,13 +12,15 @@ interface Props {
   whereColumnValuePairs?: ColumnValuePair[]
   returning?: boolean
   caller?: string
+  noLog?: boolean
 }
 
 export async function table_delete({
   table,
   whereColumnValuePairs = [],
   returning = false,
-  caller = ''
+  caller = '',
+  noLog = false
 }: Props): Promise<any[]> {
   const functionName = 'table_delete'
   //
@@ -64,7 +66,8 @@ export async function table_delete({
       caller: caller,
       query: sqlQueryStatement,
       params: values,
-      functionName: functionName
+      functionName: functionName,
+      noLog
     })
     //
     // Clear cache entries for this table

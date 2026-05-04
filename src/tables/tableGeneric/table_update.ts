@@ -18,13 +18,15 @@ interface Props {
   table: string
   columnValuePairs: ColumnValuePair[]
   whereColumnValuePairs: ColumnValuePair[]
+  noLog?: boolean
 }
 
 export async function table_update({
   caller,
   table,
   columnValuePairs,
-  whereColumnValuePairs
+  whereColumnValuePairs,
+  noLog = false
 }: Props): Promise<any[]> {
   const functionName = 'table_update'
   //
@@ -62,7 +64,8 @@ export async function table_update({
       caller: caller,
       query: sqlQuery,
       params: values,
-      functionName: functionName
+      functionName: functionName,
+      noLog
     })
     //
     // Clear cache entries for this table

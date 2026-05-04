@@ -18,13 +18,15 @@ interface Props {
   table: string
   columnValuePairs: ColumnValuePair[]
   conflictColumns: string[]
+  noLog?: boolean
 }
 
 export async function table_upsert({
   table,
   columnValuePairs,
   conflictColumns,
-  caller
+  caller,
+  noLog = false
 }: Props): Promise<any[]> {
   const functionName = 'table_upsert'
   //
@@ -61,7 +63,8 @@ export async function table_upsert({
       query: sqlQuery,
       params: values,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      noLog
     })
     //
     // Clear cache entries for this table
