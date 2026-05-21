@@ -7,9 +7,9 @@ type CacheEntry<T> = {
 }
 
 // Singleton cache anchored to globalThis so all Next.js bundles share the same instance
-const globalForCache = globalThis as unknown as { _bridgeCache: Map<string, CacheEntry<any>> }
-if (!globalForCache._bridgeCache) globalForCache._bridgeCache = new Map()
-const cache = globalForCache._bridgeCache
+const globalForCache = globalThis as unknown as { _Cache: Map<string, CacheEntry<any>> }
+if (!globalForCache._Cache) globalForCache._Cache = new Map()
+const cache = globalForCache._Cache
 
 //---------------------------------------------------------------------
 //  normalizeSql - Remove extra whitespace from SQL for cleaner cache keys

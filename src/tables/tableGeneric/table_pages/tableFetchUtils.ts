@@ -2,6 +2,7 @@ import { sql } from '../../db'
 import { write_Logging } from '../write_logging'
 import { Comparison_operator } from '../table_comparison_values'
 import { ITEMS_PER_PAGE } from './page_constants'
+import { buildSql_Readable } from '../buildSql_Readable'
 
 // Define types for joins and filters
 export type JoinParams = {
@@ -41,6 +42,7 @@ export async function table_fetch_pages_filtered({
   const db = await sql()
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
 
+  let readableSql = ''
   try {
     let finalQuery = sqlQuery
 
@@ -63,6 +65,14 @@ export async function table_fetch_pages_filtered({
     if (limit !== undefined) finalQuery += ` LIMIT ${limit}`
     if (offset !== undefined) finalQuery += ` OFFSET ${offset}`
 
+    readableSql = buildSql_Readable(finalQuery, queryValues)
+    write_Logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: `STRING_SQL | ${readableSql}`,
+      lg_severity: 'I'
+    })
+
     //
     // Execute Query
     //
@@ -75,7 +85,7 @@ export async function table_fetch_pages_filtered({
 
     return data.rows.length > 0 ? data.rows : []
   } catch (error) {
-    const errorMessage = `Table(${table}) SQL(${sqlQuery}) FAILED`
+    const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
     write_Logging({
       lg_caller: caller,
       lg_functionname: functionName,
@@ -107,9 +117,9 @@ export async function table_fetch_pages_total({
   const functionName = 'table_fetch_pages_total'
   const db = await sql()
 
+  const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
+  let readableSql = ''
   try {
-    const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
-
     //
     // Modify query for COUNT
     //
@@ -121,6 +131,14 @@ export async function table_fetch_pages_total({
     if (distinctColumns.length > 0) {
       countQuery = `SELECT COUNT(*) FROM (${sqlQuery.replace('SELECT *', `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`)}) AS distinct_records`
     }
+
+    readableSql = buildSql_Readable(countQuery, queryValues)
+    write_Logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: `STRING_SQL | ${readableSql}`,
+      lg_severity: 'I'
+    })
 
     //
     // Execute Query
@@ -139,7 +157,7 @@ export async function table_fetch_pages_total({
     const totalPages = Math.ceil(count / items_per_page)
     return totalPages
   } catch (error) {
-    const errorMessage = (error as Error).message
+    const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
     write_Logging({
       lg_caller: caller,
       lg_functionname: functionName,
@@ -153,7 +171,7 @@ export async function table_fetch_pages_total({
 //---------------------------------------------------------------------
 // Helper to build SQL query and WHERE clause
 //---------------------------------------------------------------------
-function buildSqlQuery({
+export function buildSqlQuery({
   table,
   joins = [],
   filters = []
