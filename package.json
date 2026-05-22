@@ -18,6 +18,7 @@
     "./MySelect": "./src/components/MySelect.tsx",
     "./MyTextarea": "./src/components/MyTextarea.tsx",
     "./MyToggle": "./src/components/MyToggle.tsx",
+    "./Table_Logging": "./src/components/Table_Logging.tsx",
     "./table_fetch": "./src/tables/tableGeneric/table_fetch.ts",
     "./table_fetch_join": "./src/tables/tableGeneric/table_fetch_join.ts",
     "./table_query": "./src/tables/tableGeneric/table_query.ts",

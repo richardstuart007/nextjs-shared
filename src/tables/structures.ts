@@ -11,3 +11,10 @@ export type TableColumnValuePairs = {
   table: string
   whereColumnValuePairs: ColumnValuePair[]
 }
+export type table_Logging = {
+  lg_lgid: number
+  lg_datetime: Date
+  lg_msg: string
+  lg_functionname: string
+  lg_severity: string
+}
