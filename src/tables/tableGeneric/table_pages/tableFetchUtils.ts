@@ -4,7 +4,8 @@ import { sql } from '../../db'
 import { write_Logging } from '../write_logging'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
-import { buildSqlQuery, JoinParams, Filter } from './buildSqlQuery'
+import { buildSqlQuery } from './buildSqlQuery'
+import type { JoinParams, Filter } from '../../structures'
 
 export type { JoinParams, Filter }
 

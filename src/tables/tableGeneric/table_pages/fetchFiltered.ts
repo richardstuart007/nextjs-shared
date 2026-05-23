@@ -1,7 +1,8 @@
 'use server'
 
 import { cache_get, cache_set } from '../../cache/userCache_store'
-import { JoinParams, Filter, buildSqlQuery } from './buildSqlQuery'
+import { buildSqlQuery } from './buildSqlQuery'
+import type { JoinParams, Filter } from '../../structures'
 import { table_fetch_pages_filtered } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
 
