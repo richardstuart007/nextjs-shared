@@ -136,9 +136,6 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           onChange={e => setSourceEnvFile(e.target.value)}
           onBlur={e => refreshLocation(e.target.value, 'source')}
         />
-        {sourceLocation && (
-          <span className='text-xs font-semibold text-blue-700'>[{sourceLocation}]</span>
-        )}
         <MyButton
           onClick={handleLoadTables}
           overrideClass='h-6 px-2 py-2 shrink-0'
@@ -146,6 +143,11 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
         >
           Load Tables
         </MyButton>
+        {sourceLocation && (
+          <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
+            {sourceLocation}
+          </span>
+        )}
       </div>
 
       <div className='flex items-center gap-2 mb-4'>
@@ -161,7 +163,12 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           onBlur={e => refreshLocation(e.target.value, 'target')}
         />
         {targetLocation && (
-          <span className='text-xs font-semibold text-green-700'>[{targetLocation}]</span>
+          <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
+            {targetLocation}
+          </span>
+        )}
+        {targetLocation && (
+          <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
         )}
       </div>
 
