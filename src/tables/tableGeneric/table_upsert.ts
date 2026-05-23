@@ -41,7 +41,7 @@ export async function table_upsert({
   //
   const updateClause = columnValuePairs
     .filter(({ column }) => !conflictColumns.includes(column))
-    .map(({ column }, index) => `${column} = EXCLUDED.${column}`)
+    .map(({ column }) => `${column} = EXCLUDED.${column}`)
     .join(', ')
   //
   // Build the SQL query

@@ -47,11 +47,16 @@
     "./structures": "./src/tables/structures.ts",
     "./cache_actions": "./src/tables/cache/cache_actions.ts",
     "./userCache_store": "./src/tables/cache/userCache_store.ts",
-    "./db": "./src/tables/db.ts"
+    "./db": "./src/tables/db.ts",
+    "./backupUtils": "./src/backup/backupUtils.ts",
+    "./copyTables": "./src/backup/copyTables.ts",
+    "./BackupTable": "./src/backup/table.tsx",
+    "./CopyTable": "./src/backup/CopyTable.tsx"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "clsx": "^2.1.1",
+    "csv-parser": "^3.0.0",
     "pg": "^8.13.3"
   },
   "peerDependencies": {

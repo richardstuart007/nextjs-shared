@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { table_Logging } from '../tables/structures'
 import { fetchFiltered } from '../tables/tableGeneric/table_pages/fetchFiltered'
 import { fetchTotalPages } from '../tables/tableGeneric/table_pages/fetchTotalPages'
-import { Filter } from '../tables/tableGeneric/table_pages/tableFetchUtils'
+import type { Filter } from '../tables/structures'
 import MyPagination from './MyPagination'
 import { MyInput } from './MyInput'
 
