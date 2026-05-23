@@ -108,7 +108,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
     }
   }
 
-  const selectClass = 'h-6 px-1 text-xs border border-blue-500 rounded-md focus:outline-none focus:border-blue-500'
+  const selectClass = 'h-8 px-2 w-72 text-sm border border-blue-500 rounded-md focus:outline-none focus:border-blue-500'
 
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
