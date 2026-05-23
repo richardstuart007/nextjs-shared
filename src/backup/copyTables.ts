@@ -162,6 +162,40 @@ export async function copy_tables({
     }
 
     const logs = parsePsqlOutput(psqlOutput)
+
+    // Step 4: repair sequences — set each to MAX(pk) so inserts don't collide
+    const seqFile = join(tmpdir(), `seq_repair_${Date.now()}.sql`)
+    try {
+      const tableArray = tables.map(t => `'${t}'`).join(', ')
+      const seqSql = `DO $$
+DECLARE
+  r RECORD;
+  v BIGINT;
+BEGIN
+  FOR r IN
+    SELECT t.relname, a.attname,
+           pg_get_serial_sequence('public.'||t.relname, a.attname) AS seq
+    FROM pg_class t
+    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum > 0
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = ANY(ARRAY[${tableArray}])
+      AND pg_get_serial_sequence('public.'||t.relname, a.attname) IS NOT NULL
+  LOOP
+    EXECUTE format('SELECT COALESCE(MAX(%I),0) FROM %I', r.attname, r.relname) INTO v;
+    PERFORM setval(r.seq, GREATEST(v, 1), v > 0);
+  END LOOP;
+END $$;
+`
+      writeFileSync(seqFile, seqSql, 'utf8')
+      execPg(`psql "${cleanTarget}" -f "${seqFile}"`)
+      logs.push({ event: 'SEQUENCE', detail: 'sequences repaired to MAX(id)' })
+    } catch {
+      // sequence repair is best-effort — don't fail the whole operation
+    } finally {
+      if (existsSync(seqFile)) unlinkSync(seqFile)
+    }
+
     return { success: !logs.some(l => l.event === 'ERROR'), logs }
 
   } catch (error) {
