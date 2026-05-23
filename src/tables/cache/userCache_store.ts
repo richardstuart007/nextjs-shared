@@ -4,6 +4,9 @@ type CacheEntry<T> = {
   data: T
   sql: string
   caller: string
+  tables: string[]
+  rowCount: number
+  hitCount: number
 }
 
 // Singleton cache anchored to globalThis so all Next.js bundles share the same instance
@@ -21,6 +24,13 @@ function normalizeSql(sql: string): string {
 }
 
 //---------------------------------------------------------------------
+//  extractTables - Extract all table names from FROM and JOIN clauses
+//---------------------------------------------------------------------
+function extractTables(sql: string): string[] {
+  return [...sql.matchAll(/\b(?:FROM|JOIN)\s+(\w+)/gi)].map(m => m[1])
+}
+
+//---------------------------------------------------------------------
 //  cache_get - Get cached data by SQL key
 //---------------------------------------------------------------------
 export function cache_get<T>(sql: string, caller: string = ''): T | null {
@@ -29,6 +39,7 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
   const entry = cache.get(normalizedSql)
 
   if (entry) {
+    entry.hitCount = (entry.hitCount ?? 0) + 1
     const hitMsg = `CACHE_HIT | ${entry.sql} | rows: ${getDataInfo(entry.data)}`
     write_Logging({
       lg_caller: caller,
@@ -67,20 +78,16 @@ export function cache_set<T>(sql: string, data: T, caller: string = ''): void {
   cache.set(normalizedSql, {
     data,
     sql: normalizedSql,
-    caller
+    caller,
+    tables: extractTables(normalizedSql),
+    rowCount: Array.isArray(data) ? data.length : -1,
+    hitCount: 0
   })
-
-  // Print entire cache after save
-  // console.log('\n=== CACHE CONTENTS ===')
-  // console.log(`Total entries: ${cache.size}`)
-  // for (const entry of cache.values()) {
-  //   console.log(`  ${entry.sql} | rows: ${getDataInfo(entry.data)}`)
-  // }
-  // console.log('=====================\n')
 }
 
 //---------------------------------------------------------------------
 //  cache_clearUser - Clear all entries containing userId in SQL
+//  (userId appears in the WHERE clause, not in table names, so SQL string search is correct)
 //---------------------------------------------------------------------
 export function cache_clearUser(userId: number, caller: string = ''): number {
   const functionName = 'cache_clearUser'
@@ -117,17 +124,17 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
 }
 
 //---------------------------------------------------------------------
-//  cache_clearTable - Clear all entries referencing a table in FROM or JOIN
+//  cache_clearTable - Clear all entries referencing a table (uses stored tables array)
 //---------------------------------------------------------------------
 export function cache_clearTable(tableName: string, caller: string = ''): number {
   const functionName = 'cache_clearTable'
   let cleared = 0
   const entries: string[] = []
-  const escapedName = tableName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const tableRegex = new RegExp(`\\b(?:FROM|JOIN)\\s+${escapedName}\\b`, 'i')
+  const lowerName = tableName.toLowerCase()
 
   for (const [key, entry] of cache.entries()) {
-    if (tableRegex.test(entry.sql)) {
+    const entryTables: string[] = entry.tables ?? []
+    if (entryTables.some(t => t.toLowerCase() === lowerName)) {
       entries.push(entry.sql)
       cache.delete(key)
       cleared++
@@ -206,19 +213,22 @@ export function cache_getStats(caller: string = '') {
 //---------------------------------------------------------------------
 export type CacheEntryInfo = {
   sql: string
+  tables: string[]
   info: string
+  rowCount: number
   caller: string
-  table: string
+  hitCount: number
 }
 
 export function cache_getEntriesInfo(): CacheEntryInfo[] {
   return Array.from(cache.entries()).map(([key, entry]) => {
-    const tableMatch = key.match(/\bFROM\s+(\w+)/i)
     return {
       sql: key,
+      tables: entry.tables ?? [],
       info: getDataInfo(entry.data),
+      rowCount: entry.rowCount ?? (Array.isArray(entry.data) ? entry.data.length : -1),
       caller: entry.caller,
-      table: tableMatch ? tableMatch[1] : ''
+      hitCount: entry.hitCount ?? 0
     }
   })
 }
