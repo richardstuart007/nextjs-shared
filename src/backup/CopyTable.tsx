@@ -133,16 +133,9 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           type='text'
           placeholder='.env.locallocal'
           value={sourceEnvFile}
-          onChange={e => setSourceEnvFile(e.target.value)}
+          onChange={e => { setSourceEnvFile(e.target.value); setSourceLocation('') }}
           onBlur={e => refreshLocation(e.target.value, 'source')}
         />
-        <MyButton
-          onClick={handleLoadTables}
-          overrideClass='h-6 px-2 py-2 shrink-0'
-          disabled={!sourceEnvFile || running}
-        >
-          Load Tables
-        </MyButton>
         {sourceLocation && (
           <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
             {sourceLocation}
@@ -150,7 +143,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
         )}
       </div>
 
-      <div className='flex items-center gap-2 mb-4'>
+      <div className='flex items-center gap-2 mb-2'>
         <label className='text-xs w-20 text-right shrink-0'>Target</label>
         <MyInput
           id='targetEnvFile'
@@ -159,7 +152,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           type='text'
           placeholder='.env.localdev'
           value={targetEnvFile}
-          onChange={e => setTargetEnvFile(e.target.value)}
+          onChange={e => { setTargetEnvFile(e.target.value); setTargetLocation('') }}
           onBlur={e => refreshLocation(e.target.value, 'target')}
         />
         {targetLocation && (
@@ -171,6 +164,19 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
         )}
       </div>
+
+      {sourceLocation && targetLocation && (
+        <div className='flex items-center gap-2 mt-3 mb-4'>
+          <div className='w-20 shrink-0' />
+          <MyButton
+            onClick={handleLoadTables}
+            overrideClass='h-6 px-2 py-2 shrink-0'
+            disabled={running}
+          >
+            Load Tables
+          </MyButton>
+        </div>
+      )}
 
       {availableTables.length > 0 && (
         <div className='mb-4'>
