@@ -11,10 +11,26 @@ export type TableColumnValuePairs = {
   table: string
   whereColumnValuePairs: ColumnValuePair[]
 }
+//
+// Join and filter params
+//
+export type JoinParams = {
+  table: string
+  on: string
+}
+export type Filter = {
+  column: string
+  operator: Comparison_operator
+  value: string | number | (string | number)[]
+}
+//
+//  Logging table structure
+//
 export type table_Logging = {
   lg_lgid: number
-  lg_datetime: Date
-  lg_msg: string
-  lg_functionname: string
   lg_severity: string
+  lg_caller: string
+  lg_functionname: string
+  lg_msg: string
+  lg_datetime: Date
 }

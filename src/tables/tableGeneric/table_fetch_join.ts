@@ -6,7 +6,7 @@ import { ColumnValuePair } from '../structures'
 import { cache_get, cache_set } from '../cache/userCache_store'
 import { buildSql_Placeholders } from './buildSql_Placeholders'
 import { buildSql_Readable } from './buildSql_Readable'
-import { JoinParams } from './table_pages/tableFetchUtils'
+import { JoinParams } from './table_pages/buildSqlQuery'
 
 //----------------------------------------------------------------------------------
 //  Main function

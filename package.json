@@ -39,6 +39,7 @@
     "./buildSql_Readable": "./src/tables/tableGeneric/buildSql_Readable.ts",
     "./buildSql_Placeholders": "./src/tables/tableGeneric/buildSql_Placeholders.ts",
     "./write_logging": "./src/tables/tableGeneric/write_logging.ts",
+    "./buildSqlQuery": "./src/tables/tableGeneric/table_pages/buildSqlQuery.ts",
     "./tableFetchUtils": "./src/tables/tableGeneric/table_pages/tableFetchUtils.ts",
     "./page_constants": "./src/tables/tableGeneric/table_pages/page_constants.ts",
     "./fetchTotalPages": "./src/tables/tableGeneric/table_pages/fetchTotalPages.ts",
