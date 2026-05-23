@@ -44,6 +44,6 @@ export async function table_duplicate({
       lg_severity: 'E'
     })
     console.error('Error:', errorMessage)
-    return false
+    throw new Error(`${functionName}: Failed`)
   }
 }

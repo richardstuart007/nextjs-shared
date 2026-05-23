@@ -97,7 +97,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //
     const sqlQueryMax = `SELECT COALESCE((SELECT MAX(${columnName}) FROM ${tableName}), 1)`
     const maxValueResult = await db.query({
-      caller: '',
+      caller: caller,
       query: sqlQueryMax,
       functionName: functionName
     })
@@ -105,7 +105,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //
     //  No sequenceName returned
     //
-    if (!maxValue) {
+    if (maxValue === null || maxValue === undefined) {
       const message = `No maxValue found for Table ${tableName} column ${columnName}`
       write_Logging({
         lg_caller: caller,

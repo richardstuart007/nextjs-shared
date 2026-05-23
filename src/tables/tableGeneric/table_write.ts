@@ -67,7 +67,6 @@ export async function table_write({ table, columnValuePairs, caller, noLog = fal
       lg_msg: errorMessage,
       lg_severity: 'E'
     })
-    // throw new Error(`${functionName}, ${errorMessage}`)
-    return []
+    throw new Error(`${functionName}, ${errorMessage}`)
   }
 }

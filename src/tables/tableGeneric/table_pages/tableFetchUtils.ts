@@ -1,3 +1,5 @@
+'use server'
+
 import { sql } from '../../db'
 import { write_Logging } from '../write_logging'
 import { Comparison_operator } from '../table_comparison_values'
@@ -66,12 +68,6 @@ export async function table_fetch_pages_filtered({
     if (offset !== undefined) finalQuery += ` OFFSET ${offset}`
 
     readableSql = buildSql_Readable(finalQuery, queryValues)
-    write_Logging({
-      lg_caller: caller,
-      lg_functionname: functionName,
-      lg_msg: `STRING_SQL | ${readableSql}`,
-      lg_severity: 'I'
-    })
 
     //
     // Execute Query
@@ -133,12 +129,6 @@ export async function table_fetch_pages_total({
     }
 
     readableSql = buildSql_Readable(countQuery, queryValues)
-    write_Logging({
-      lg_caller: caller,
-      lg_functionname: functionName,
-      lg_msg: `STRING_SQL | ${readableSql}`,
-      lg_severity: 'I'
-    })
 
     //
     // Execute Query
@@ -153,7 +143,7 @@ export async function table_fetch_pages_total({
     //
     // Calculate Total Pages
     //
-    const count = result.rows[0].count
+    const count = Number(result.rows[0].count)
     const totalPages = Math.ceil(count / items_per_page)
     return totalPages
   } catch (error) {

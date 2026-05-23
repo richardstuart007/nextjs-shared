@@ -101,7 +101,7 @@ export default function MyDropdown<T extends string, U extends string>({
   useEffect(() => {
     if (filteredOptions.length === 1 && selectedOption !== filteredOptions[0].value) {
       const value = filteredOptions[0].value
-      const valueUpdate = isNaN(Number(value)) ? value : Number(value)
+      const valueUpdate = value !== '' && !isNaN(Number(value)) ? Number(value) : value
       setSelectedOption(valueUpdate)
     }
   }, [filteredOptions, selectedOption, setSelectedOption])
@@ -180,7 +180,9 @@ export default function MyDropdown<T extends string, U extends string>({
   //---------------------------------------------------------------------
   useEffect(() => {
     if (dropdownOptions.length === 1) {
-      setSelectedOption(dropdownOptions[0].value)
+      const value = dropdownOptions[0].value
+      const valueUpdate = value !== '' && !isNaN(Number(value)) ? Number(value) : value
+      setSelectedOption(valueUpdate)
     }
   }, [dropdownOptions, setSelectedOption])
   //---------------------------------------------------------------------
@@ -248,7 +250,7 @@ export default function MyDropdown<T extends string, U extends string>({
             value={selectedOption}
             onChange={e => {
               const value = e.target.value
-              const valueUpdate = isNaN(Number(value)) ? value : Number(value)
+              const valueUpdate = value !== '' && !isNaN(Number(value)) ? Number(value) : value
               setSelectedOption(valueUpdate)
             }}
           >

@@ -45,7 +45,7 @@ export async function table_copy_data({
     //
     // Execute the query
     //
-    await db.query({ caller: '', query: sqlQuery, functionName: functionName })
+    await db.query({ caller: caller, query: sqlQuery, functionName: functionName })
     //
     // All ok
     //
@@ -75,12 +75,12 @@ async function getColumns(db: any, table: string): Promise<string[]> {
   const sqlQuery = `
         SELECT column_name
         FROM information_schema.columns
-        where table_name = '${table}'
+        WHERE table_name = $1
     `
   //
   // Execute the query
   //
-  const data = await db.query({ caller: '', query: sqlQuery, functionName: functionName })
+  const data = await db.query({ caller: '', query: sqlQuery, params: [table], functionName: functionName })
   //
   //  Extract and return the columns
   //

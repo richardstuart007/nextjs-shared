@@ -88,10 +88,7 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
   const entries: string[] = []
 
   for (const [key, entry] of cache.entries()) {
-    if (
-      entry.sql.includes(`userId:${userId}`) ||
-      new RegExp(`= ${userId}(?!\\d)`).test(entry.sql)
-    ) {
+    if (new RegExp(`= ${userId}(?!\\d)`).test(entry.sql)) {
       entries.push(entry.sql)
       cache.delete(key)
       cleared++
@@ -126,7 +123,8 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
   const functionName = 'cache_clearTable'
   let cleared = 0
   const entries: string[] = []
-  const tableRegex = new RegExp(`\\b(?:FROM|JOIN)\\s+${tableName}\\b`, 'i')
+  const escapedName = tableName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const tableRegex = new RegExp(`\\b(?:FROM|JOIN)\\s+${escapedName}\\b`, 'i')
 
   for (const [key, entry] of cache.entries()) {
     if (tableRegex.test(entry.sql)) {
@@ -179,25 +177,20 @@ export function cache_clearAll(caller: string = ''): void {
 //---------------------------------------------------------------------
 export function cache_getStats(caller: string = '') {
   const functionName = 'cache_getStats'
-  const sqls: Record<string, number> = {}
-  for (const entry of cache.values()) {
-    sqls[entry.sql] = (sqls[entry.sql] || 0) + 1
-  }
+  const sqls: string[] = Array.from(cache.keys())
 
-  const statsMsg = `CACHE_STATS | Total entries: ${cache.size}`
   write_Logging({
     lg_caller: caller,
     lg_functionname: functionName,
-    lg_msg: statsMsg,
+    lg_msg: `CACHE_STATS | Total entries: ${cache.size}`,
     lg_severity: 'I'
   })
 
-  Object.entries(sqls).forEach(function ([sql, cnt]) {
-    const idMsg = `  - ${sql}: ${cnt} entries`
+  sqls.forEach(function (sql) {
     write_Logging({
       lg_caller: caller,
       lg_functionname: functionName,
-      lg_msg: idMsg,
+      lg_msg: `  - ${sql}`,
       lg_severity: 'I'
     })
   })

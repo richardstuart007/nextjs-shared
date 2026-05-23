@@ -24,6 +24,7 @@ export type table_fetch_join_Props = {
   columns?: string[]
   limit?: number
   skipCache?: boolean
+  noLog?: boolean
 }
 
 const functionName = 'table_fetch_join'
@@ -37,7 +38,8 @@ export async function table_fetch_join({
   distinct = false,
   columns,
   limit,
-  skipCache = false
+  skipCache = false,
+  noLog = false
 }: table_fetch_join_Props): Promise<any[]> {
   // Build the SQL with placeholders
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
@@ -75,7 +77,8 @@ export async function table_fetch_join({
     orderBy,
     distinct,
     columns,
-    limit
+    limit,
+    noLog
   })
   if (!skipCache) {
     cache_set(readableSql, data, caller)
@@ -94,7 +97,8 @@ async function table_fetch_join_query({
   orderBy,
   distinct = false,
   columns,
-  limit
+  limit,
+  noLog = false
 }: table_fetch_join_Props): Promise<any[]> {
   try {
     //
@@ -119,20 +123,6 @@ async function table_fetch_join_query({
       ? sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
       : sqlQuery
     //
-    // Create readable SQL for logging
-    //
-    const readableSql = buildSql_Readable(finalQuery, values)
-    //
-    // Log the SQL
-    //
-    const sqlMsg = `STRING_SQL | ${readableSql}`
-    write_Logging({
-      lg_caller: caller,
-      lg_functionname: functionName,
-      lg_msg: sqlMsg,
-      lg_severity: 'I'
-    })
-    //
     // Execute the query
     //
     const db = await sql()
@@ -140,7 +130,8 @@ async function table_fetch_join_query({
       query: finalQuery,
       params: values,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      noLog
     })
     //
     // Return rows

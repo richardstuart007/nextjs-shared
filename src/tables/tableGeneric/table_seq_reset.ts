@@ -33,7 +33,7 @@ export async function table_seqReset({ tableName, caller = '' }: Props): Promise
 
     const sqlQuery = `SELECT setval($1, $2)`
     const values = [sequenceName, maxValue]
-    await db.query({ caller: '', query: sqlQuery, params: values, functionName: functionName })
+    await db.query({ caller: caller, query: sqlQuery, params: values, functionName: functionName })
     //
     //  Completion message
     //

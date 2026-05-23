@@ -86,6 +86,6 @@ export async function table_upsert({
       lg_msg: errorMessage,
       lg_severity: 'E'
     })
-    return []
+    throw new Error(`${functionName}, ${errorMessage}`)
   }
 }

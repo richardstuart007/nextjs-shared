@@ -98,21 +98,6 @@ async function table_fetch_query({
       limit
     })
     //
-    // Create readable SQL for logging
-    //
-    const readableSql = buildSql_Readable(sqlQuery, values)
-    //
-    // Log the SQL
-    //
-    if (!noLog) {
-      write_Logging({
-        lg_caller: caller,
-        lg_functionname: functionName,
-        lg_msg: `STRING_SQL | ${readableSql}`,
-        lg_severity: 'I'
-      })
-    }
-    //
     // Execute the query
     //
     const db = await sql()
