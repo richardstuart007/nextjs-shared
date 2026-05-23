@@ -6,7 +6,7 @@ import { MyInput } from '../components/MyInput'
 import { read_url, get_tables, copy_tables, list_env_files } from './copyTables'
 import type { CopyLog, EnvFile } from './copyTables'
 
-export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
+export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { baseDir?: string; caller?: string }) {
   const [directory, setDirectory] = useState(baseDir)
   const [envFiles, setEnvFiles] = useState<EnvFile[]>([])
   const [sourceEnvFile, setSourceEnvFile] = useState('')
@@ -81,6 +81,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
         tables: Array.from(selectedTables),
         sourceLabel: sourceLocation,
         targetLabel: targetLocation,
+        caller,
       })
       setLogs(result.logs)
       setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors')

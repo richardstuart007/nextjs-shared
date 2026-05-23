@@ -254,15 +254,16 @@ END $$;
         if (existsSync(seqFile)) unlinkSync(seqFile)
       }
 
-      // One write_Logging entry per table
-      const tableOk = !tableLogs.some(l => l.event === 'ERROR')
-      const summary = tableLogs.map(l => `${l.event}: ${l.detail}`).join(' | ')
-      write_Logging({
-        lg_caller: caller,
-        lg_functionname: functionName,
-        lg_msg: `${table}${envTag}: ${tableOk ? 'OK' : 'FAILED'} — ${summary}`,
-        lg_severity: tableOk ? 'I' : 'E'
-      })
+      // One write_Logging entry per event — matches the UI log exactly
+      for (const log of tableLogs) {
+        const msg = log.detail.replace(`${table} — `, `${table}${envTag} — `)
+        write_Logging({
+          lg_caller: caller,
+          lg_functionname: functionName,
+          lg_msg: msg,
+          lg_severity: log.event === 'ERROR' ? 'E' : 'I'
+        })
+      }
 
     } finally {
       if (existsSync(tmpFile)) unlinkSync(tmpFile)
