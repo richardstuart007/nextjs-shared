@@ -6,20 +6,25 @@ import { MyInput } from '../components/MyInput'
 import { read_url, get_tables, copy_tables } from './copyTables'
 import type { CopyLog } from './copyTables'
 
-export default function CopyTable() {
-  const [sourceEnvFile, setSourceEnvFile] = useState('')
-  const [targetEnvFile, setTargetEnvFile] = useState('')
+export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
+  const [directory, setDirectory] = useState(baseDir)
+  const [sourceEnvFile, setSourceEnvFile] = useState('.env.locallocal')
+  const [targetEnvFile, setTargetEnvFile] = useState('.env.localdev')
   const [availableTables, setAvailableTables] = useState<string[]>([])
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
   const [running, setRunning] = useState(false)
 
+  function fullPath(filename: string) {
+    return directory ? `${directory}/${filename}` : filename
+  }
+
   async function handleLoadTables() {
     setMessage('Loading tables...')
     setRunning(true)
     try {
-      const url = await read_url(sourceEnvFile)
+      const url = await read_url(fullPath(sourceEnvFile))
       if (!url) {
         setMessage('Could not read POSTGRES_URL from source env file')
         return
@@ -40,8 +45,8 @@ export default function CopyTable() {
     setRunning(true)
     setLogs([])
     try {
-      const sourceUrl = await read_url(sourceEnvFile)
-      const targetUrl = await read_url(targetEnvFile)
+      const sourceUrl = await read_url(fullPath(sourceEnvFile))
+      const targetUrl = await read_url(fullPath(targetEnvFile))
       if (!sourceUrl || !targetUrl) {
         setMessage('Could not read POSTGRES_URL from one or both env files')
         return
@@ -81,14 +86,27 @@ export default function CopyTable() {
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
       <h2 className='text-sm font-bold mb-4'>Cross-Database Table Copy (pg_dump / psql)</h2>
 
+      <div className='flex items-center gap-2 mb-4'>
+        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
+        <MyInput
+          id='directory'
+          name='directory'
+          overrideClass='flex-1 text-xs'
+          type='text'
+          placeholder='C:/Users/richa/github/next-bridgeschool'
+          value={directory}
+          onChange={e => setDirectory(e.target.value)}
+        />
+      </div>
+
       <div className='flex items-center gap-2 mb-2'>
-        <label className='text-xs w-32 text-right shrink-0'>Source .env file</label>
+        <label className='text-xs w-20 text-right shrink-0'>Source</label>
         <MyInput
           id='sourceEnvFile'
           name='sourceEnvFile'
-          overrideClass='flex-1 text-xs'
+          overrideClass='w-48 text-xs'
           type='text'
-          placeholder='/path/to/source/.env.local'
+          placeholder='.env.locallocal'
           value={sourceEnvFile}
           onChange={e => setSourceEnvFile(e.target.value)}
         />
@@ -102,13 +120,13 @@ export default function CopyTable() {
       </div>
 
       <div className='flex items-center gap-2 mb-4'>
-        <label className='text-xs w-32 text-right shrink-0'>Target .env file</label>
+        <label className='text-xs w-20 text-right shrink-0'>Target</label>
         <MyInput
           id='targetEnvFile'
           name='targetEnvFile'
-          overrideClass='flex-1 text-xs'
+          overrideClass='w-48 text-xs'
           type='text'
-          placeholder='/path/to/target/.env.local'
+          placeholder='.env.localdev'
           value={targetEnvFile}
           onChange={e => setTargetEnvFile(e.target.value)}
         />

@@ -1,10 +1,22 @@
 'use server'
 
-import { execSync } from 'child_process'
+import { execSync, ExecSyncOptions } from 'child_process'
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { write_Logging } from '../tables/tableGeneric/write_logging'
+
+const PG_BIN_PATHS = [
+  'C:\\Program Files\\PostgreSQL\\18\\bin',
+  'C:\\Program Files\\PostgreSQL\\17\\bin',
+  'C:\\Program Files\\PostgreSQL\\16\\bin',
+  'C:\\Program Files\\PostgreSQL\\15\\bin',
+]
+
+function execPg(cmd: string, options: ExecSyncOptions = {}) {
+  const augmentedPath = [...PG_BIN_PATHS, process.env.PATH ?? ''].join(';')
+  return execSync(cmd, { ...options, env: { ...process.env, PATH: augmentedPath } })
+}
 //--------------------------------------------------------------------------
 //  Types
 //--------------------------------------------------------------------------
@@ -85,10 +97,10 @@ export async function get_tables({
   const functionName = 'get_tables'
   try {
     const cleanUrl = stripUnsupportedParams(url)
-    const output = execSync(
+    const output = execPg(
       `psql "${cleanUrl}" -t -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"`,
       { encoding: 'utf8' }
-    )
+    ) as string
     return output
       .split('\n')
       .map(line => line.trim())
@@ -123,7 +135,7 @@ export async function copy_tables({
 
     // Step 1: dump source tables to temp file
     try {
-      execSync(`pg_dump --no-owner --clean ${tableFlags} "${cleanSource}" -f "${tmpFile}"`)
+      execPg(`pg_dump --no-owner --clean ${tableFlags} "${cleanSource}" -f "${tmpFile}"`)
     } catch (error) {
       const msg = (error as Error).message
       write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: msg, lg_severity: 'E' })
@@ -140,7 +152,7 @@ export async function copy_tables({
     // Step 3: restore to target, capture output for logging
     let psqlOutput = ''
     try {
-      psqlOutput = execSync(`psql "${cleanTarget}" -f "${tmpFile}"`, { encoding: 'utf8' })
+      psqlOutput = execPg(`psql "${cleanTarget}" -f "${tmpFile}"`, { encoding: 'utf8' }) as string
     } catch (error) {
       psqlOutput = (error as any).stdout ?? ''
       const stderr = ((error as any).stderr ?? '').trim()
