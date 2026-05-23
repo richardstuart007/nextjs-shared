@@ -18,6 +18,7 @@
     "./MySelect": "./src/components/MySelect.tsx",
     "./MyTextarea": "./src/components/MyTextarea.tsx",
     "./MyToggle": "./src/components/MyToggle.tsx",
+    "./Table_Cache": "./src/components/Table_Cache.tsx",
     "./Table_Logging": "./src/components/Table_Logging.tsx",
     "./widthUtils": "./src/components/widthUtils.ts",
     "./table_fetch": "./src/tables/tableGeneric/table_fetch.ts",
