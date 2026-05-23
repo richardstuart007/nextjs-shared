@@ -7,8 +7,6 @@ import { buildSql_Readable } from '../buildSql_Readable'
 import { buildSqlQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
 
-export type { JoinParams, Filter }
-
 //---------------------------------------------------------------------
 // Shared private function – builds and executes the query
 //---------------------------------------------------------------------
