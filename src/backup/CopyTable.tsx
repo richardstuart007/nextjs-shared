@@ -1,69 +1,52 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
-import { read_url, read_location, get_tables, copy_tables } from './copyTables'
-import type { CopyLog } from './copyTables'
+import { read_url, get_tables, copy_tables, list_env_files } from './copyTables'
+import type { CopyLog, EnvFile } from './copyTables'
 
 export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   const [directory, setDirectory] = useState(baseDir)
-  const [sourceEnvFile, setSourceEnvFile] = useState('.env.locallocal')
-  const [targetEnvFile, setTargetEnvFile] = useState('.env.localdev')
-  const [sourceLocation, setSourceLocation] = useState('')
-  const [targetLocation, setTargetLocation] = useState('')
+  const [envFiles, setEnvFiles] = useState<EnvFile[]>([])
+  const [sourceEnvFile, setSourceEnvFile] = useState('')
+  const [targetEnvFile, setTargetEnvFile] = useState('')
   const [availableTables, setAvailableTables] = useState<string[]>([])
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
   const [running, setRunning] = useState(false)
-  const srcDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const tgtDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
   }
 
+  function locationFor(file: string) {
+    return envFiles.find(e => e.file === file)?.location ?? ''
+  }
+
   useEffect(() => {
-    if (sourceEnvFile) refreshLocation(sourceEnvFile, 'source')
-    if (targetEnvFile) refreshLocation(targetEnvFile, 'target')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!directory) return
+    list_env_files(directory).then(files => {
+      setEnvFiles(files)
+      setSourceEnvFile(files[0]?.file ?? '')
+      setTargetEnvFile(files[1]?.file ?? '')
+      setAvailableTables([])
+      setSelectedTables(new Set())
+      setLogs([])
+      setMessage('')
+    })
   }, [directory])
 
-  async function refreshLocation(envFile: string, which: 'source' | 'target') {
-    if (!envFile) {
-      which === 'source' ? setSourceLocation('') : setTargetLocation('')
-      return
-    }
-    const loc = await read_location(fullPath(envFile))
-    which === 'source' ? setSourceLocation(loc) : setTargetLocation(loc)
-  }
-
-  function handleEnvChange(value: string, which: 'source' | 'target') {
-    if (which === 'source') {
-      setSourceEnvFile(value)
-      setSourceLocation('')
-      if (srcDebounce.current) clearTimeout(srcDebounce.current)
-      srcDebounce.current = setTimeout(() => refreshLocation(value, 'source'), 400)
-    } else {
-      setTargetEnvFile(value)
-      setTargetLocation('')
-      if (tgtDebounce.current) clearTimeout(tgtDebounce.current)
-      tgtDebounce.current = setTimeout(() => refreshLocation(value, 'target'), 400)
-    }
-  }
+  const sourceLocation = locationFor(sourceEnvFile)
+  const targetLocation = locationFor(targetEnvFile)
+  const sameEnv = sourceLocation && targetLocation && sourceLocation === targetLocation
 
   async function handleLoadTables() {
     setMessage('Loading tables...')
     setRunning(true)
     try {
-      const [url, srcLoc, tgtLoc] = await Promise.all([
-        read_url(fullPath(sourceEnvFile)),
-        read_location(fullPath(sourceEnvFile)),
-        read_location(fullPath(targetEnvFile)),
-      ])
-      setSourceLocation(srcLoc)
-      setTargetLocation(tgtLoc)
+      const url = await read_url(fullPath(sourceEnvFile))
       if (!url) {
         setMessage('Could not read POSTGRES_URL from source env file')
         return
@@ -80,10 +63,6 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   }
 
   async function handleCopy() {
-    if (!sourceLocation || !targetLocation) {
-      setMessage('Cannot copy: location not set for one or both env files. Load Tables first.')
-      return
-    }
     setMessage('Copying tables...')
     setRunning(true)
     setLogs([])
@@ -129,6 +108,8 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
     }
   }
 
+  const selectClass = 'h-6 px-1 text-xs border border-blue-500 rounded-md focus:outline-none focus:border-blue-500'
+
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
       <h2 className='text-sm font-bold mb-4'>Cross-Database Table Copy (pg_dump / psql)</h2>
@@ -146,60 +127,68 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
         />
       </div>
 
-      <div className='flex items-center gap-2 mb-2'>
-        <label className='text-xs w-20 text-right shrink-0'>Source</label>
-        <MyInput
-          id='sourceEnvFile'
-          name='sourceEnvFile'
-          overrideClass='w-48 text-xs'
-          type='text'
-          placeholder='.env.locallocal'
-          value={sourceEnvFile}
-          onChange={e => handleEnvChange(e.target.value, 'source')}
-        />
-        {sourceLocation && (
-          <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-            {sourceLocation}
-          </span>
-        )}
-      </div>
-
-      <div className='flex items-center gap-2 mb-2'>
-        <label className='text-xs w-20 text-right shrink-0'>Target</label>
-        <MyInput
-          id='targetEnvFile'
-          name='targetEnvFile'
-          overrideClass='w-48 text-xs'
-          type='text'
-          placeholder='.env.localdev'
-          value={targetEnvFile}
-          onChange={e => handleEnvChange(e.target.value, 'target')}
-        />
-        {targetLocation && (
-          <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
-            {targetLocation}
-          </span>
-        )}
-        {targetLocation && (
-          <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
-        )}
-      </div>
-
-      {sourceLocation && targetLocation && (
-        <div className='flex items-center gap-2 mt-3 mb-4'>
-          <div className='w-20 shrink-0' />
-          {sourceLocation === targetLocation ? (
-            <span className='text-sm font-bold text-red-700'>&#9888; Source and target are the same environment — cannot copy</span>
-          ) : (
-            <MyButton
-              onClick={handleLoadTables}
-              overrideClass='h-6 px-2 py-2 shrink-0'
-              disabled={running}
+      {envFiles.length === 0 ? (
+        <p className='text-xs text-red-700 mb-4'>No .env.* files found in directory</p>
+      ) : (
+        <>
+          <div className='flex items-center gap-2 mb-2'>
+            <label className='text-xs w-20 text-right shrink-0'>Source</label>
+            <select
+              className={selectClass}
+              value={sourceEnvFile}
+              onChange={e => { setSourceEnvFile(e.target.value); setAvailableTables([]); setSelectedTables(new Set()) }}
             >
-              Load Tables
-            </MyButton>
-          )}
-        </div>
+              {envFiles.map(e => (
+                <option key={e.file} value={e.file}>
+                  {e.file}{e.location ? ` (${e.location})` : ''}
+                </option>
+              ))}
+            </select>
+            {sourceLocation && (
+              <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
+                {sourceLocation}
+              </span>
+            )}
+          </div>
+
+          <div className='flex items-center gap-2 mb-2'>
+            <label className='text-xs w-20 text-right shrink-0'>Target</label>
+            <select
+              className={selectClass}
+              value={targetEnvFile}
+              onChange={e => setTargetEnvFile(e.target.value)}
+            >
+              {envFiles.map(e => (
+                <option key={e.file} value={e.file}>
+                  {e.file}{e.location ? ` (${e.location})` : ''}
+                </option>
+              ))}
+            </select>
+            {targetLocation && (
+              <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
+                {targetLocation}
+              </span>
+            )}
+            {targetLocation && (
+              <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
+            )}
+          </div>
+
+          <div className='flex items-center gap-2 mt-3 mb-4'>
+            <div className='w-20 shrink-0' />
+            {sameEnv ? (
+              <span className='text-sm font-bold text-red-700'>&#9888; Source and target are the same environment — cannot copy</span>
+            ) : (
+              <MyButton
+                onClick={handleLoadTables}
+                overrideClass='h-6 px-2 py-2 shrink-0'
+                disabled={!sourceEnvFile || running}
+              >
+                Load Tables
+              </MyButton>
+            )}
+          </div>
+        </>
       )}
 
       {availableTables.length > 0 && (
@@ -215,7 +204,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
             <MyButton
               onClick={handleCopy}
               overrideClass='h-6 px-2 py-2 bg-red-500 hover:bg-red-600'
-              disabled={selectedTables.size === 0 || !targetEnvFile || running}
+              disabled={selectedTables.size === 0 || running}
             >
               Copy {selectedTables.size} Tables
             </MyButton>

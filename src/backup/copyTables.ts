@@ -1,7 +1,7 @@
 'use server'
 
 import { execSync, spawnSync, ExecSyncOptions } from 'child_process'
-import { writeFileSync, readFileSync, unlinkSync, existsSync } from 'fs'
+import { writeFileSync, readFileSync, unlinkSync, existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { write_Logging } from '../tables/tableGeneric/write_logging'
@@ -59,6 +59,25 @@ export async function read_url(envFile: string): Promise<string> {
 
 export async function read_location(envFile: string): Promise<string> {
   return readEnvVar(envFile, 'POSTGRES_DATABASE_LOCATION')
+}
+//--------------------------------------------------------------------------
+//  List .env.* files in a directory with their POSTGRES_DATABASE_LOCATION
+//--------------------------------------------------------------------------
+export type EnvFile = { file: string; location: string }
+
+export async function list_env_files(dir: string): Promise<EnvFile[]> {
+  try {
+    const entries = readdirSync(dir)
+    return entries
+      .filter(f => /^\.env\./.test(f))
+      .sort()
+      .map(file => ({
+        file,
+        location: readEnvVar(join(dir, file), 'POSTGRES_DATABASE_LOCATION')
+      }))
+  } catch {
+    return []
+  }
 }
 //--------------------------------------------------------------------------
 //  Strip query parameters unsupported by psql / pg_dump (e.g. timezone)
