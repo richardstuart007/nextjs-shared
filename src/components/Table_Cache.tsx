@@ -103,8 +103,8 @@ export default function Table_Cache() {
                 <th scope='col' className='font-medium px-2'>#</th>
                 <th scope='col' className='font-medium px-2'>Tables</th>
                 <th scope='col' className='font-medium px-2'>Caller</th>
-                <th scope='col' className='font-medium px-2'>Rows</th>
-                <th scope='col' className='font-medium px-2'>Hits</th>
+                <th scope='col' className='font-medium px-2 text-center'>Rows</th>
+                <th scope='col' className='font-medium px-2 text-center'>Hits</th>
                 <th scope='col' className='font-medium px-2'>Key (SQL)</th>
                 <th scope='col' className='font-medium px-2'></th>
               </tr>
@@ -157,15 +157,15 @@ export default function Table_Cache() {
                     onClick={() => handleRowClick(entry)}
                   >
                     <td className='px-2'>{idx + 1}</td>
-                    <td className='px-2 whitespace-nowrap'>
+                    <td className='px-2 max-w-[120px] truncate'>
                       <TablesBadge tables={entry.tables} />
                     </td>
-                    <td className='px-2'>{entry.caller}</td>
-                    <td className='px-2 text-right'>
+                    <td className='px-2 max-w-[100px] truncate'>{entry.caller}</td>
+                    <td className='px-2 text-center'>
                       {entry.rowCount >= 0 ? entry.rowCount : entry.info}
                     </td>
-                    <td className='px-2 text-right'>{entry.hitCount}</td>
-                    <td className='px-2 font-mono max-w-[400px] truncate'>
+                    <td className='px-2 text-center'>{entry.hitCount}</td>
+                    <td className='px-2 font-mono max-w-[700px] truncate'>
                       {entry.sql}
                     </td>
                     <td className='px-2' onClick={e => e.stopPropagation()}>
