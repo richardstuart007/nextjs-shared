@@ -12,10 +12,7 @@ import { MyInput } from './MyInput'
 import { MyButton } from './MyButton'
 import MyPopup from './MyPopup'
 
-type PopupState =
-  | { type: 'key'; entry: CacheEntryInfo }
-  | { type: 'row'; entry: CacheEntryInfo; data: any }
-  | null
+type PopupState = { entry: CacheEntryInfo; data: any } | null
 
 export default function Table_Cache() {
   const functionName = 'Table_Cache'
@@ -66,12 +63,7 @@ export default function Table_Cache() {
 
   async function handleRowClick(entry: CacheEntryInfo) {
     const data = await cacheAction_getEntryData(entry.sql)
-    setPopup({ type: 'row', entry, data })
-  }
-
-  function handleKeyClick(e: React.MouseEvent, entry: CacheEntryInfo) {
-    e.stopPropagation()
-    setPopup({ type: 'key', entry })
+    setPopup({ entry, data })
   }
 
   const filteredEntries = useMemo(() => {
@@ -141,6 +133,7 @@ export default function Table_Cache() {
                   />
                 </th>
                 <th scope='col' className='px-2'></th>
+                <th scope='col' className='px-2'></th>
                 <th scope='col' className='px-2'>
                   <MyInput
                     id='keyFilter'
@@ -172,11 +165,7 @@ export default function Table_Cache() {
                       {entry.rowCount >= 0 ? entry.rowCount : entry.info}
                     </td>
                     <td className='px-2 text-right'>{entry.hitCount}</td>
-                    <td
-                      className='px-2 font-mono max-w-[400px] truncate text-blue-600 hover:text-blue-800 underline'
-                      title='Click to view full key'
-                      onClick={e => handleKeyClick(e, entry)}
-                    >
+                    <td className='px-2 font-mono max-w-[400px] truncate'>
                       {entry.sql}
                     </td>
                     <td className='px-2' onClick={e => e.stopPropagation()}>
@@ -202,19 +191,8 @@ export default function Table_Cache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup?.type === 'key'} onClose={() => setPopup(null)} maxWidth='max-w-3xl'>
-        {popup?.type === 'key' && (
-          <>
-            <h3 className='text-sm font-semibold text-gray-700 mb-2'>Full Cache Key (SQL)</h3>
-            <pre className='bg-gray-100 rounded p-3 text-xs font-mono whitespace-pre-wrap break-all overflow-auto max-h-[60vh]'>
-              {popup.entry.sql}
-            </pre>
-          </>
-        )}
-      </MyPopup>
-
-      <MyPopup isOpen={popup?.type === 'row'} onClose={() => setPopup(null)} maxWidth='max-w-5xl'>
-        {popup?.type === 'row' && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} maxWidth='max-w-5xl'>
+        {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>
   )
@@ -242,7 +220,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
     <div>
       <h3 className='text-sm font-semibold text-gray-700 mb-3'>Cache Entry Detail</h3>
 
-      <div className='grid grid-cols-3 gap-2 mb-3 text-xs'>
+      <div className='grid grid-cols-4 gap-2 mb-3 text-xs'>
         <div>
           <span className='font-medium text-gray-500'>Tables: </span>
           {entry.tables.length > 0 ? entry.tables.join(', ') : '—'}
