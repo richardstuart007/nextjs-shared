@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
-import { read_url, get_tables, copy_tables } from './copyTables'
+import { read_url, read_location, get_tables, copy_tables } from './copyTables'
 import type { CopyLog } from './copyTables'
 
 export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
@@ -14,6 +14,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
+  const [envInfo, setEnvInfo] = useState('')
   const [running, setRunning] = useState(false)
 
   function fullPath(filename: string) {
@@ -44,17 +45,27 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
     setMessage('Copying tables...')
     setRunning(true)
     setLogs([])
+    setEnvInfo('')
     try {
-      const sourceUrl = await read_url(fullPath(sourceEnvFile))
-      const targetUrl = await read_url(fullPath(targetEnvFile))
+      const [sourceUrl, targetUrl, sourceLabel, targetLabel] = await Promise.all([
+        read_url(fullPath(sourceEnvFile)),
+        read_url(fullPath(targetEnvFile)),
+        read_location(fullPath(sourceEnvFile)),
+        read_location(fullPath(targetEnvFile)),
+      ])
       if (!sourceUrl || !targetUrl) {
         setMessage('Could not read POSTGRES_URL from one or both env files')
         return
       }
+      if (sourceLabel || targetLabel) {
+        setEnvInfo(`${sourceLabel || sourceEnvFile} → ${targetLabel || targetEnvFile}`)
+      }
       const result = await copy_tables({
         sourceUrl,
         targetUrl,
-        tables: Array.from(selectedTables)
+        tables: Array.from(selectedTables),
+        sourceLabel,
+        targetLabel,
       })
       setLogs(result.logs)
       setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors')
@@ -171,7 +182,10 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
 
       {logs.length > 0 && (
         <div className='mt-2'>
-          <p className='text-xs font-semibold mb-1'>Copy Log</p>
+          <div className='flex items-center gap-3 mb-1'>
+            <p className='text-xs font-semibold'>Copy Log</p>
+            {envInfo && <p className='text-xs text-gray-500'>{envInfo}</p>}
+          </div>
           <div className='max-h-48 overflow-y-auto border rounded bg-white'>
             <table className='min-w-full text-xs'>
               <thead className='bg-gray-100'>

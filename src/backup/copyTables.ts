@@ -1,6 +1,6 @@
 'use server'
 
-import { execSync, ExecSyncOptions } from 'child_process'
+import { execSync, spawnSync, ExecSyncOptions } from 'child_process'
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
@@ -17,6 +17,15 @@ function execPg(cmd: string, options: ExecSyncOptions = {}) {
   const augmentedPath = [...PG_BIN_PATHS, process.env.PATH ?? ''].join(';')
   return execSync(cmd, { ...options, env: { ...process.env, PATH: augmentedPath } })
 }
+
+function spawnPg(args: string[]): { stdout: string; stderr: string } {
+  const augmentedPath = [...PG_BIN_PATHS, process.env.PATH ?? ''].join(';')
+  const result = spawnSync('psql', args, {
+    encoding: 'utf8',
+    env: { ...process.env, PATH: augmentedPath }
+  })
+  return { stdout: result.stdout ?? '', stderr: result.stderr ?? '' }
+}
 //--------------------------------------------------------------------------
 //  Types
 //--------------------------------------------------------------------------
@@ -32,12 +41,24 @@ export type CopyResult = {
   logs: CopyLog[]
 }
 //--------------------------------------------------------------------------
-//  Read POSTGRES_URL from a .env file on disk
+//  Read a single variable from a .env file on disk
 //--------------------------------------------------------------------------
+function readEnvVar(envFile: string, varName: string): string {
+  try {
+    const content = readFileSync(envFile, 'utf8')
+    const match = content.match(new RegExp(`^${varName}=(.+)$`, 'm'))
+    return match ? match[1].trim() : ''
+  } catch {
+    return ''
+  }
+}
+
 export async function read_url(envFile: string): Promise<string> {
-  const content = readFileSync(envFile, 'utf8')
-  const match = content.match(/^POSTGRES_URL=(.+)$/m)
-  return match ? match[1].trim() : ''
+  return readEnvVar(envFile, 'POSTGRES_URL')
+}
+
+export async function read_location(envFile: string): Promise<string> {
+  return readEnvVar(envFile, 'POSTGRES_DATABASE_LOCATION')
 }
 //--------------------------------------------------------------------------
 //  Strip query parameters unsupported by psql / pg_dump (e.g. timezone)
@@ -66,16 +87,6 @@ function parsePsqlOutput(output: string): CopyLog[] {
       logs.push({ event: 'COPY', detail: `${match[1]} rows copied` })
     } else if (/^CREATE INDEX/i.test(trimmed)) {
       logs.push({ event: 'INDEX', detail: trimmed })
-    } else if (/^\s*setval\s*$/.test(line)) {
-      // psql renders setval as a table: header / dashes / value / (1 row)
-      if (i + 2 < lines.length) {
-        const valueLine = lines[i + 2].trim()
-        if (/^\d+$/.test(valueLine)) {
-          logs.push({ event: 'SEQUENCE', detail: `sequence reset to ${valueLine}` })
-          i += 3
-          continue
-        }
-      }
     } else if (/ERROR/i.test(trimmed) && trimmed.length > 5) {
       logs.push({ event: 'ERROR', detail: trimmed })
     }
@@ -113,61 +124,81 @@ export async function get_tables({
 }
 //--------------------------------------------------------------------------
 //  Copy a selection of tables from one Postgres database to another
+//  Processes one table at a time so every log entry includes the table name
 //--------------------------------------------------------------------------
 export async function copy_tables({
   sourceUrl,
   targetUrl,
   tables,
+  sourceLabel = '',
+  targetLabel = '',
   caller = ''
 }: {
   sourceUrl: string
   targetUrl: string
   tables: string[]
+  sourceLabel?: string
+  targetLabel?: string
   caller?: string
 }): Promise<CopyResult> {
   const functionName = 'copy_tables'
-  const tmpFile = join(tmpdir(), `copy_tables_${Date.now()}.sql`)
+  const allLogs: CopyLog[] = []
+  let hasError = false
 
-  try {
-    const cleanSource = stripUnsupportedParams(sourceUrl)
-    const cleanTarget = stripUnsupportedParams(targetUrl)
-    const tableFlags = tables.map(t => `-t ${t}`).join(' ')
+  const cleanSource = stripUnsupportedParams(sourceUrl)
+  const cleanTarget = stripUnsupportedParams(targetUrl)
+  const envTag = sourceLabel && targetLabel ? ` [${sourceLabel} → ${targetLabel}]` : ''
 
-    // Step 1: dump source tables to temp file
+  for (const table of tables) {
+    const tableLogs: CopyLog[] = []
+    const tmpFile = join(tmpdir(), `copy_${table}_${Date.now()}.sql`)
+
     try {
-      execPg(`pg_dump --no-owner --clean ${tableFlags} "${cleanSource}" -f "${tmpFile}"`)
-    } catch (error) {
-      const msg = (error as Error).message
-      write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: msg, lg_severity: 'E' })
-      return { success: false, logs: [{ event: 'ERROR', detail: `pg_dump failed: ${msg}` }] }
-    }
-
-    // Step 2: remove parameters the target may not support
-    const filtered = readFileSync(tmpFile, 'utf8')
-      .split('\n')
-      .filter(line => !line.match(/transaction_timeout/))
-      .join('\n')
-    writeFileSync(tmpFile, filtered, 'utf8')
-
-    // Step 3: restore to target, capture output for logging
-    let psqlOutput = ''
-    try {
-      psqlOutput = execPg(`psql "${cleanTarget}" -f "${tmpFile}"`, { encoding: 'utf8' }) as string
-    } catch (error) {
-      psqlOutput = (error as any).stdout ?? ''
-      const stderr = ((error as any).stderr ?? '').trim()
-      if (stderr) {
-        write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: stderr, lg_severity: 'E' })
+      // Step 1: dump single table
+      try {
+        execPg(`pg_dump --no-owner --clean --if-exists -t ${table} "${cleanSource}" -f "${tmpFile}"`)
+      } catch (error) {
+        const msg = (error as Error).message
+        const log: CopyLog = { event: 'ERROR', detail: `${table} — pg_dump failed: ${msg}` }
+        tableLogs.push(log)
+        allLogs.push(log)
+        hasError = true
+        write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: `${table}: pg_dump failed: ${msg}`, lg_severity: 'E' })
+        continue
       }
-    }
 
-    const logs = parsePsqlOutput(psqlOutput)
+      // Step 2: filter lines the target doesn't support; strip setval
+      // (sequences are repaired in step 4 based on MAX(id))
+      const filtered = readFileSync(tmpFile, 'utf8')
+        .split('\n')
+        .filter(line => !line.match(/transaction_timeout/))
+        .filter(line => !line.match(/setval/))
+        .join('\n')
+      writeFileSync(tmpFile, filtered, 'utf8')
 
-    // Step 4: repair sequences — set each to MAX(pk) so inserts don't collide
-    const seqFile = join(tmpdir(), `seq_repair_${Date.now()}.sql`)
-    try {
-      const tableArray = tables.map(t => `'${t}'`).join(', ')
-      const seqSql = `DO $$
+      // Step 3: restore to target, capture output
+      let psqlOutput = ''
+      try {
+        psqlOutput = execPg(`psql "${cleanTarget}" -f "${tmpFile}"`, { encoding: 'utf8' }) as string
+      } catch (error) {
+        psqlOutput = (error as any).stdout ?? ''
+        const stderr = ((error as any).stderr ?? '').trim()
+        if (stderr) {
+          write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: `${table}: ${stderr}`, lg_severity: 'E' })
+        }
+      }
+
+      for (const log of parsePsqlOutput(psqlOutput)) {
+        const tagged: CopyLog = { event: log.event, detail: `${table} — ${log.detail}` }
+        tableLogs.push(tagged)
+        allLogs.push(tagged)
+        if (log.event === 'ERROR') hasError = true
+      }
+
+      // Step 4: repair sequence — set to MAX(pk) so inserts don't collide
+      const seqFile = join(tmpdir(), `seq_${table}_${Date.now()}.sql`)
+      try {
+        const seqSql = `DO $$
 DECLARE
   r RECORD;
   v BIGINT;
@@ -179,30 +210,45 @@ BEGIN
     JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum > 0
     JOIN pg_namespace n ON n.oid = t.relnamespace
     WHERE n.nspname = 'public'
-      AND t.relname = ANY(ARRAY[${tableArray}])
+      AND t.relname = '${table}'
       AND pg_get_serial_sequence('public.'||t.relname, a.attname) IS NOT NULL
   LOOP
     EXECUTE format('SELECT COALESCE(MAX(%I),0) FROM %I', r.attname, r.relname) INTO v;
     PERFORM setval(r.seq, GREATEST(v, 1), v > 0);
+    RAISE NOTICE 'SEQFIX:%:%', r.relname, v;
   END LOOP;
 END $$;
 `
-      writeFileSync(seqFile, seqSql, 'utf8')
-      execPg(`psql "${cleanTarget}" -f "${seqFile}"`)
-      logs.push({ event: 'SEQUENCE', detail: 'sequences repaired to MAX(id)' })
-    } catch {
-      // sequence repair is best-effort — don't fail the whole operation
+        writeFileSync(seqFile, seqSql, 'utf8')
+        const { stderr } = spawnPg([cleanTarget, '-f', seqFile])
+        for (const line of stderr.split('\n')) {
+          const match = line.match(/SEQFIX:([^:]+):(\d+)/)
+          if (match) {
+            const seqLog: CopyLog = { event: 'SEQUENCE', detail: `${match[1]} — repaired to ${match[2]}` }
+            tableLogs.push(seqLog)
+            allLogs.push(seqLog)
+          }
+        }
+      } catch {
+        // sequence repair is best-effort — don't fail the whole operation
+      } finally {
+        if (existsSync(seqFile)) unlinkSync(seqFile)
+      }
+
+      // One write_Logging entry per table
+      const tableOk = !tableLogs.some(l => l.event === 'ERROR')
+      const summary = tableLogs.map(l => `${l.event}: ${l.detail}`).join(' | ')
+      write_Logging({
+        lg_caller: caller,
+        lg_functionname: functionName,
+        lg_msg: `${table}${envTag}: ${tableOk ? 'OK' : 'FAILED'} — ${summary}`,
+        lg_severity: tableOk ? 'I' : 'E'
+      })
+
     } finally {
-      if (existsSync(seqFile)) unlinkSync(seqFile)
+      if (existsSync(tmpFile)) unlinkSync(tmpFile)
     }
-
-    return { success: !logs.some(l => l.event === 'ERROR'), logs }
-
-  } catch (error) {
-    const msg = (error as Error).message
-    write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: msg, lg_severity: 'E' })
-    return { success: false, logs: [{ event: 'ERROR', detail: msg }] }
-  } finally {
-    if (existsSync(tmpFile)) unlinkSync(tmpFile)
   }
+
+  return { success: !hasError, logs: allLogs }
 }
