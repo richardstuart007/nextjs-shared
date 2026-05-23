@@ -174,13 +174,17 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
       {sourceLocation && targetLocation && (
         <div className='flex items-center gap-2 mt-3 mb-4'>
           <div className='w-20 shrink-0' />
-          <MyButton
-            onClick={handleLoadTables}
-            overrideClass='h-6 px-2 py-2 shrink-0'
-            disabled={running}
-          >
-            Load Tables
-          </MyButton>
+          {sourceLocation === targetLocation ? (
+            <span className='text-sm font-bold text-red-700'>&#9888; Source and target are the same environment — cannot copy</span>
+          ) : (
+            <MyButton
+              onClick={handleLoadTables}
+              overrideClass='h-6 px-2 py-2 shrink-0'
+              disabled={running}
+            >
+              Load Tables
+            </MyButton>
+          )}
         </div>
       )}
 
