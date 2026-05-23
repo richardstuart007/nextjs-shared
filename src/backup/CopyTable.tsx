@@ -10,29 +10,45 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   const [directory, setDirectory] = useState(baseDir)
   const [sourceEnvFile, setSourceEnvFile] = useState('.env.locallocal')
   const [targetEnvFile, setTargetEnvFile] = useState('.env.localdev')
+  const [sourceLocation, setSourceLocation] = useState('')
+  const [targetLocation, setTargetLocation] = useState('')
   const [availableTables, setAvailableTables] = useState<string[]>([])
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
-  const [envInfo, setEnvInfo] = useState('')
   const [running, setRunning] = useState(false)
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
   }
 
+  async function refreshLocation(envFile: string, which: 'source' | 'target') {
+    if (!envFile) {
+      which === 'source' ? setSourceLocation('') : setTargetLocation('')
+      return
+    }
+    const loc = await read_location(fullPath(envFile))
+    which === 'source' ? setSourceLocation(loc) : setTargetLocation(loc)
+  }
+
   async function handleLoadTables() {
     setMessage('Loading tables...')
     setRunning(true)
     try {
-      const url = await read_url(fullPath(sourceEnvFile))
+      const [url, srcLoc, tgtLoc] = await Promise.all([
+        read_url(fullPath(sourceEnvFile)),
+        read_location(fullPath(sourceEnvFile)),
+        read_location(fullPath(targetEnvFile)),
+      ])
+      setSourceLocation(srcLoc)
+      setTargetLocation(tgtLoc)
       if (!url) {
         setMessage('Could not read POSTGRES_URL from source env file')
         return
       }
       const tables = await get_tables({ url })
       setAvailableTables(tables)
-      setSelectedTables(new Set(tables))
+      setSelectedTables(new Set())
       setMessage(`Loaded ${tables.length} tables`)
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
@@ -42,30 +58,28 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   }
 
   async function handleCopy() {
+    if (!sourceLocation || !targetLocation) {
+      setMessage('Cannot copy: location not set for one or both env files. Load Tables first.')
+      return
+    }
     setMessage('Copying tables...')
     setRunning(true)
     setLogs([])
-    setEnvInfo('')
     try {
-      const [sourceUrl, targetUrl, sourceLabel, targetLabel] = await Promise.all([
+      const [sourceUrl, targetUrl] = await Promise.all([
         read_url(fullPath(sourceEnvFile)),
         read_url(fullPath(targetEnvFile)),
-        read_location(fullPath(sourceEnvFile)),
-        read_location(fullPath(targetEnvFile)),
       ])
       if (!sourceUrl || !targetUrl) {
         setMessage('Could not read POSTGRES_URL from one or both env files')
         return
       }
-      if (sourceLabel || targetLabel) {
-        setEnvInfo(`${sourceLabel || sourceEnvFile} → ${targetLabel || targetEnvFile}`)
-      }
       const result = await copy_tables({
         sourceUrl,
         targetUrl,
         tables: Array.from(selectedTables),
-        sourceLabel,
-        targetLabel,
+        sourceLabel: sourceLocation,
+        targetLabel: targetLocation,
       })
       setLogs(result.logs)
       setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors')
@@ -120,7 +134,11 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           placeholder='.env.locallocal'
           value={sourceEnvFile}
           onChange={e => setSourceEnvFile(e.target.value)}
+          onBlur={e => refreshLocation(e.target.value, 'source')}
         />
+        {sourceLocation && (
+          <span className='text-xs font-semibold text-blue-700'>[{sourceLocation}]</span>
+        )}
         <MyButton
           onClick={handleLoadTables}
           overrideClass='h-6 px-2 py-2 shrink-0'
@@ -140,7 +158,11 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           placeholder='.env.localdev'
           value={targetEnvFile}
           onChange={e => setTargetEnvFile(e.target.value)}
+          onBlur={e => refreshLocation(e.target.value, 'target')}
         />
+        {targetLocation && (
+          <span className='text-xs font-semibold text-green-700'>[{targetLocation}]</span>
+        )}
       </div>
 
       {availableTables.length > 0 && (
@@ -184,7 +206,9 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
         <div className='mt-2'>
           <div className='flex items-center gap-3 mb-1'>
             <p className='text-xs font-semibold'>Copy Log</p>
-            {envInfo && <p className='text-xs text-gray-500'>{envInfo}</p>}
+            {sourceLocation && targetLocation && (
+              <p className='text-xs text-gray-500'>{sourceLocation} → {targetLocation}</p>
+            )}
           </div>
           <div className='max-h-48 overflow-y-auto border rounded bg-white'>
             <table className='min-w-full text-xs'>
