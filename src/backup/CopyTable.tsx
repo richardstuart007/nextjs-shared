@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import { read_url, read_location, get_tables, copy_tables } from './copyTables'
@@ -17,6 +17,8 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
   const [running, setRunning] = useState(false)
+  const srcDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tgtDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -35,6 +37,20 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
     }
     const loc = await read_location(fullPath(envFile))
     which === 'source' ? setSourceLocation(loc) : setTargetLocation(loc)
+  }
+
+  function handleEnvChange(value: string, which: 'source' | 'target') {
+    if (which === 'source') {
+      setSourceEnvFile(value)
+      setSourceLocation('')
+      if (srcDebounce.current) clearTimeout(srcDebounce.current)
+      srcDebounce.current = setTimeout(() => refreshLocation(value, 'source'), 400)
+    } else {
+      setTargetEnvFile(value)
+      setTargetLocation('')
+      if (tgtDebounce.current) clearTimeout(tgtDebounce.current)
+      tgtDebounce.current = setTimeout(() => refreshLocation(value, 'target'), 400)
+    }
   }
 
   async function handleLoadTables() {
@@ -139,8 +155,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           type='text'
           placeholder='.env.locallocal'
           value={sourceEnvFile}
-          onChange={e => { setSourceEnvFile(e.target.value); setSourceLocation('') }}
-          onBlur={e => refreshLocation(e.target.value, 'source')}
+          onChange={e => handleEnvChange(e.target.value, 'source')}
         />
         {sourceLocation && (
           <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
@@ -158,8 +173,7 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
           type='text'
           placeholder='.env.localdev'
           value={targetEnvFile}
-          onChange={e => { setTargetEnvFile(e.target.value); setTargetLocation('') }}
-          onBlur={e => refreshLocation(e.target.value, 'target')}
+          onChange={e => handleEnvChange(e.target.value, 'target')}
         />
         {targetLocation && (
           <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
