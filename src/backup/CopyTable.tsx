@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import { read_url, read_location, get_tables, copy_tables } from './copyTables'
@@ -21,6 +21,12 @@ export default function CopyTable({ baseDir = '' }: { baseDir?: string }) {
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
   }
+
+  useEffect(() => {
+    if (sourceEnvFile) refreshLocation(sourceEnvFile, 'source')
+    if (targetEnvFile) refreshLocation(targetEnvFile, 'target')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [directory])
 
   async function refreshLocation(envFile: string, which: 'source' | 'target') {
     if (!envFile) {
