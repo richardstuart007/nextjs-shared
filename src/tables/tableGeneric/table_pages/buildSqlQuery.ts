@@ -1,5 +1,4 @@
-export type { JoinParams, Filter } from '../../structures'
-import type { JoinParams, Filter } from '../../structures' // needed for parameter types below
+import type { JoinParams, Filter } from '../../structures'
 
 //---------------------------------------------------------------------
 // Helper to build SQL query and WHERE clause
