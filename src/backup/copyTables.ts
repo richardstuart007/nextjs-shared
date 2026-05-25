@@ -5,6 +5,7 @@ import { writeFileSync, readFileSync, unlinkSync, existsSync, readdirSync } from
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { write_Logging } from '../tables/tableGeneric/write_logging'
+import { readEnvVar } from './dbClient'
 
 const PG_BIN_PATHS = [
   'C:\\Program Files\\PostgreSQL\\18\\bin',
@@ -40,19 +41,6 @@ export type CopyResult = {
   success: boolean
   logs: CopyLog[]
 }
-//--------------------------------------------------------------------------
-//  Read a single variable from a .env file on disk
-//--------------------------------------------------------------------------
-function readEnvVar(envFile: string, varName: string): string {
-  try {
-    const content = readFileSync(envFile, 'utf8')
-    const match = content.match(new RegExp(`^${varName}=(.+)$`, 'm'))
-    return match ? match[1].trim() : ''
-  } catch {
-    return ''
-  }
-}
-
 export async function read_url(envFile: string): Promise<string> {
   return readEnvVar(envFile, 'POSTGRES_URL')
 }

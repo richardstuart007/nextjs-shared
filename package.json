@@ -51,6 +51,8 @@
     "./db": "./src/tables/db.ts",
     "./backupUtils": "./src/backup/backupUtils.ts",
     "./copyTables": "./src/backup/copyTables.ts",
+    "./dbClient": "./src/backup/dbClient.ts",
+    "./schemaCompare": "./src/backup/schemaCompare.ts",
     "./BackupTable": "./src/backup/table.tsx",
     "./CopyTable": "./src/backup/CopyTable.tsx"
   },
