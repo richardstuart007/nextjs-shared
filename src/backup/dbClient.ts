@@ -1,5 +1,3 @@
-'use server'
-
 import { Client } from 'pg'
 import { readFileSync } from 'fs'
 //--------------------------------------------------------------------------
