@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.schemaSnapshot = schemaSnapshot;
 exports.schemaCompare = schemaCompare;
 //--------------------------------------------------------------------------
-//  Ensure tsc_schema exists in the store database
+//  Ensure xsc_schema exists in the store database
 //--------------------------------------------------------------------------
 async function ensureTable(client) {
     await client.query(`
-    CREATE TABLE IF NOT EXISTS tsc_schema (
+    CREATE TABLE IF NOT EXISTS xsc_schema (
       sc_id       SERIAL PRIMARY KEY,
       sc_source   TEXT NOT NULL,
       sc_table    TEXT NOT NULL,
@@ -77,13 +77,13 @@ async function fetchSchema(client) {
     }));
 }
 //--------------------------------------------------------------------------
-//  Snapshot the public schema of sourceClient into storeClient's tsc_schema.
+//  Snapshot the public schema of sourceClient into storeClient's xsc_schema.
 //  If storeClient is omitted it defaults to sourceClient (same-db case).
 //  Any previous snapshot for this source is replaced.
 //--------------------------------------------------------------------------
 async function schemaSnapshot(sourceClient, source, storeClient = sourceClient) {
     await ensureTable(storeClient);
-    await storeClient.query('DELETE FROM tsc_schema WHERE sc_source = $1', [source]);
+    await storeClient.query('DELETE FROM xsc_schema WHERE sc_source = $1', [source]);
     const rows = await fetchSchema(sourceClient);
     if (rows.length === 0)
         return;
@@ -96,24 +96,24 @@ async function schemaSnapshot(sourceClient, source, storeClient = sourceClient) 
             values.push(source, r.sc_table, r.sc_column, r.sc_datatype, r.sc_maxlen, r.sc_nullable, r.sc_default, r.sc_is_pk, r.sc_is_unique, r.sc_has_index);
             return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},$${base + 8},$${base + 9},$${base + 10})`;
         });
-        await storeClient.query(`INSERT INTO tsc_schema
+        await storeClient.query(`INSERT INTO xsc_schema
          (sc_source,sc_table,sc_column,sc_datatype,sc_maxlen,sc_nullable,sc_default,sc_is_pk,sc_is_unique,sc_has_index)
        VALUES ${placeholders.join(',')}`, values);
     }
 }
 //--------------------------------------------------------------------------
-//  Compare two sources already stored in storeClient's tsc_schema.
+//  Compare two sources already stored in storeClient's xsc_schema.
 //  Returns rows present in one source but not the other.
 //--------------------------------------------------------------------------
 const COMPARE_COLS = `sc_table,sc_column,sc_datatype,sc_maxlen,sc_nullable,sc_default,sc_is_pk,sc_is_unique,sc_has_index`;
 async function schemaCompare(storeClient, source1, source2) {
-    const only1 = await storeClient.query(`SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $1
+    const only1 = await storeClient.query(`SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $1
      EXCEPT
-     SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $2
+     SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $2
      ORDER BY sc_table, sc_column`, [source1, source2]);
-    const only2 = await storeClient.query(`SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $1
+    const only2 = await storeClient.query(`SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $1
      EXCEPT
-     SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $2
+     SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $2
      ORDER BY sc_table, sc_column`, [source2, source1]);
     return [
         ...only1.rows.map(row => ({ direction: 'only_in_1', row })),

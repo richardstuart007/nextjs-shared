@@ -54,7 +54,11 @@
     "./dbClient": "./dist/backup/dbClient.js",
     "./schemaCompare": "./dist/backup/schemaCompare.js",
     "./BackupTable": "./src/backup/table.tsx",
-    "./CopyTable": "./src/backup/CopyTable.tsx"
+    "./CopyTable": "./src/backup/CopyTable.tsx",
+    "./SchemaSync": "./src/backup/SchemaSync.tsx",
+    "./schemaSync": "./src/backup/schemaSync.ts",
+    "./routes/schema-compare": "./src/backup/routes/schema-compare/route.ts",
+    "./routes/copy": "./src/backup/routes/copy/route.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

@@ -25,7 +25,7 @@ async function write_Logging({ lg_functionname, lg_msg, lg_severity = 'E', lg_ca
         //  Query statement
         //
         const sqlQueryStatement = `
-    INSERT INTO tlg_logging (
+    INSERT INTO xlg_logging (
       lg_datetime,
       lg_msg,
       lg_functionname,

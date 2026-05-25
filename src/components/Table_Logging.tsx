@@ -53,7 +53,7 @@ export default function Table({ initialRows, initialTotalPages }: TableProps = {
     ]
     const filters = filtersToUpdate.filter(filter => filter.value)
     try {
-      const table = 'tlg_logging'
+      const table = 'xlg_logging'
       const offset = (currentPage - 1) * LOGGING_ROWS_PER_PAGE
       const data = await fetchFiltered({
         caller: functionName,

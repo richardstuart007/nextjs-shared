@@ -19,11 +19,11 @@ export type SchemaDiff = {
   row: SchemaRow
 }
 //--------------------------------------------------------------------------
-//  Ensure tsc_schema exists in the store database
+//  Ensure xsc_schema exists in the store database
 //--------------------------------------------------------------------------
 async function ensureTable(client: Client): Promise<void> {
   await client.query(`
-    CREATE TABLE IF NOT EXISTS tsc_schema (
+    CREATE TABLE IF NOT EXISTS xsc_schema (
       sc_id       SERIAL PRIMARY KEY,
       sc_source   TEXT NOT NULL,
       sc_table    TEXT NOT NULL,
@@ -104,7 +104,7 @@ async function fetchSchema(client: Client): Promise<SchemaRow[]> {
   }))
 }
 //--------------------------------------------------------------------------
-//  Snapshot the public schema of sourceClient into storeClient's tsc_schema.
+//  Snapshot the public schema of sourceClient into storeClient's xsc_schema.
 //  If storeClient is omitted it defaults to sourceClient (same-db case).
 //  Any previous snapshot for this source is replaced.
 //--------------------------------------------------------------------------
@@ -114,7 +114,7 @@ export async function schemaSnapshot(
   storeClient: Client = sourceClient
 ): Promise<void> {
   await ensureTable(storeClient)
-  await storeClient.query('DELETE FROM tsc_schema WHERE sc_source = $1', [source])
+  await storeClient.query('DELETE FROM xsc_schema WHERE sc_source = $1', [source])
 
   const rows = await fetchSchema(sourceClient)
   if (rows.length === 0) return
@@ -140,7 +140,7 @@ export async function schemaSnapshot(
       return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},$${base + 8},$${base + 9},$${base + 10})`
     })
     await storeClient.query(
-      `INSERT INTO tsc_schema
+      `INSERT INTO xsc_schema
          (sc_source,sc_table,sc_column,sc_datatype,sc_maxlen,sc_nullable,sc_default,sc_is_pk,sc_is_unique,sc_has_index)
        VALUES ${placeholders.join(',')}`,
       values
@@ -148,7 +148,7 @@ export async function schemaSnapshot(
   }
 }
 //--------------------------------------------------------------------------
-//  Compare two sources already stored in storeClient's tsc_schema.
+//  Compare two sources already stored in storeClient's xsc_schema.
 //  Returns rows present in one source but not the other.
 //--------------------------------------------------------------------------
 const COMPARE_COLS = `sc_table,sc_column,sc_datatype,sc_maxlen,sc_nullable,sc_default,sc_is_pk,sc_is_unique,sc_has_index`
@@ -159,17 +159,17 @@ export async function schemaCompare(
   source2: string
 ): Promise<SchemaDiff[]> {
   const only1 = await storeClient.query<SchemaRow>(
-    `SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $1
+    `SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $1
      EXCEPT
-     SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $2
+     SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $2
      ORDER BY sc_table, sc_column`,
     [source1, source2]
   )
 
   const only2 = await storeClient.query<SchemaRow>(
-    `SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $1
+    `SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $1
      EXCEPT
-     SELECT ${COMPARE_COLS} FROM tsc_schema WHERE sc_source = $2
+     SELECT ${COMPARE_COLS} FROM xsc_schema WHERE sc_source = $2
      ORDER BY sc_table, sc_column`,
     [source2, source1]
   )
