@@ -47,16 +47,18 @@ export type TableDDL = {
 }
 
 function parsePgDumpByTable(raw: string): TableDDL[] {
+  // Normalise Windows CRLF so all regex / split patterns work uniformly
+  const text = raw.replace(/\r\n/g, '\n')
   const tableMap = new Map<string, string[]>()
 
   // First pass: build seqname → tablename map from OWNED BY statements
   const seqToTable = new Map<string, string>()
   const ownedRe = /ALTER SEQUENCE public\.(\S+)\s+OWNED BY public\.(\w+)\./g
   let om: RegExpExecArray | null
-  while ((om = ownedRe.exec(raw)) !== null) seqToTable.set(om[1], om[2])
+  while ((om = ownedRe.exec(text)) !== null) seqToTable.set(om[1], om[2])
 
   // Split into blocks on the section separator pattern
-  const blocks = raw.split(/\n--\n(?=-- Name:)/)
+  const blocks = text.split(/\n--\n(?=-- Name:)/)
 
   for (const block of blocks) {
     const headerMatch = block.match(/^-- Name: ([^;]+); Type: ([^;]+);/)
