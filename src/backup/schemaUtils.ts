@@ -188,11 +188,15 @@ export function generateAlterSQL(result: SchemaCompareResult): string[] {
       )
     }
     if (c.source.column_default !== c.target.column_default) {
-      sqls.push(
-        c.source.column_default
-          ? `ALTER TABLE "${c.table_name}" ALTER COLUMN "${c.column_name}" SET DEFAULT ${c.source.column_default};`
-          : `ALTER TABLE "${c.table_name}" ALTER COLUMN "${c.column_name}" DROP DEFAULT;`
-      )
+      if (c.source.column_default?.startsWith('nextval(') && !c.target.column_default) {
+        sqls.push(`-- Skipped: "${c.table_name}"."${c.column_name}" — target may be an IDENTITY column (cannot SET DEFAULT on identity)`)
+      } else {
+        sqls.push(
+          c.source.column_default
+            ? `ALTER TABLE "${c.table_name}" ALTER COLUMN "${c.column_name}" SET DEFAULT ${c.source.column_default};`
+            : `ALTER TABLE "${c.table_name}" ALTER COLUMN "${c.column_name}" DROP DEFAULT;`
+        )
+      }
     }
   }
 

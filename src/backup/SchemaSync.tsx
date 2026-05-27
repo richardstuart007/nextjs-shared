@@ -69,8 +69,7 @@ export default function SchemaSync({
     setApplyResult(null)
     setMessage('Applying SQL to target...')
     try {
-      const statements = sql.split('\n')
-      const r = await applySQL(fullPath(targetEnv), statements)
+      const r = await applySQL(fullPath(targetEnv), sql)
       setApplyResult(r)
       setMessage(r.errors.length === 0
         ? `Applied ${r.ok} statement${r.ok !== 1 ? 's' : ''} successfully`

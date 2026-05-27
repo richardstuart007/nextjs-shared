@@ -24,19 +24,24 @@ export type ApplyResult = {
   errors: Array<{ sql: string; error: string }>
 }
 
-export async function applySQL(envFile: string, statements: string[]): Promise<ApplyResult> {
+export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
   const client = await createClient(envFile)
   let ok = 0
   const errors: Array<{ sql: string; error: string }> = []
   try {
-    for (const sql of statements) {
-      const trimmed = sql.trim()
-      if (!trimmed || trimmed.startsWith('--')) continue
+    const statements = sqlText
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => {
+        const nonComment = s.split('\n').filter(l => l.trim() && !l.trim().startsWith('--'))
+        return nonComment.length > 0
+      })
+    for (const stmt of statements) {
       try {
-        await client.query(trimmed)
+        await client.query(stmt)
         ok++
       } catch (error) {
-        errors.push({ sql: trimmed, error: (error as Error).message })
+        errors.push({ sql: stmt, error: (error as Error).message })
       }
     }
   } finally {
