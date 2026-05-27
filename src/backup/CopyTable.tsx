@@ -27,7 +27,7 @@ const HELP_ITEMS: HelpItem[] = [
   },
 ]
 
-export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { baseDir?: string; caller?: string }) {
+export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = '' }: { baseDir?: string; caller?: string; title?: string }) {
   const [directory, setDirectory] = useState(baseDir)
   const [envFiles, setEnvFiles] = useState<EnvFile[]>([])
   const [sourceEnvFile, setSourceEnvFile] = useState('')
@@ -135,7 +135,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { base
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
       <div className='flex items-center gap-2 mb-4'>
-        <h2 className='text-sm font-bold'>Cross-Database Table Copy (pg_dump / psql)</h2>
+        {title && <h2 className='text-sm font-bold'>{title}</h2>}
         <MyHelp items={HELP_ITEMS} title='Copy Tables Help' />
       </div>
 
