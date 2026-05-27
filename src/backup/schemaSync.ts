@@ -4,7 +4,6 @@ import { createClient, read_location } from './dbClient'
 import { fetchSchema, diffSchemas, generateAlterSQL, type SchemaCompareResult } from './schemaUtils'
 
 export type { SchemaCompareResult, DiffRow, ChangeRow, TableSummary, TableStatus } from './schemaUtils'
-export { generateAlterSQL } from './schemaUtils'
 
 export async function compareSchemas(env1: string, env2: string): Promise<SchemaCompareResult> {
   const c1 = await createClient(env1)

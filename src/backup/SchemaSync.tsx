@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
-import { compareSchemas, applySQL, generateAlterSQL } from './schemaSync'
+import { compareSchemas, applySQL } from './schemaSync'
+import { generateAlterSQL } from './schemaUtils'
 import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSync'
 
 export default function SchemaSync({
