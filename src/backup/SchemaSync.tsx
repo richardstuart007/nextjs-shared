@@ -138,50 +138,61 @@ export default function SchemaSync({
       </div>
 
       {/* Directory */}
-      <div className='flex items-center gap-2'>
-        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-        <input
-          className='flex-1 text-xs border border-blue-500 rounded-md px-2 py-1 focus:outline-none'
-          type='text'
-          value={directory}
-          onChange={e => setDirectory(e.target.value)}
-        />
+      <div>
+        <div className='flex items-center gap-2'>
+          <label className='text-xs w-20 text-right shrink-0'>Directory</label>
+          <input
+            className='flex-1 text-xs border border-blue-500 rounded-md px-2 py-1 focus:outline-none'
+            type='text'
+            value={directory}
+            onChange={e => setDirectory(e.target.value)}
+          />
+        </div>
+        <p className='text-xs text-gray-400 ml-24 mt-0.5'>
+          Absolute path to the folder containing your .env.* files. Each file needs POSTGRES_URL and POSTGRES_DATABASE_LOCATION.
+        </p>
       </div>
 
       {envFiles.length > 0 && (
         <>
           {/* Source */}
-          <div className='flex items-center gap-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <select className={selectClass} value={sourceEnv} onChange={e => setSourceEnv(e.target.value)}>
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </select>
-            {sourceLabel && (
-              <span className='text-sm font-bold uppercase bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-                {sourceLabel}
-              </span>
-            )}
+          <div>
+            <div className='flex items-center gap-2'>
+              <label className='text-xs w-20 text-right shrink-0'>Source</label>
+              <select className={selectClass} value={sourceEnv} onChange={e => setSourceEnv(e.target.value)}>
+                {envFiles.map(e => (
+                  <option key={e.file} value={e.file}>
+                    {e.file}{e.location ? ` (${e.location})` : ''}
+                  </option>
+                ))}
+              </select>
+              {sourceLabel && (
+                <span className='text-sm font-bold uppercase bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
+                  {sourceLabel}
+                </span>
+              )}
+            </div>
+            <p className='text-xs text-gray-400 ml-24 mt-0.5'>Reference database — the target will be updated to match this.</p>
           </div>
 
           {/* Target */}
-          <div className='flex items-center gap-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Target</label>
-            <select className={selectClass} value={targetEnv} onChange={e => setTargetEnv(e.target.value)}>
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </select>
-            {targetLabel && (
-              <span className='text-sm font-bold uppercase bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
-                {targetLabel}
-              </span>
-            )}
+          <div>
+            <div className='flex items-center gap-2'>
+              <label className='text-xs w-20 text-right shrink-0'>Target</label>
+              <select className={selectClass} value={targetEnv} onChange={e => setTargetEnv(e.target.value)}>
+                {envFiles.map(e => (
+                  <option key={e.file} value={e.file}>
+                    {e.file}{e.location ? ` (${e.location})` : ''}
+                  </option>
+                ))}
+              </select>
+              {targetLabel && (
+                <span className='text-sm font-bold uppercase bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
+                  {targetLabel}
+                </span>
+              )}
+            </div>
+            <p className='text-xs text-gray-400 ml-24 mt-0.5'>Database to be modified — SQL changes are applied here.</p>
           </div>
 
           {sameEnv ? (
