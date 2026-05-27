@@ -218,7 +218,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
                 overrideClass='h-6 px-2 py-2 shrink-0'
                 disabled={!sourceEnvFile || running}
               >
-                Display Local Tables
+                Display {sourceLocation || 'source'} Tables
               </MyButton>
             )}
           </div>
