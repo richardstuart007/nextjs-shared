@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
+import MySelect from '../components/MySelect'
 import { read_url, get_tables, copy_tables, list_env_files } from './copyTables'
 import type { CopyLog, EnvFile } from './copyTables'
 import { MyHelp } from '../components/MyHelp'
@@ -130,8 +131,6 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
     }
   }
 
-  const selectClass = 'py-1 px-2 w-72 text-sm border border-blue-500 rounded-md focus:outline-none focus:border-blue-500'
-
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
       <div className='flex items-center gap-2 mb-4'>
@@ -162,17 +161,16 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
         <>
           <div className='flex items-center gap-2 mb-2'>
             <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <select
-              className={selectClass}
+            <MySelect
               value={sourceEnvFile}
-              onChange={e => { setSourceEnvFile(e.target.value); setAvailableTables([]); setSelectedTables(new Set()) }}
+              onChange={e => { setSourceEnvFile((e.target as HTMLSelectElement).value); setAvailableTables([]); setSelectedTables(new Set()) }}
             >
               {envFiles.map(e => (
                 <option key={e.file} value={e.file}>
                   {e.file}{e.location ? ` (${e.location})` : ''}
                 </option>
               ))}
-            </select>
+            </MySelect>
             {sourceLocation && (
               <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
                 {sourceLocation}
@@ -186,17 +184,16 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
 
           <div className='flex items-center gap-2 mb-2'>
             <label className='text-xs w-20 text-right shrink-0'>Target</label>
-            <select
-              className={selectClass}
+            <MySelect
               value={targetEnvFile}
-              onChange={e => setTargetEnvFile(e.target.value)}
+              onChange={e => setTargetEnvFile((e.target as HTMLSelectElement).value)}
             >
               {envFiles.map(e => (
                 <option key={e.file} value={e.file}>
                   {e.file}{e.location ? ` (${e.location})` : ''}
                 </option>
               ))}
-            </select>
+            </MySelect>
             {targetLocation && (
               <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
                 {targetLocation}

@@ -2,7 +2,7 @@
 
 import { execSync } from 'child_process'
 import { createClient, read_location, readEnvVar } from './dbClient'
-import { fetchSchema, diffSchemas, generateAlterSQL, type SchemaCompareResult } from './schemaUtils'
+import { fetchSchema, diffSchemas, type SchemaCompareResult } from './schemaUtils'
 
 const PG_BIN_PATHS = [
   'C:\\Program Files\\PostgreSQL\\18\\bin',

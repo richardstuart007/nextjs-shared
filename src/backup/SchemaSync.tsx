@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
+import { MyInput } from '../components/MyInput'
+import MySelect from '../components/MySelect'
+import { MyTextarea } from '../components/MyTextarea'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
 import { compareSchemas, applySQL, generateCreateSQL } from './schemaSync'
@@ -130,8 +133,6 @@ export default function SchemaSync({
   const sameEnv = sourceLabel && targetLabel && sourceLabel === targetLabel
   const hasDiffs = result && (result.onlyIn1.length + result.onlyIn2.length + result.changed.length) > 0
 
-  const selectClass = 'py-1 px-2 w-72 text-sm border border-blue-500 rounded-md focus:outline-none'
-
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-4xl space-y-4'>
       <div className='flex items-center gap-2'>
@@ -142,8 +143,8 @@ export default function SchemaSync({
       {/* Directory */}
       <div className='flex items-center gap-2'>
         <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-        <input
-          className='flex-1 text-xs border border-blue-500 rounded-md px-2 py-1 focus:outline-none'
+        <MyInput
+          overrideClass='flex-1'
           type='text'
           value={directory}
           onChange={e => setDirectory(e.target.value)}
@@ -159,13 +160,13 @@ export default function SchemaSync({
           {/* Source */}
           <div className='flex items-center gap-2'>
             <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <select className={selectClass} value={sourceEnv} onChange={e => setSourceEnv(e.target.value)}>
+            <MySelect value={sourceEnv} onChange={e => setSourceEnv((e.target as HTMLSelectElement).value)}>
               {envFiles.map(e => (
                 <option key={e.file} value={e.file}>
                   {e.file}{e.location ? ` (${e.location})` : ''}
                 </option>
               ))}
-            </select>
+            </MySelect>
             {sourceLabel && (
               <span className='text-sm font-bold uppercase bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
                 {sourceLabel}
@@ -180,13 +181,13 @@ export default function SchemaSync({
           {/* Target */}
           <div className='flex items-center gap-2'>
             <label className='text-xs w-20 text-right shrink-0'>Target</label>
-            <select className={selectClass} value={targetEnv} onChange={e => setTargetEnv(e.target.value)}>
+            <MySelect value={targetEnv} onChange={e => setTargetEnv((e.target as HTMLSelectElement).value)}>
               {envFiles.map(e => (
                 <option key={e.file} value={e.file}>
                   {e.file}{e.location ? ` (${e.location})` : ''}
                 </option>
               ))}
-            </select>
+            </MySelect>
             {targetLabel && (
               <span className='text-sm font-bold uppercase bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
                 {targetLabel}
@@ -238,8 +239,8 @@ export default function SchemaSync({
       {hasDiffs && (
         <div className='space-y-2'>
           <p className='text-xs font-semibold'>Generated SQL (review and edit before applying)</p>
-          <textarea
-            className='w-full h-48 text-xs font-mono border border-gray-300 rounded p-2 bg-white focus:outline-none focus:border-blue-500'
+          <MyTextarea
+            overrideClass='w-full h-48 font-mono bg-white px-2 py-2'
             value={sql}
             onChange={e => setSql(e.target.value)}
           />
