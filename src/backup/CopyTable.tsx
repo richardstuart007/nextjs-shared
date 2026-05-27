@@ -135,7 +135,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
       <div className='flex items-center gap-2 mb-4'>
         {title && <h2 className='text-sm font-bold'>{title}</h2>}
-        <MyHelp items={HELP_ITEMS} title='Copy Tables Help' />
+        <MyHelp items={HELP_ITEMS} title='Copy Tables Help' label='Help' />
       </div>
 
       <div className='flex items-center gap-2 mb-4'>
@@ -218,7 +218,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
                 overrideClass='h-6 px-2 py-2 shrink-0'
                 disabled={!sourceEnvFile || running}
               >
-                Load Tables
+                Display Local Tables
               </MyButton>
             )}
           </div>

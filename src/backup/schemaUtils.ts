@@ -1,4 +1,4 @@
-import { Client } from 'pg'
+import type { ArbitraryDb } from '../tables/dbArbitrary'
 
 export type SchemaRow = {
   table_name: string
@@ -26,6 +26,8 @@ export type TableStatus = 'identical' | 'different' | 'only_in_source' | 'only_i
 export type TableSummary = {
   table_name: string
   status: TableStatus
+  count1?: number | null
+  count2?: number | null
 }
 
 export type SchemaCompareResult = {
@@ -37,9 +39,9 @@ export type SchemaCompareResult = {
   tableSummary: TableSummary[]
 }
 
-/** Query all columns in the public schema with PK, unique, and index flags; caller must close the client. */
-export async function fetchSchema(client: Client): Promise<SchemaRow[]> {
-  const result = await client.query<SchemaRow>(`
+/** Query all columns in the public schema with PK, unique, and index flags. */
+export async function fetchSchema(db: ArbitraryDb): Promise<SchemaRow[]> {
+  const result = await db.query({ query: `
     SELECT
       c.table_name,
       c.column_name,
@@ -76,8 +78,8 @@ export async function fetchSchema(client: Client): Promise<SchemaRow[]> {
     FROM information_schema.columns c
     WHERE c.table_schema = 'public'
     ORDER BY c.table_name, c.ordinal_position
-  `)
-  return result.rows
+  ` })
+  return result.rows as SchemaRow[]
 }
 
 /** Compare two SchemaRow arrays and return columns only in each side, changed columns, and a per-table status summary. */
@@ -143,6 +145,12 @@ function buildTypeStr(col: SchemaRow): string {
     return col.data_type === 'character varying' ? `VARCHAR(${col.max_len})` : `CHAR(${col.max_len})`
   }
   return col.data_type.toUpperCase()
+}
+
+/** Generate a CREATE TABLE statement for a snapshot/work table — column names and types only, no constraints, no indexes, no defaults. */
+export function generateCreateTableDDL(columns: SchemaRow[], tableName: string): string {
+  const colDefs = columns.map(col => `  "${col.column_name}" ${buildTypeStr(col)}`)
+  return `CREATE TABLE "${tableName}" (\n${colDefs.join(',\n')}\n)`
 }
 
 /** Generate ALTER TABLE / CREATE TABLE SQL to bring the target in line with the source; identity-column defaults are skipped with a comment. */

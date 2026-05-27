@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 export type HelpItem = { heading: string; body: string }
 
-export function MyHelp({ items, title }: { items: HelpItem[]; title?: string }) {
+export function MyHelp({ items, title, label = '?' }: { items: HelpItem[]; title?: string; label?: string }) {
   const [open, setOpen] = useState(false)
   return (
     <span className='inline-block'>
@@ -14,7 +14,7 @@ export function MyHelp({ items, title }: { items: HelpItem[]; title?: string }) 
         aria-expanded={open}
         type='button'
       >
-        ?
+        {label}
       </button>
       {open && (
         <div className='absolute z-10 mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs space-y-2 max-w-md shadow-md'>

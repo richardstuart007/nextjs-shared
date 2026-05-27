@@ -1,7 +1,9 @@
 'use server'
 
 import { execSync } from 'child_process'
-import { createClient, read_location, readEnvVar } from './dbClient'
+import { read_location, readEnvVar } from './dbClient'
+import { sql } from '../tables/db'
+import { createArbitraryDb } from '../tables/dbArbitrary'
 import { fetchSchema, diffSchemas, type SchemaCompareResult } from './schemaUtils'
 
 const PG_BIN_PATHS = [
@@ -21,19 +23,49 @@ function execPgDump(args: string): string {
 
 export type { SchemaCompareResult, DiffRow, ChangeRow, TableSummary, TableStatus } from './schemaUtils'
 
-/** Connect to two databases and return a full schema diff including a per-table summary. */
-export async function compareSchemas(env1: string, env2: string): Promise<SchemaCompareResult> {
-  const c1 = await createClient(env1)
-  const c2 = await createClient(env2)
-  try {
-    const [rows1, rows2] = await Promise.all([fetchSchema(c1), fetchSchema(c2)])
-    const label1 = read_location(env1) || env1
-    const label2 = read_location(env2) || env2
-    return { label1, label2, ...diffSchemas(rows1, rows2, label1, label2) }
-  } finally {
-    await c1.end().catch(() => {})
-    await c2.end().catch(() => {})
-  }
+/** Connect to two databases and return a full schema diff. excludePrefixes: comma-separated table-name prefixes to silently ignore (e.g. "bk_,tmp_"). */
+export async function compareSchemas(env1: string, env2: string, excludePrefixes = 'bk_,local_,prod_,dev_'): Promise<SchemaCompareResult> {
+  const url1 = readEnvVar(env1, 'POSTGRES_URL')
+  const url2 = readEnvVar(env2, 'POSTGRES_URL')
+  if (!url1) throw new Error(`POSTGRES_URL not found in ${env1}`)
+  if (!url2) throw new Error(`POSTGRES_URL not found in ${env2}`)
+  const db1 = createArbitraryDb(url1)
+  const db2 = createArbitraryDb(url2)
+  const [rows1, rows2] = await Promise.all([fetchSchema(db1), fetchSchema(db2)])
+  const label1 = read_location(env1) || env1
+  const label2 = read_location(env2) || env2
+  const prefixes = excludePrefixes.split(',').map(p => p.trim()).filter(Boolean)
+  const exclude = (table: string) => prefixes.some(p => table.startsWith(p))
+  const filtered1 = rows1.filter(r => !exclude(r.table_name))
+  const filtered2 = rows2.filter(r => !exclude(r.table_name))
+  const diff = diffSchemas(filtered1, filtered2, label1, label2)
+  return { label1, label2, ...diff }
+}
+
+/** Count rows for the given table names in the current database (via db.ts). Tables that do not exist are omitted from the result. */
+export async function fetchTableCounts(tables: string[]): Promise<Record<string, number>> {
+  if (tables.length === 0) return {}
+  const db = await sql()
+  const checkResult = await db.query({
+    query: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1::text[])`,
+    params: [tables],
+    functionName: 'fetchTableCounts',
+    caller: 'schemaSync',
+    noLog: true,
+  })
+  const existing: string[] = checkResult.rows.map((r: { table_name: string }) => r.table_name)
+  if (existing.length === 0) return {}
+  const unions = existing.map(t => `SELECT '${t}'::text AS t, COUNT(*) AS c FROM public."${t}"`).join(' UNION ALL ')
+  const countResult = await db.query({
+    query: unions,
+    params: [],
+    functionName: 'fetchTableCounts',
+    caller: 'schemaSync',
+    noLog: true,
+  })
+  const counts: Record<string, number> = {}
+  for (const row of countResult.rows) counts[row.t] = parseInt(row.c, 10)
+  return counts
 }
 
 export type ApplyResult = {
@@ -129,27 +161,25 @@ export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
 
 /** Execute SQL statements (split by ';') against envFile's database; returns ok count and per-statement errors. */
 export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
-  const client = await createClient(envFile)
+  const url = readEnvVar(envFile, 'POSTGRES_URL')
+  if (!url) throw new Error(`POSTGRES_URL not found in ${envFile}`)
+  const db = createArbitraryDb(url)
   let ok = 0
   const errors: Array<{ sql: string; error: string }> = []
-  try {
-    const statements = sqlText
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => {
-        const nonComment = s.split('\n').filter(l => l.trim() && !l.trim().startsWith('--'))
-        return nonComment.length > 0
-      })
-    for (const stmt of statements) {
-      try {
-        await client.query(stmt)
-        ok++
-      } catch (error) {
-        errors.push({ sql: stmt, error: (error as Error).message })
-      }
+  const statements = sqlText
+    .split(';')
+    .map(s => s.trim())
+    .filter(s => {
+      const nonComment = s.split('\n').filter(l => l.trim() && !l.trim().startsWith('--'))
+      return nonComment.length > 0
+    })
+  for (const stmt of statements) {
+    try {
+      await db.query({ query: stmt })
+      ok++
+    } catch (error) {
+      errors.push({ sql: stmt, error: (error as Error).message })
     }
-  } finally {
-    await client.end().catch(() => {})
   }
   return { ok, errors }
 }
