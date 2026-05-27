@@ -106,8 +106,21 @@ export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
   const url = readEnvVar(envFile, 'POSTGRES_URL')
   if (!url) throw new Error('POSTGRES_URL not found in env file')
   const cleanUrl = url.replace(/[&?]timezone=[^&]*/g, '')
-  const raw = execPgDump(`--schema-only --no-owner --no-acl "${cleanUrl}"`)
-  return parsePgDumpByTable(raw)
+  let raw: string
+  try {
+    raw = execPgDump(`--schema-only --no-owner --no-acl "${cleanUrl}"`)
+  } catch (e) {
+    throw new Error(`pg_dump failed: ${(e as Error).message}`)
+  }
+  if (!raw.trim()) throw new Error('pg_dump returned empty output')
+  const result = parsePgDumpByTable(raw)
+  if (result.length === 0) {
+    throw new Error(
+      `pg_dump ran (${raw.length} chars) but no tables were parsed. ` +
+      `First 300 chars: ${raw.slice(0, 300).replace(/\n/g, '↵')}`
+    )
+  }
+  return result
 }
 
 export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
