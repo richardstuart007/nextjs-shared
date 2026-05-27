@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
-import { compareSchemas, applySQL } from './schemaSync'
+import { compareSchemas, applySQL, generateCreateSQL } from './schemaSync'
 import { generateAlterSQL } from './schemaUtils'
 import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSync'
 
@@ -24,6 +24,8 @@ export default function SchemaSync({
   const [applyResult, setApplyResult]   = useState<{ ok: number; errors: Array<{ sql: string; error: string }> } | null>(null)
   const [message, setMessage]           = useState('')
   const [running, setRunning]           = useState(false)
+  const [createSql, setCreateSql]       = useState('')
+  const [createMsg, setCreateMsg]       = useState('')
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -76,6 +78,22 @@ export default function SchemaSync({
         : `Applied ${r.ok} ok, ${r.errors.length} failed`)
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  async function handleGenerateCreateSQL() {
+    if (!sourceEnv) return
+    setRunning(true)
+    setCreateSql('')
+    setCreateMsg('Generating CREATE SQL from source...')
+    try {
+      const sql = await generateCreateSQL(fullPath(sourceEnv))
+      setCreateSql(sql)
+      setCreateMsg('')
+    } catch (error) {
+      setCreateMsg(`Error: ${(error as Error).message}`)
     } finally {
       setRunning(false)
     }
@@ -216,6 +234,29 @@ export default function SchemaSync({
           <p className='text-xs text-gray-500'>After applying SQL, use CopyTable to copy data for the affected tables.</p>
         </div>
       )}
+
+      {/* CREATE TABLE + indexes SQL */}
+      <div className='border-t pt-3 space-y-2'>
+        <div className='flex items-center gap-3'>
+          <p className='text-xs font-semibold'>Create SQL</p>
+          <MyButton
+            onClick={handleGenerateCreateSQL}
+            overrideClass='h-6 px-2 py-2'
+            disabled={!sourceEnv || running}
+          >
+            Generate from {sourceLabel || 'source'}
+          </MyButton>
+          <span className='text-xs text-gray-400'>CREATE TABLE + indexes for all tables — use to recreate an environment</span>
+        </div>
+        {createMsg && <p className='text-xs text-red-700'>{createMsg}</p>}
+        {createSql && (
+          <textarea
+            className='w-full h-64 text-xs font-mono border border-gray-300 rounded p-2 bg-white focus:outline-none focus:border-blue-500'
+            value={createSql}
+            onChange={e => setCreateSql(e.target.value)}
+          />
+        )}
+      </div>
     </div>
   )
 }

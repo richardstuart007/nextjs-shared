@@ -1,7 +1,23 @@
 'use server'
 
-import { createClient, read_location } from './dbClient'
+import { execSync } from 'child_process'
+import { createClient, read_location, readEnvVar } from './dbClient'
 import { fetchSchema, diffSchemas, generateAlterSQL, type SchemaCompareResult } from './schemaUtils'
+
+const PG_BIN_PATHS = [
+  'C:\\Program Files\\PostgreSQL\\18\\bin',
+  'C:\\Program Files\\PostgreSQL\\17\\bin',
+  'C:\\Program Files\\PostgreSQL\\16\\bin',
+  'C:\\Program Files\\PostgreSQL\\15\\bin',
+]
+
+function execPgDump(args: string): string {
+  const augmentedPath = [...PG_BIN_PATHS, process.env.PATH ?? ''].join(';')
+  return execSync(`pg_dump ${args}`, {
+    encoding: 'utf8',
+    env: { ...process.env, PATH: augmentedPath },
+  }) as string
+}
 
 export type { SchemaCompareResult, DiffRow, ChangeRow, TableSummary, TableStatus } from './schemaUtils'
 
@@ -22,6 +38,25 @@ export async function compareSchemas(env1: string, env2: string): Promise<Schema
 export type ApplyResult = {
   ok: number
   errors: Array<{ sql: string; error: string }>
+}
+
+export async function generateCreateSQL(envFile: string): Promise<string> {
+  const url = readEnvVar(envFile, 'POSTGRES_URL')
+  if (!url) throw new Error('POSTGRES_URL not found in env file')
+  const cleanUrl = url.replace(/[&?]timezone=[^&]*/g, '')
+  const raw = execPgDump(`--schema-only --no-owner --no-acl "${cleanUrl}"`)
+
+  // Strip pg_dump boilerplate; keep DDL and section headers
+  const lines = raw.split('\n').filter(line => {
+    const t = line.trim()
+    if (t.startsWith('SET '))                    return false
+    if (t.startsWith('SELECT pg_catalog'))       return false
+    if (t.startsWith('-- Dumped'))               return false
+    if (t.startsWith('-- PostgreSQL database'))  return false
+    return true
+  })
+
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
 }
 
 export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
