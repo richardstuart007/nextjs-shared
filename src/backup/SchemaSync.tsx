@@ -54,8 +54,8 @@ export default function SchemaSync({
       setResult(r)
       const lines = generateAlterSQL(r)
       setSql(lines.join('\n'))
-      const total = r.onlyIn1.length + r.onlyIn2.length + r.changed.length
-      setMessage(total === 0 ? 'Schemas are identical' : `Found ${total} difference${total !== 1 ? 's' : ''}`)
+      const diffCount = r.tableSummary.filter(t => t.status !== 'identical').length
+      setMessage(diffCount === 0 ? 'Schemas are identical' : `Found differences in ${diffCount} table${diffCount !== 1 ? 's' : ''}`)
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
     } finally {
@@ -160,8 +160,18 @@ export default function SchemaSync({
       {/* Diff details */}
       {result && hasDiffs && (
         <div className='space-y-3'>
-          <DiffSection title={`Only in ${result.label1} — will ADD to target`} rows={result.onlyIn1} className='text-green-700' />
-          <DiffSection title={`Only in ${result.label2} — not in source (review before dropping)`} rows={result.onlyIn2} className='text-orange-600' />
+          <DiffSection
+            title={`Only in ${result.label1}`}
+            rows={result.onlyIn1}
+            tableSummary={result.tableSummary}
+            className='text-green-700'
+          />
+          <DiffSection
+            title={`Only in ${result.label2} — not in source (review before dropping)`}
+            rows={result.onlyIn2}
+            tableSummary={result.tableSummary}
+            className='text-orange-600'
+          />
           {result.changed.length > 0 && <ChangedSection rows={result.changed} />}
         </div>
       )}
@@ -211,11 +221,14 @@ export default function SchemaSync({
   )
 }
 
-const STATUS_META: Record<string, { label: string; className: string }> = {
-  identical:       { label: '✓ Identical',      className: 'bg-green-100 text-green-800' },
-  different:       { label: '! Different',       className: 'bg-yellow-100 text-yellow-800' },
-  only_in_source:  { label: '+ Source only',     className: 'bg-blue-100 text-blue-800' },
-  only_in_target:  { label: '− Target only',     className: 'bg-orange-100 text-orange-800' },
+function statusMeta(status: string, label1: string, label2: string) {
+  switch (status) {
+    case 'identical':      return { label: '✓ Identical',           className: 'bg-green-100 text-green-800' }
+    case 'different':      return { label: '! Different',            className: 'bg-yellow-100 text-yellow-800' }
+    case 'only_in_source': return { label: `+ ${label1} only`,      className: 'bg-blue-100 text-blue-800' }
+    case 'only_in_target': return { label: `− ${label2} only`,      className: 'bg-orange-100 text-orange-800' }
+    default:               return { label: status,                   className: 'bg-gray-100 text-gray-800' }
+  }
 }
 
 function TableSummarySection({
@@ -243,7 +256,7 @@ function TableSummarySection({
       </div>
       <div className='grid grid-cols-3 gap-1 max-h-48 overflow-y-auto border rounded bg-white p-2'>
         {rows.map(r => {
-          const meta = STATUS_META[r.status]
+          const meta = statusMeta(r.status, label1, label2)
           return (
             <div key={r.table_name} className='flex items-center gap-1'>
               <span className={`text-xs font-mono flex-1 truncate ${r.status !== 'identical' ? 'font-semibold' : 'text-gray-500'}`}>
@@ -258,37 +271,59 @@ function TableSummarySection({
   )
 }
 
-function DiffSection({ title, rows, className }: { title: string; rows: DiffRow[]; className: string }) {
+function DiffSection({
+  title,
+  rows,
+  tableSummary,
+  className,
+}: {
+  title: string
+  rows: DiffRow[]
+  tableSummary: TableSummary[]
+  className: string
+}) {
   if (rows.length === 0) return null
+  const missingTables = new Set(
+    tableSummary.filter(t => t.status === 'only_in_source' || t.status === 'only_in_target').map(t => t.table_name)
+  )
   const byTable = groupByTable(rows)
+  const tableCount = Object.keys(byTable).length
   return (
     <div>
-      <p className={`text-xs font-semibold mb-1 ${className}`}>{title} ({rows.length})</p>
+      <p className={`text-xs font-semibold mb-1 ${className}`}>{title} ({tableCount} table{tableCount !== 1 ? 's' : ''})</p>
       {Object.entries(byTable).map(([table, cols]) => (
         <div key={table} className='mb-2'>
-          <p className='text-xs font-mono font-bold text-gray-700'>{table}</p>
-          <table className='w-full text-xs border border-gray-200 rounded bg-white'>
-            <thead className='bg-gray-50'>
-              <tr>
-                {['Column', 'Type', 'Nullable', 'Default', 'PK', 'Unique', 'Index'].map(h => (
-                  <th key={h} className='px-2 py-1 text-left text-gray-500 font-medium border-b'>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {cols.map((r, i) => (
-                <tr key={i} className='border-b border-gray-100'>
-                  <td className='px-2 py-1 font-mono'>{r.column_name}</td>
-                  <td className='px-2 py-1'>{r.data_type}{r.max_len ? `(${r.max_len})` : ''}</td>
-                  <td className='px-2 py-1'>{r.is_nullable === 'YES' ? '✓' : ''}</td>
-                  <td className='px-2 py-1 text-gray-400 truncate max-w-[120px]'>{r.column_default ?? ''}</td>
-                  <td className='px-2 py-1'>{r.is_pk ? '✓' : ''}</td>
-                  <td className='px-2 py-1'>{r.is_unique ? '✓' : ''}</td>
-                  <td className='px-2 py-1'>{r.has_index ? '✓' : ''}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {missingTables.has(table) ? (
+            <p className='text-xs font-mono font-bold text-gray-700'>
+              {table} <span className='font-normal text-gray-500'>— entire table missing ({cols.length} columns) — SQL will CREATE TABLE</span>
+            </p>
+          ) : (
+            <>
+              <p className='text-xs font-mono font-bold text-gray-700'>{table}</p>
+              <table className='w-full text-xs border border-gray-200 rounded bg-white'>
+                <thead className='bg-gray-50'>
+                  <tr>
+                    {['Column', 'Type', 'Nullable', 'Default', 'PK', 'Unique', 'Index'].map(h => (
+                      <th key={h} className='px-2 py-1 text-left text-gray-500 font-medium border-b'>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cols.map((r, i) => (
+                    <tr key={i} className='border-b border-gray-100'>
+                      <td className='px-2 py-1 font-mono'>{r.column_name}</td>
+                      <td className='px-2 py-1'>{r.data_type}{r.max_len ? `(${r.max_len})` : ''}</td>
+                      <td className='px-2 py-1'>{r.is_nullable === 'YES' ? '✓' : ''}</td>
+                      <td className='px-2 py-1 text-gray-400 truncate max-w-[120px]'>{r.column_default ?? ''}</td>
+                      <td className='px-2 py-1'>{r.is_pk ? '✓' : ''}</td>
+                      <td className='px-2 py-1'>{r.is_unique ? '✓' : ''}</td>
+                      <td className='px-2 py-1'>{r.has_index ? '✓' : ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       ))}
     </div>

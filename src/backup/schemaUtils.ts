@@ -146,11 +146,33 @@ function buildTypeStr(col: SchemaRow): string {
 export function generateAlterSQL(result: SchemaCompareResult): string[] {
   const sqls: string[] = []
 
+  // Tables entirely missing from target need CREATE TABLE, not ADD COLUMN
+  const missingTables = new Set(
+    result.tableSummary.filter(t => t.status === 'only_in_source').map(t => t.table_name)
+  )
+  const byTable = new Map<string, DiffRow[]>()
   for (const col of result.onlyIn1) {
-    const typeStr = buildTypeStr(col)
-    const nullStr = col.is_nullable === 'NO' ? ' NOT NULL' : ''
-    const defStr = col.column_default ? ` DEFAULT ${col.column_default}` : ''
-    sqls.push(`ALTER TABLE "${col.table_name}" ADD COLUMN IF NOT EXISTS "${col.column_name}" ${typeStr}${nullStr}${defStr};`)
+    ;(byTable.get(col.table_name) ?? byTable.set(col.table_name, []).get(col.table_name)!).push(col)
+  }
+
+  for (const [tableName, cols] of byTable) {
+    if (missingTables.has(tableName)) {
+      const colDefs = cols.map(col => {
+        const parts = [`  "${col.column_name}" ${buildTypeStr(col)}`]
+        if (col.is_pk) parts.push('PRIMARY KEY')
+        if (col.is_nullable === 'NO' && !col.is_pk) parts.push('NOT NULL')
+        if (col.column_default && !col.is_pk) parts.push(`DEFAULT ${col.column_default}`)
+        return parts.join(' ')
+      })
+      sqls.push(`CREATE TABLE IF NOT EXISTS "${tableName}" (\n${colDefs.join(',\n')}\n);`)
+    } else {
+      for (const col of cols) {
+        const typeStr = buildTypeStr(col)
+        const nullStr = col.is_nullable === 'NO' ? ' NOT NULL' : ''
+        const defStr = col.column_default ? ` DEFAULT ${col.column_default}` : ''
+        sqls.push(`ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${col.column_name}" ${typeStr}${nullStr}${defStr};`)
+      }
+    }
   }
 
   for (const c of result.changed) {
