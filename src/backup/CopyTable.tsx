@@ -139,75 +139,76 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { base
         <MyHelp items={HELP_ITEMS} title='Copy Tables Help' />
       </div>
 
-      <div className='mb-4'>
-        <div className='flex items-center gap-2'>
-          <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-          <MyInput
-            id='directory'
-            name='directory'
-            overrideClass='flex-1 text-xs'
-            type='text'
-            placeholder='C:/Users/richa/github/next-bridgeschool'
-            value={directory}
-            onChange={e => setDirectory(e.target.value)}
-          />
-        </div>
-        <p className='text-xs text-gray-400 ml-24 mt-0.5'>
-          Absolute path to the folder containing your .env.* files. Each file needs POSTGRES_URL and POSTGRES_DATABASE_LOCATION.
-        </p>
+      <div className='flex items-center gap-2 mb-4'>
+        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
+        <MyInput
+          id='directory'
+          name='directory'
+          overrideClass='flex-1 text-xs'
+          type='text'
+          placeholder='C:/Users/richa/github/next-bridgeschool'
+          value={directory}
+          onChange={e => setDirectory(e.target.value)}
+        />
+        <MyHelp items={[{
+          heading: 'Directory',
+          body: 'Absolute path to the folder that contains your .env.* files (one per database). Each file must have POSTGRES_URL and POSTGRES_DATABASE_LOCATION.',
+        }]} />
       </div>
 
       {envFiles.length === 0 ? (
         <p className='text-xs text-red-700 mb-4'>No .env.* files found in directory</p>
       ) : (
         <>
-          <div className='mb-2'>
-            <div className='flex items-center gap-2'>
-              <label className='text-xs w-20 text-right shrink-0'>Source</label>
-              <select
-                className={selectClass}
-                value={sourceEnvFile}
-                onChange={e => { setSourceEnvFile(e.target.value); setAvailableTables([]); setSelectedTables(new Set()) }}
-              >
-                {envFiles.map(e => (
-                  <option key={e.file} value={e.file}>
-                    {e.file}{e.location ? ` (${e.location})` : ''}
-                  </option>
-                ))}
-              </select>
-              {sourceLocation && (
-                <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-                  {sourceLocation}
-                </span>
-              )}
-            </div>
-            <p className='text-xs text-gray-400 ml-24 mt-0.5'>Tables are read from this database.</p>
+          <div className='flex items-center gap-2 mb-2'>
+            <label className='text-xs w-20 text-right shrink-0'>Source</label>
+            <select
+              className={selectClass}
+              value={sourceEnvFile}
+              onChange={e => { setSourceEnvFile(e.target.value); setAvailableTables([]); setSelectedTables(new Set()) }}
+            >
+              {envFiles.map(e => (
+                <option key={e.file} value={e.file}>
+                  {e.file}{e.location ? ` (${e.location})` : ''}
+                </option>
+              ))}
+            </select>
+            {sourceLocation && (
+              <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
+                {sourceLocation}
+              </span>
+            )}
+            <MyHelp items={[{
+              heading: 'Source',
+              body: 'Tables are read from this database. Selecting a new source clears the table list.',
+            }]} />
           </div>
 
-          <div className='mb-2'>
-            <div className='flex items-center gap-2'>
-              <label className='text-xs w-20 text-right shrink-0'>Target</label>
-              <select
-                className={selectClass}
-                value={targetEnvFile}
-                onChange={e => setTargetEnvFile(e.target.value)}
-              >
-                {envFiles.map(e => (
-                  <option key={e.file} value={e.file}>
-                    {e.file}{e.location ? ` (${e.location})` : ''}
-                  </option>
-                ))}
-              </select>
-              {targetLocation && (
-                <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
-                  {targetLocation}
-                </span>
-              )}
-              {targetLocation && (
-                <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
-              )}
-            </div>
-            <p className='text-xs text-gray-400 ml-24 mt-0.5'>Selected tables will be truncated and replaced with data from source.</p>
+          <div className='flex items-center gap-2 mb-2'>
+            <label className='text-xs w-20 text-right shrink-0'>Target</label>
+            <select
+              className={selectClass}
+              value={targetEnvFile}
+              onChange={e => setTargetEnvFile(e.target.value)}
+            >
+              {envFiles.map(e => (
+                <option key={e.file} value={e.file}>
+                  {e.file}{e.location ? ` (${e.location})` : ''}
+                </option>
+              ))}
+            </select>
+            {targetLocation && (
+              <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
+                {targetLocation}
+              </span>
+            )}
+            {targetLocation && (
+              <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
+            )}
+            <MyHelp items={[{
+              heading: 'Target',
+              body: 'Selected tables will be truncated and replaced with data from the source. This cannot be undone.',
+            }]} />
           </div>
 
           <div className='flex items-center gap-2 mt-3 mb-4'>
