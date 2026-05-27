@@ -21,6 +21,7 @@ function execPgDump(args: string): string {
 
 export type { SchemaCompareResult, DiffRow, ChangeRow, TableSummary, TableStatus } from './schemaUtils'
 
+/** Connect to two databases and return a full schema diff including a per-table summary. */
 export async function compareSchemas(env1: string, env2: string): Promise<SchemaCompareResult> {
   const c1 = await createClient(env1)
   const c2 = await createClient(env2)
@@ -102,6 +103,7 @@ function parsePgDumpByTable(raw: string): TableDDL[] {
     .map(([table_name, sqls]) => ({ table_name, sql: sqls.join('\n\n') }))
 }
 
+/** Run pg_dump --schema-only against envFile's database and return per-table CREATE TABLE + index DDL. */
 export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
   const url = readEnvVar(envFile, 'POSTGRES_URL')
   if (!url) throw new Error('POSTGRES_URL not found in env file')
@@ -123,6 +125,7 @@ export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
   return result
 }
 
+/** Execute SQL statements (split by ';') against envFile's database; returns ok count and per-statement errors. */
 export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
   const client = await createClient(envFile)
   let ok = 0

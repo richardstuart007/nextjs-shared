@@ -37,6 +37,7 @@ export type SchemaCompareResult = {
   tableSummary: TableSummary[]
 }
 
+/** Query all columns in the public schema with PK, unique, and index flags; caller must close the client. */
 export async function fetchSchema(client: Client): Promise<SchemaRow[]> {
   const result = await client.query<SchemaRow>(`
     SELECT
@@ -79,6 +80,7 @@ export async function fetchSchema(client: Client): Promise<SchemaRow[]> {
   return result.rows
 }
 
+/** Compare two SchemaRow arrays and return columns only in each side, changed columns, and a per-table status summary. */
 export function diffSchemas(
   rows1: SchemaRow[],
   rows2: SchemaRow[],
@@ -143,6 +145,7 @@ function buildTypeStr(col: SchemaRow): string {
   return col.data_type.toUpperCase()
 }
 
+/** Generate ALTER TABLE / CREATE TABLE SQL to bring the target in line with the source; identity-column defaults are skipped with a comment. */
 export function generateAlterSQL(result: SchemaCompareResult): string[] {
   const sqls: string[] = []
 

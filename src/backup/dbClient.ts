@@ -1,8 +1,6 @@
 import { Client } from 'pg'
 import { readFileSync } from 'fs'
-//--------------------------------------------------------------------------
-//  Read a single variable from a .env file on disk
-//--------------------------------------------------------------------------
+/** Read a named variable from a .env file; returns '' if the file is missing or the variable is not found. */
 export function readEnvVar(envFile: string, varName: string): string {
   try {
     const content = readFileSync(envFile, 'utf8')
@@ -12,24 +10,15 @@ export function readEnvVar(envFile: string, varName: string): string {
     return ''
   }
 }
-//--------------------------------------------------------------------------
-//  Read POSTGRES_URL from a .env file
-//--------------------------------------------------------------------------
+/** Shorthand for readEnvVar(envFile, 'POSTGRES_URL'). */
 export function read_url(envFile: string): string {
   return readEnvVar(envFile, 'POSTGRES_URL')
 }
-//--------------------------------------------------------------------------
-//  Read POSTGRES_DATABASE_LOCATION from a .env file
-//--------------------------------------------------------------------------
+/** Shorthand for readEnvVar(envFile, 'POSTGRES_DATABASE_LOCATION'); used as the display label in UI. */
 export function read_location(envFile: string): string {
   return readEnvVar(envFile, 'POSTGRES_DATABASE_LOCATION')
 }
-//--------------------------------------------------------------------------
-//  Create and connect a pg.Client from a .env file path or the environment.
-//  If envFile is provided, POSTGRES_URL is read from that file.
-//  Otherwise, process.env.POSTGRES_URL is used.
-//  Caller is responsible for calling client.end() when done.
-//--------------------------------------------------------------------------
+/** Create and connect a pg.Client; reads POSTGRES_URL from envFile if given, else from process.env. Caller must call client.end(). */
 export async function createClient(envFile?: string): Promise<Client> {
   const connectionString = envFile
     ? readEnvVar(envFile, 'POSTGRES_URL')

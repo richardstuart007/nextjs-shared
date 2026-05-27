@@ -7,6 +7,27 @@ import type { EnvFile } from './copyTables'
 import { compareSchemas, applySQL, generateCreateSQL } from './schemaSync'
 import { generateAlterSQL } from './schemaUtils'
 import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary, TableDDL } from './schemaSync'
+import { MyHelp } from '../components/MyHelp'
+import type { HelpItem } from '../components/MyHelp'
+
+const HELP_ITEMS: HelpItem[] = [
+  {
+    heading: 'Compare Schemas',
+    body: 'Select a source and target .env file then click Compare. Source is the reference; target will be updated to match.',
+  },
+  {
+    heading: 'Generated SQL',
+    body: 'ALTER TABLE / CREATE TABLE statements that will bring the target in line with the source. Review and edit before applying.',
+  },
+  {
+    heading: 'Apply SQL',
+    body: 'Executes the SQL against the target database. This is irreversible — each statement is run independently and errors are reported per-statement.',
+  },
+  {
+    heading: 'Create SQL (Generate from source)',
+    body: 'Runs pg_dump --schema-only against the source database and shows full CREATE TABLE + index DDL per table. Use this to recreate an empty environment from scratch.',
+  },
+]
 
 export default function SchemaSync({
   baseDir = '',
@@ -111,7 +132,10 @@ export default function SchemaSync({
 
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-4xl space-y-4'>
-      <h2 className='text-sm font-bold'>Schema Compare &amp; Sync</h2>
+      <div className='flex items-center gap-2'>
+        <h2 className='text-sm font-bold'>Schema Compare &amp; Sync</h2>
+        <MyHelp items={HELP_ITEMS} title='Schema Sync Help' />
+      </div>
 
       {/* Directory */}
       <div className='flex items-center gap-2'>

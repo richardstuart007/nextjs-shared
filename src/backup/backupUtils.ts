@@ -6,9 +6,7 @@ import csv from 'csv-parser'
 import readline from 'readline'
 import { sql } from '../tables/db'
 import { write_Logging } from '../tables/tableGeneric/write_logging'
-//--------------------------------------------------------------------------
-//  Checks if a directory exists on the system
-//--------------------------------------------------------------------------
+/** Return true if dirPath exists and is a directory. */
 export async function directory_Exists(dirPath: string, caller: string = ''): Promise<boolean> {
   const functionName = 'directory_Exists'
   try {
@@ -25,9 +23,7 @@ export async function directory_Exists(dirPath: string, caller: string = ''): Pr
     return false
   }
 }
-//--------------------------------------------------------------------------
-//  Creates a directory on the system
-//--------------------------------------------------------------------------
+/** Create dirPath (recursive); returns true if a new directory was created, false if it already existed. */
 export async function directory_create(dirPath: string, caller: string = ''): Promise<boolean> {
   const functionName = 'directory_create'
   try {
@@ -48,9 +44,7 @@ export async function directory_create(dirPath: string, caller: string = ''): Pr
     return false
   }
 }
-//--------------------------------------------------------------------------
-//  Deletes a directory from the system
-//--------------------------------------------------------------------------
+/** Recursively delete dirPath; returns true if it existed and was removed. */
 export async function directory_delete(dirPath: string, caller: string = ''): Promise<boolean> {
   const functionName = 'directory_delete'
   try {
@@ -70,9 +64,7 @@ export async function directory_delete(dirPath: string, caller: string = ''): Pr
     return false
   }
 }
-//--------------------------------------------------------------------------
-//  Lists files in a directory
-//--------------------------------------------------------------------------
+/** Return an array of file names (not directories) inside dirPath. */
 export async function directory_list(dirPath: string, caller: string = ''): Promise<string[]> {
   const functionName = 'directory_list'
   try {
@@ -100,9 +92,7 @@ export async function directory_list(dirPath: string, caller: string = ''): Prom
     return []
   }
 }
-//--------------------------------------------------------------------------
-//  Checks if a file exists on the system
-//--------------------------------------------------------------------------
+/** Return true if filePath exists and is a file (not a directory). */
 export async function file_exists(filePath: string, caller: string = ''): Promise<boolean> {
   const functionName = 'file_exists'
   try {
@@ -119,9 +109,7 @@ export async function file_exists(filePath: string, caller: string = ''): Promis
     return false
   }
 }
-//--------------------------------------------------------------------------
-//  Returns the number of records in a JSON file (array)
-//--------------------------------------------------------------------------
+/** Return the number of elements in a JSON array file; returns 0 if the file is missing or not an array. */
 export async function file_count_json(filePath: string, caller: string = ''): Promise<number> {
   const functionName = 'file_count_json'
   try {
@@ -140,9 +128,7 @@ export async function file_count_json(filePath: string, caller: string = ''): Pr
     return 0
   }
 }
-//--------------------------------------------------------------------------
-//  Deletes a file from the system
-//--------------------------------------------------------------------------
+/** Delete filePath if it exists; returns true if a file was removed. */
 export async function file_delete(filePath: string, caller: string = ''): Promise<boolean> {
   const functionName = 'file_delete'
   try {
@@ -258,14 +244,12 @@ async function processCsv(
     })
   }
 }
-//--------------------------------------------------------------------------
-//  Downloads data from the PostgreSQL database and saves it as a JSON file
-//--------------------------------------------------------------------------
 interface Props {
   table: string
   dirPath: string
   file_out: string
 }
+/** Export a table to a JSON file in dirPath; returns true on success. Uses json_agg so data is fetched in one query. */
 export async function table_write_toJSON(Props: Props, caller: string = ''): Promise<boolean> {
   const functionName = 'table_write_toJSON'
   const { table, dirPath, file_out } = Props
@@ -349,9 +333,7 @@ function processJsonAgg(
     return []
   }
 }
-//--------------------------------------------------------------------------
-//  Uploads the content of a JSON file to the PostgreSQL database
-//--------------------------------------------------------------------------
+/** Insert rows from a JSON array file into tableName in batches of 100; returns the total rows inserted. */
 export async function table_write_fromJSON(
   filePath: string,
   tableName: string,

@@ -5,6 +5,27 @@ import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import { read_url, get_tables, copy_tables, list_env_files } from './copyTables'
 import type { CopyLog, EnvFile } from './copyTables'
+import { MyHelp } from '../components/MyHelp'
+import type { HelpItem } from '../components/MyHelp'
+
+const HELP_ITEMS: HelpItem[] = [
+  {
+    heading: 'Load Tables',
+    body: 'Fetches the list of user tables from the source database. Select which tables to copy using the checkboxes.',
+  },
+  {
+    heading: 'Copy Tables',
+    body: 'Each selected table is copied using pg_dump / psql. Target rows are deleted before copying — all existing data in the selected tables will be replaced.',
+  },
+  {
+    heading: 'FK constraints',
+    body: 'Foreign-key constraints are bypassed during the copy (session_replication_role = replica). They are re-enabled automatically when the session ends.',
+  },
+  {
+    heading: 'Sequence repair',
+    body: 'After each table copy the sequence (auto-increment) is reset to MAX(pk) so future inserts do not collide with the copied rows.',
+  },
+]
 
 export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { baseDir?: string; caller?: string }) {
   const [directory, setDirectory] = useState(baseDir)
@@ -113,7 +134,10 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable' }: { base
 
   return (
     <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
-      <h2 className='text-sm font-bold mb-4'>Cross-Database Table Copy (pg_dump / psql)</h2>
+      <div className='flex items-center gap-2 mb-4'>
+        <h2 className='text-sm font-bold'>Cross-Database Table Copy (pg_dump / psql)</h2>
+        <MyHelp items={HELP_ITEMS} title='Copy Tables Help' />
+      </div>
 
       <div className='flex items-center gap-2 mb-4'>
         <label className='text-xs w-20 text-right shrink-0'>Directory</label>

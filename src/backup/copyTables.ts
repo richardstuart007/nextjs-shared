@@ -48,11 +48,9 @@ export async function read_url(envFile: string): Promise<string> {
 export async function read_location(envFile: string): Promise<string> {
   return readEnvVar(envFile, 'POSTGRES_DATABASE_LOCATION')
 }
-//--------------------------------------------------------------------------
-//  List .env.* files in a directory with their POSTGRES_DATABASE_LOCATION
-//--------------------------------------------------------------------------
 export type EnvFile = { file: string; location: string }
 
+/** List all .env.* files in dir sorted alphabetically, each paired with its POSTGRES_DATABASE_LOCATION label. */
 export async function list_env_files(dir: string): Promise<EnvFile[]> {
   try {
     const entries = readdirSync(dir)
@@ -102,9 +100,7 @@ function parsePsqlOutput(output: string): CopyLog[] {
 
   return logs
 }
-//--------------------------------------------------------------------------
-//  Get list of user tables from a Postgres database
-//--------------------------------------------------------------------------
+/** Return all user table names in the public schema of the given database URL; returns [] on error. */
 export async function get_tables({
   url,
   caller = ''
@@ -129,10 +125,7 @@ export async function get_tables({
     return []
   }
 }
-//--------------------------------------------------------------------------
-//  Copy a selection of tables from one Postgres database to another
-//  Processes one table at a time so every log entry includes the table name
-//--------------------------------------------------------------------------
+/** Copy selected tables from source to target using pg_dump/psql; repairs sequences after each table. Target rows are deleted before copying. */
 export async function copy_tables({
   sourceUrl,
   targetUrl,
