@@ -40,23 +40,74 @@ export type ApplyResult = {
   errors: Array<{ sql: string; error: string }>
 }
 
-export async function generateCreateSQL(envFile: string): Promise<string> {
+export type TableDDL = {
+  table_name: string
+  sql: string
+}
+
+function parsePgDumpByTable(raw: string): TableDDL[] {
+  const tableMap = new Map<string, string[]>()
+
+  // First pass: build seqname → tablename map from OWNED BY statements
+  const seqToTable = new Map<string, string>()
+  const ownedRe = /ALTER SEQUENCE public\.(\S+)\s+OWNED BY public\.(\w+)\./g
+  let om: RegExpExecArray | null
+  while ((om = ownedRe.exec(raw)) !== null) seqToTable.set(om[1], om[2])
+
+  // Split into blocks on the section separator pattern
+  const blocks = raw.split(/\n--\n(?=-- Name:)/)
+
+  for (const block of blocks) {
+    const headerMatch = block.match(/^-- Name: ([^;]+); Type: ([^;]+);/)
+    if (!headerMatch) continue
+    const name = headerMatch[1].trim()
+    const type = headerMatch[2].trim()
+
+    // Skip SEQUENCE OWNED BY — already used above
+    if (type === 'SEQUENCE OWNED BY') continue
+
+    // Extract SQL: everything after the leading comment lines
+    const lines = block.split('\n')
+    let sqlStart = 0
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].startsWith('--') && lines[i].trim() !== '') { sqlStart = i; break }
+    }
+    const sql = lines.slice(sqlStart).join('\n').trim()
+    if (!sql) continue
+
+    let tableName: string | null = null
+    if (type === 'TABLE') {
+      tableName = name
+    } else if (type === 'CONSTRAINT' || type === 'DEFAULT') {
+      tableName = name.split(' ')[0]
+    } else if (type === 'SEQUENCE') {
+      tableName = seqToTable.get(name) ?? null
+      if (!tableName) {
+        const m2 = sql.match(/ALTER TABLE public\.(\w+)/)
+        if (m2) tableName = m2[1]
+      }
+    } else if (type === 'INDEX') {
+      const m2 = sql.match(/ON public\.(\w+)/)
+      if (m2) tableName = m2[1]
+    }
+
+    if (tableName) {
+      if (!tableMap.has(tableName)) tableMap.set(tableName, [])
+      tableMap.get(tableName)!.push(sql)
+    }
+  }
+
+  return [...tableMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([table_name, sqls]) => ({ table_name, sql: sqls.join('\n\n') }))
+}
+
+export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
   const url = readEnvVar(envFile, 'POSTGRES_URL')
   if (!url) throw new Error('POSTGRES_URL not found in env file')
   const cleanUrl = url.replace(/[&?]timezone=[^&]*/g, '')
   const raw = execPgDump(`--schema-only --no-owner --no-acl "${cleanUrl}"`)
-
-  // Strip pg_dump boilerplate; keep DDL and section headers
-  const lines = raw.split('\n').filter(line => {
-    const t = line.trim()
-    if (t.startsWith('SET '))                    return false
-    if (t.startsWith('SELECT pg_catalog'))       return false
-    if (t.startsWith('-- Dumped'))               return false
-    if (t.startsWith('-- PostgreSQL database'))  return false
-    return true
-  })
-
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  return parsePgDumpByTable(raw)
 }
 
 export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {

@@ -6,7 +6,7 @@ import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
 import { compareSchemas, applySQL, generateCreateSQL } from './schemaSync'
 import { generateAlterSQL } from './schemaUtils'
-import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSync'
+import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary, TableDDL } from './schemaSync'
 
 export default function SchemaSync({
   baseDir = '',
@@ -24,7 +24,8 @@ export default function SchemaSync({
   const [applyResult, setApplyResult]   = useState<{ ok: number; errors: Array<{ sql: string; error: string }> } | null>(null)
   const [message, setMessage]           = useState('')
   const [running, setRunning]           = useState(false)
-  const [createSql, setCreateSql]       = useState('')
+  const [tableDDLs, setTableDDLs]       = useState<TableDDL[]>([])
+  const [selectedTable, setSelectedTable] = useState('')
   const [createMsg, setCreateMsg]       = useState('')
 
   function fullPath(filename: string) {
@@ -86,11 +87,13 @@ export default function SchemaSync({
   async function handleGenerateCreateSQL() {
     if (!sourceEnv) return
     setRunning(true)
-    setCreateSql('')
+    setTableDDLs([])
+    setSelectedTable('')
     setCreateMsg('Generating CREATE SQL from source...')
     try {
-      const sql = await generateCreateSQL(fullPath(sourceEnv))
-      setCreateSql(sql)
+      const ddls = await generateCreateSQL(fullPath(sourceEnv))
+      setTableDDLs(ddls)
+      setSelectedTable(ddls[0]?.table_name ?? '')
       setCreateMsg('')
     } catch (error) {
       setCreateMsg(`Error: ${(error as Error).message}`)
@@ -235,7 +238,7 @@ export default function SchemaSync({
         </div>
       )}
 
-      {/* CREATE TABLE + indexes SQL */}
+      {/* CREATE TABLE + indexes SQL — master/detail */}
       <div className='border-t pt-3 space-y-2'>
         <div className='flex items-center gap-3'>
           <p className='text-xs font-semibold'>Create SQL</p>
@@ -246,15 +249,34 @@ export default function SchemaSync({
           >
             Generate from {sourceLabel || 'source'}
           </MyButton>
-          <span className='text-xs text-gray-400'>CREATE TABLE + indexes for all tables — use to recreate an environment</span>
+          <span className='text-xs text-gray-400'>CREATE TABLE + indexes — use to recreate an environment</span>
         </div>
         {createMsg && <p className='text-xs text-red-700'>{createMsg}</p>}
-        {createSql && (
-          <textarea
-            className='w-full h-64 text-xs font-mono border border-gray-300 rounded p-2 bg-white focus:outline-none focus:border-blue-500'
-            value={createSql}
-            onChange={e => setCreateSql(e.target.value)}
-          />
+        {tableDDLs.length > 0 && (
+          <div className='flex gap-2 border rounded bg-white overflow-hidden' style={{ height: '24rem' }}>
+            {/* Left — table list */}
+            <div className='w-48 shrink-0 border-r overflow-y-auto'>
+              {tableDDLs.map(t => (
+                <button
+                  key={t.table_name}
+                  onClick={() => setSelectedTable(t.table_name)}
+                  className={`w-full text-left px-2 py-1 text-xs font-mono truncate border-b border-gray-100 hover:bg-blue-50 ${
+                    selectedTable === t.table_name ? 'bg-blue-100 font-semibold text-blue-800' : 'text-gray-700'
+                  }`}
+                >
+                  {t.table_name}
+                </button>
+              ))}
+            </div>
+            {/* Right — SQL for selected table */}
+            <div className='flex-1 overflow-auto p-2'>
+              {selectedTable && (
+                <pre className='text-xs font-mono whitespace-pre-wrap text-gray-800'>
+                  {tableDDLs.find(t => t.table_name === selectedTable)?.sql ?? ''}
+                </pre>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
