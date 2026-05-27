@@ -21,12 +21,20 @@ export type ChangeRow = {
   target: SchemaRow
 }
 
+export type TableStatus = 'identical' | 'different' | 'only_in_source' | 'only_in_target'
+
+export type TableSummary = {
+  table_name: string
+  status: TableStatus
+}
+
 export type SchemaCompareResult = {
   label1: string
   label2: string
   onlyIn1: DiffRow[]
   onlyIn2: DiffRow[]
   changed: ChangeRow[]
+  tableSummary: TableSummary[]
 }
 
 export async function fetchSchema(client: Client): Promise<SchemaRow[]> {
@@ -103,7 +111,29 @@ export function diffSchemas(
     }
   }
 
-  return { onlyIn1, onlyIn2, changed }
+  // Build per-table summary across all tables seen in either DB
+  const tables1 = [...new Set(rows1.map(r => r.table_name))].sort()
+  const tables2 = new Set(rows2.map(r => r.table_name))
+  const diffTables = new Set([
+    ...onlyIn1.map(r => r.table_name),
+    ...onlyIn2.map(r => r.table_name),
+    ...changed.map(r => r.table_name),
+  ])
+  const allTables = [...new Set([...tables1, ...rows2.map(r => r.table_name)])].sort()
+
+  const tableSummary: TableSummary[] = allTables.map(t => {
+    const inSource = tables1.includes(t)
+    const inTarget = tables2.has(t)
+    let status: TableStatus
+    if (inSource && inTarget) {
+      status = diffTables.has(t) ? 'different' : 'identical'
+    } else {
+      status = inSource ? 'only_in_source' : 'only_in_target'
+    }
+    return { table_name: t, status }
+  })
+
+  return { onlyIn1, onlyIn2, changed, tableSummary }
 }
 
 function buildTypeStr(col: SchemaRow): string {

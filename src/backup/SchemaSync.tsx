@@ -5,7 +5,7 @@ import { MyButton } from '../components/MyButton'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
 import { compareSchemas, applySQL, generateAlterSQL } from './schemaSync'
-import type { SchemaCompareResult, ChangeRow, DiffRow } from './schemaSync'
+import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSync'
 
 export default function SchemaSync({
   baseDir = '',
@@ -85,13 +85,6 @@ export default function SchemaSync({
   const targetLabel = envFiles.find(e => e.file === targetEnv)?.location ?? ''
   const sameEnv = sourceLabel && targetLabel && sourceLabel === targetLabel
   const hasDiffs = result && (result.onlyIn1.length + result.onlyIn2.length + result.changed.length) > 0
-  const affectedTables = result
-    ? [...new Set([
-        ...result.onlyIn1.map(r => r.table_name),
-        ...result.onlyIn2.map(r => r.table_name),
-        ...result.changed.map(r => r.table_name),
-      ])].sort()
-    : []
 
   const selectClass = 'py-1 px-2 w-72 text-sm border border-blue-500 rounded-md focus:outline-none'
 
@@ -160,7 +153,10 @@ export default function SchemaSync({
 
       {message && <p className='text-xs text-red-700'>{message}</p>}
 
-      {/* Diff tables */}
+      {/* Table summary */}
+      {result && <TableSummarySection rows={result.tableSummary} label1={result.label1} label2={result.label2} />}
+
+      {/* Diff details */}
       {result && hasDiffs && (
         <div className='space-y-3'>
           <DiffSection title={`Only in ${result.label1} — will ADD to target`} rows={result.onlyIn1} className='text-green-700' />
@@ -204,18 +200,59 @@ export default function SchemaSync({
         </div>
       )}
 
-      {/* Affected tables — hand off to CopyTable */}
-      {affectedTables.length > 0 && (
-        <div className='border-t pt-3 space-y-1'>
-          <p className='text-xs font-semibold'>Affected tables — copy data after applying SQL:</p>
-          <div className='flex flex-wrap gap-1'>
-            {affectedTables.map(t => (
-              <span key={t} className='text-xs font-mono bg-gray-200 px-2 py-0.5 rounded'>{t}</span>
-            ))}
-          </div>
-          <p className='text-xs text-gray-500'>Use CopyTable to copy data for these tables.</p>
+      {/* Copy reminder for affected tables */}
+      {hasDiffs && (
+        <div className='border-t pt-3'>
+          <p className='text-xs text-gray-500'>After applying SQL, use CopyTable to copy data for the affected tables.</p>
         </div>
       )}
+    </div>
+  )
+}
+
+const STATUS_META: Record<string, { label: string; className: string }> = {
+  identical:       { label: '✓ Identical',      className: 'bg-green-100 text-green-800' },
+  different:       { label: '! Different',       className: 'bg-yellow-100 text-yellow-800' },
+  only_in_source:  { label: '+ Source only',     className: 'bg-blue-100 text-blue-800' },
+  only_in_target:  { label: '− Target only',     className: 'bg-orange-100 text-orange-800' },
+}
+
+function TableSummarySection({
+  rows,
+  label1,
+  label2,
+}: {
+  rows: TableSummary[]
+  label1: string
+  label2: string
+}) {
+  if (rows.length === 0) return null
+  const counts = rows.reduce<Record<string, number>>((acc, r) => {
+    acc[r.status] = (acc[r.status] ?? 0) + 1
+    return acc
+  }, {})
+  return (
+    <div className='space-y-2'>
+      <div className='flex items-center gap-3'>
+        <p className='text-xs font-semibold'>Table Summary ({rows.length} tables)</p>
+        <span className='text-xs text-green-700'>{counts.identical ?? 0} identical</span>
+        {(counts.different ?? 0) > 0 && <span className='text-xs text-yellow-700'>{counts.different} different</span>}
+        {(counts.only_in_source ?? 0) > 0 && <span className='text-xs text-blue-700'>{counts.only_in_source} only in {label1}</span>}
+        {(counts.only_in_target ?? 0) > 0 && <span className='text-xs text-orange-700'>{counts.only_in_target} only in {label2}</span>}
+      </div>
+      <div className='grid grid-cols-3 gap-1 max-h-48 overflow-y-auto border rounded bg-white p-2'>
+        {rows.map(r => {
+          const meta = STATUS_META[r.status]
+          return (
+            <div key={r.table_name} className='flex items-center gap-1'>
+              <span className={`text-xs font-mono flex-1 truncate ${r.status !== 'identical' ? 'font-semibold' : 'text-gray-500'}`}>
+                {r.table_name}
+              </span>
+              <span className={`text-xs px-1 rounded shrink-0 ${meta.className}`}>{meta.label}</span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
