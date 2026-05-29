@@ -34,7 +34,7 @@ const HELP_ITEMS: HelpItem[] = [
 
 export default function SchemaSync({
   baseDir = '',
-  caller = 'SchemaSync',
+  caller: _caller = 'SchemaSync',
   title = '',
 }: {
   baseDir?: string
