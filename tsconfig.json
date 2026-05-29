@@ -22,7 +22,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true
+    "incremental": true,
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src/**/*.ts",
