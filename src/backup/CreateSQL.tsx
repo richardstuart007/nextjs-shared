@@ -8,8 +8,8 @@ import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
-import { generateCreateSQL } from './schemaSync'
-import type { TableDDL } from './schemaSync'
+import { generateCreateSQL } from './schemaSyncServer'
+import type { TableDDL } from './schemaSyncServer'
 
 const HELP_ITEMS: HelpItem[] = [
   {

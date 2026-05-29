@@ -59,7 +59,7 @@
     "./DatabaseTools": "./src/backup/DatabaseTools.tsx",
     "./CopyTable": "./src/backup/CopyTable.tsx",
     "./SchemaSync": "./src/backup/SchemaSync.tsx",
-    "./schemaSync": "./src/backup/schemaSync.ts",
+    "./schemaSync": "./src/backup/schemaSyncServer.ts",
     "./routes/schema-compare": "./src/backup/routes/schema-compare/route.ts",
     "./routes/copy": "./src/backup/routes/copy/route.ts"
   },

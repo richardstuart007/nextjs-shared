@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import BackupTable from './table'
-import SchemaSync from './SchemaSync.tsx'
-import CopyTable from './CopyTable.tsx'
-import CreateSQL from './CreateSQL.tsx'
+import SchemaSync from './SchemaSync'
+import CopyTable from './CopyTable'
+import CreateSQL from './CreateSQL'
 
 type Tab = 'backup' | 'schema' | 'copy' | 'createsql'
 
