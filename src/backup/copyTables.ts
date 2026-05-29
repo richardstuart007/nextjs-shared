@@ -30,7 +30,7 @@ function spawnPg(args: string[]): { stdout: string; stderr: string } {
 //--------------------------------------------------------------------------
 //  Types
 //--------------------------------------------------------------------------
-export type CopyEvent = 'DROP' | 'CREATE_TABLE' | 'COPY' | 'INDEX' | 'SEQUENCE' | 'ERROR'
+export type CopyEvent = 'DROP' | 'CREATE_TABLE' | 'COPY' | 'INDEX' | 'SEQUENCE' | 'ERROR' | 'BACKUP'
 
 export type CopyLog = {
   event: CopyEvent
@@ -252,4 +252,59 @@ END $$;
   }
 
   return { success: !hasError, logs: allLogs }
+}
+//--------------------------------------------------------------------------
+//  backup_tables — snapshot target tables in-place before overwriting them
+//--------------------------------------------------------------------------
+export type BackupResult = {
+  conflicts: string[]
+  logs: CopyLog[]
+}
+
+/** Create backup copies of target tables as "{backupName}" using CREATE TABLE AS SELECT.
+ *  If any backup name already exists, returns conflicts and creates nothing. */
+export async function backup_tables({
+  targetUrl,
+  tables,
+  caller = '',
+}: {
+  targetUrl: string
+  tables: { table: string; backupName: string }[]
+  caller?: string
+}): Promise<BackupResult> {
+  const functionName = 'backup_tables'
+  const cleanTarget = stripUnsupportedParams(targetUrl)
+  const backupNames = tables.map(t => t.backupName)
+
+  // Check for existing backup tables in one query
+  const namesList = backupNames.map(n => `'${n}'`).join(',')
+  const { stdout: checkOut } = spawnPg([
+    cleanTarget, '-t', '-c',
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN (${namesList})`
+  ])
+  const existing = checkOut.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('('))
+
+  if (existing.length > 0) {
+    return { conflicts: existing, logs: [] }
+  }
+
+  // Create each backup table
+  const logs: CopyLog[] = []
+  for (const { table, backupName } of tables) {
+    const { stderr } = spawnPg([
+      cleanTarget, '-c',
+      `CREATE TABLE "${backupName}" AS SELECT * FROM "${table}"`
+    ])
+    if (stderr && /error/i.test(stderr)) {
+      const detail = `${backupName} — ${stderr.trim()}`
+      logs.push({ event: 'ERROR', detail })
+      write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: detail, lg_severity: 'E' })
+    } else {
+      const detail = `${backupName} — created from ${table}`
+      logs.push({ event: 'BACKUP', detail })
+      write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: detail, lg_severity: 'I' })
+    }
+  }
+
+  return { conflicts: [], logs }
 }

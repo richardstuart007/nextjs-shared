@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import MySelect from '../components/MySelect'
-import { read_url, get_tables, copy_tables, list_env_files } from './copyTables'
+import { read_url, get_tables, copy_tables, backup_tables, list_env_files } from './copyTables'
 import type { CopyLog, EnvFile } from './copyTables'
 import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
@@ -38,6 +38,9 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
   const [logs, setLogs] = useState<CopyLog[]>([])
   const [message, setMessage] = useState('')
   const [running, setRunning] = useState(false)
+  const [backupPrefix, setBackupPrefix] = useState('')
+  const [backupLogs, setBackupLogs] = useState<CopyLog[]>([])
+  const [backupConflicts, setBackupConflicts] = useState<string[]>([])
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -56,6 +59,8 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
       setAvailableTables([])
       setSelectedTables(new Set())
       setLogs([])
+      setBackupLogs([])
+      setBackupConflicts([])
       setMessage('')
     })
   }, [directory])
@@ -63,6 +68,12 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
   const sourceLocation = locationFor(sourceEnvFile)
   const targetLocation = locationFor(targetEnvFile)
   const sameEnv = sourceLocation && targetLocation && sourceLocation === targetLocation
+
+  useEffect(() => {
+    setBackupPrefix(targetLocation)
+    setBackupLogs([])
+    setBackupConflicts([])
+  }, [targetLocation])
 
   async function handleLoadTables() {
     setMessage('Loading tables...')
@@ -107,6 +118,34 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
       })
       setLogs(result.logs)
       setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors')
+    } catch (error) {
+      setMessage(`Error: ${(error as Error).message}`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  async function handleBackup() {
+    setMessage('Creating backups...')
+    setRunning(true)
+    setBackupLogs([])
+    setBackupConflicts([])
+    try {
+      const targetUrl = await read_url(fullPath(targetEnvFile))
+      if (!targetUrl) { setMessage('Could not read POSTGRES_URL from target env file'); return }
+      const tables = Array.from(selectedTables).map(table => ({
+        table,
+        backupName: `${backupPrefix}_${table}`,
+      }))
+      const result = await backup_tables({ targetUrl, tables, caller })
+      if (result.conflicts.length > 0) {
+        setBackupConflicts(result.conflicts)
+        setMessage('Backup blocked — resolve conflicts before retrying')
+      } else {
+        setBackupLogs(result.logs)
+        const ok = result.logs.filter(l => l.event === 'BACKUP').length
+        setMessage(`Backup completed: ${ok} table${ok !== 1 ? 's' : ''} backed up in ${targetLocation}`)
+      }
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
     } finally {
@@ -255,6 +294,54 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
               </label>
             ))}
           </div>
+
+          {/* Backup section */}
+          {selectedTables.size > 0 && (
+            <div className='mt-3 pt-3 border-t space-y-2'>
+              <div className='flex items-center gap-2'>
+                <label className='text-xs w-28 text-right shrink-0'>Backup prefix</label>
+                <MyInput
+                  overrideClass='w-32 font-mono text-xs'
+                  type='text'
+                  value={backupPrefix}
+                  onChange={e => { setBackupPrefix(e.target.value); setBackupConflicts([]); setBackupLogs([]) }}
+                  placeholder={targetLocation || 'prefix'}
+                />
+                <MyButton
+                  onClick={handleBackup}
+                  overrideClass='h-6 px-2 py-2 bg-amber-500 hover:bg-amber-600'
+                  disabled={!backupPrefix.trim() || selectedTables.size === 0 || running}
+                >
+                  Backup {selectedTables.size} Tables
+                </MyButton>
+              </div>
+              {backupPrefix.trim() && selectedTables.size > 0 && (
+                <p className='text-xs text-gray-400 ml-32'>
+                  {Array.from(selectedTables).slice(0, 3).map(t => `${backupPrefix}_${t}`).join(', ')}
+                  {selectedTables.size > 3 ? ', …' : ''}
+                </p>
+              )}
+              {backupConflicts.length > 0 && (
+                <p className='text-xs text-red-700 ml-32'>
+                  Already exist — drop before retrying: {backupConflicts.join(', ')}
+                </p>
+              )}
+              {backupLogs.length > 0 && (
+                <div className='ml-32 max-h-32 overflow-y-auto border rounded bg-white'>
+                  <table className='min-w-full text-xs'>
+                    <tbody>
+                      {backupLogs.map((log, i) => (
+                        <tr key={i} className={log.event === 'ERROR' ? 'text-red-600' : 'text-green-700'}>
+                          <td className='px-2 py-0.5'>{log.event}</td>
+                          <td className='px-2 py-0.5'>{log.detail}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

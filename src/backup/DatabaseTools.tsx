@@ -4,18 +4,14 @@ import { useState } from 'react'
 import BackupTable from './table'
 import SchemaSync from './SchemaSync.tsx'
 import CopyTable from './CopyTable.tsx'
-import DataSync from './DataSync.tsx'
-import DataSnapshot from './DataSnapshot.tsx'
 import CreateSQL from './CreateSQL.tsx'
 
-type Tab = 'backup' | 'schema' | 'copy' | 'datasync' | 'snapshot' | 'createsql'
+type Tab = 'backup' | 'schema' | 'copy' | 'createsql'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'backup',    label: 'Backup' },
   { id: 'schema',    label: 'Schema Sync' },
   { id: 'copy',      label: 'Copy Tables' },
-  { id: 'datasync',  label: 'Data Sync' },
-  { id: 'snapshot',  label: 'Data Snapshot' },
   { id: 'createsql', label: 'Create SQL' },
 ]
 
@@ -50,9 +46,7 @@ export default function DatabaseTools({
         {activeTab === 'backup'   && <BackupTable  tables={tables} />}
         {activeTab === 'schema'   && <SchemaSync   baseDir={baseDir} title='Schema Sync' />}
         {activeTab === 'copy'     && <CopyTable    baseDir={baseDir} title='Copy Tables' />}
-        {activeTab === 'datasync' && <DataSync     baseDir={baseDir} title='Data Sync' />}
-        {activeTab === 'snapshot' && <DataSnapshot baseDir={baseDir} title='Data Snapshot' />}
-        {activeTab === 'createsql' && <CreateSQL   baseDir={baseDir} />}
+{activeTab === 'createsql' && <CreateSQL   baseDir={baseDir} />}
       </div>
     </div>
   )

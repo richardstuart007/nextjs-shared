@@ -147,12 +147,6 @@ function buildTypeStr(col: SchemaRow): string {
   return col.data_type.toUpperCase()
 }
 
-/** Generate a CREATE TABLE statement for a snapshot/work table — column names and types only, no constraints, no indexes, no defaults. */
-export function generateCreateTableDDL(columns: SchemaRow[], tableName: string): string {
-  const colDefs = columns.map(col => `  "${col.column_name}" ${buildTypeStr(col)}`)
-  return `CREATE TABLE "${tableName}" (\n${colDefs.join(',\n')}\n)`
-}
-
 /** Generate ALTER TABLE / CREATE TABLE SQL to bring the target in line with the source; identity-column defaults are skipped with a comment. */
 export function generateAlterSQL(result: SchemaCompareResult): string[] {
   const sqls: string[] = []

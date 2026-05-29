@@ -68,11 +68,6 @@ export async function fetchTableCounts(tables: string[]): Promise<Record<string,
   return counts
 }
 
-export type ApplyResult = {
-  ok: number
-  errors: Array<{ sql: string; error: string }>
-}
-
 export type TableDDL = {
   table_name: string
   sql: string
@@ -159,27 +154,3 @@ export async function generateCreateSQL(envFile: string): Promise<TableDDL[]> {
   return result
 }
 
-/** Execute SQL statements (split by ';') against envFile's database; returns ok count and per-statement errors. */
-export async function applySQL(envFile: string, sqlText: string): Promise<ApplyResult> {
-  const url = readEnvVar(envFile, 'POSTGRES_URL')
-  if (!url) throw new Error(`POSTGRES_URL not found in ${envFile}`)
-  const db = createArbitraryDb(url)
-  let ok = 0
-  const errors: Array<{ sql: string; error: string }> = []
-  const statements = sqlText
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => {
-      const nonComment = s.split('\n').filter(l => l.trim() && !l.trim().startsWith('--'))
-      return nonComment.length > 0
-    })
-  for (const stmt of statements) {
-    try {
-      await db.query({ query: stmt })
-      ok++
-    } catch (error) {
-      errors.push({ sql: stmt, error: (error as Error).message })
-    }
-  }
-  return { ok, errors }
-}
