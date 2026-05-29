@@ -211,9 +211,21 @@ export function generateAlterSQL(result: SchemaCompareResult): string[] {
     }
   }
 
+  const targetOnlyTables = new Set(
+    result.tableSummary.filter(t => t.status === 'only_in_target').map(t => t.table_name)
+  )
+  const droppedTables = new Set<string>()
   for (const col of result.onlyIn2) {
-    sqls.push(`-- Only in ${result.label2}, not in ${result.label1} — drop if intended:`)
-    sqls.push(`-- ALTER TABLE "${col.table_name}" DROP COLUMN "${col.column_name}";`)
+    if (targetOnlyTables.has(col.table_name)) {
+      if (!droppedTables.has(col.table_name)) {
+        droppedTables.add(col.table_name)
+        sqls.push(`-- Table only in ${result.label2}, not in ${result.label1} — drop if intended:`)
+        sqls.push(`-- DROP TABLE "${col.table_name}";`)
+      }
+    } else {
+      sqls.push(`-- Column only in ${result.label2}, not in ${result.label1} — drop if intended:`)
+      sqls.push(`-- ALTER TABLE "${col.table_name}" DROP COLUMN "${col.column_name}";`)
+    }
   }
 
   return sqls

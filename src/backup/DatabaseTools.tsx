@@ -44,7 +44,7 @@ export default function DatabaseTools({
         ))}
       </div>
 
-      <div>
+      <div className='overflow-y-auto max-h-[calc(100vh-6rem)]'>
         {activeTab === 'backup'   && <BackupTable  tables={tables} />}
         {activeTab === 'schema'   && <SchemaSync   baseDir={baseDir} title='Schema Sync' />}
         {activeTab === 'copy'     && <CopyTable    baseDir={baseDir} title='Copy Tables' />}
