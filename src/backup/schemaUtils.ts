@@ -168,14 +168,7 @@ export function generateAlterSQL(result: SchemaCompareResult): string[] {
 
   for (const [tableName, cols] of byTable) {
     if (missingTables.has(tableName)) {
-      const colDefs = cols.map(col => {
-        const parts = [`  "${col.column_name}" ${buildTypeStr(col)}`]
-        if (col.is_pk) parts.push('PRIMARY KEY')
-        if (col.is_nullable === 'NO' && !col.is_pk) parts.push('NOT NULL')
-        if (col.column_default && !col.is_pk) parts.push(`DEFAULT ${col.column_default}`)
-        return parts.join(' ')
-      })
-      sqls.push(`CREATE TABLE IF NOT EXISTS "${tableName}" (\n${colDefs.join(',\n')}\n);`)
+      sqls.push(`-- CREATE TABLE "${tableName}" — use the Create SQL tab for full DDL including indexes and constraints`)
     } else {
       for (const col of cols) {
         const typeStr = buildTypeStr(col)

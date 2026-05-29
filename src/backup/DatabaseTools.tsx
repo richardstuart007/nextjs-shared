@@ -6,15 +6,17 @@ import SchemaSync from './SchemaSync.tsx'
 import CopyTable from './CopyTable.tsx'
 import DataSync from './DataSync.tsx'
 import DataSnapshot from './DataSnapshot.tsx'
+import CreateSQL from './CreateSQL.tsx'
 
-type Tab = 'backup' | 'schema' | 'copy' | 'datasync' | 'snapshot'
+type Tab = 'backup' | 'schema' | 'copy' | 'datasync' | 'snapshot' | 'createsql'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'backup',   label: 'Backup' },
-  { id: 'schema',   label: 'Schema Sync' },
-  { id: 'copy',     label: 'Copy Tables' },
-  { id: 'datasync', label: 'Data Sync' },
-  { id: 'snapshot', label: 'Data Snapshot' },
+  { id: 'backup',    label: 'Backup' },
+  { id: 'schema',    label: 'Schema Sync' },
+  { id: 'copy',      label: 'Copy Tables' },
+  { id: 'datasync',  label: 'Data Sync' },
+  { id: 'snapshot',  label: 'Data Snapshot' },
+  { id: 'createsql', label: 'Create SQL' },
 ]
 
 export default function DatabaseTools({
@@ -27,8 +29,8 @@ export default function DatabaseTools({
   const [activeTab, setActiveTab] = useState<Tab>('backup')
 
   return (
-    <div className='mt-4'>
-      <div className='flex border-b border-gray-300'>
+    <div className='flex flex-col mt-4' style={{ height: 'calc(100vh - 4rem)' }}>
+      <div className='flex border-b border-gray-300 shrink-0'>
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -44,12 +46,13 @@ export default function DatabaseTools({
         ))}
       </div>
 
-      <div className='overflow-y-auto max-h-[calc(100vh-6rem)]'>
+      <div className='flex-1 overflow-y-auto min-h-0'>
         {activeTab === 'backup'   && <BackupTable  tables={tables} />}
         {activeTab === 'schema'   && <SchemaSync   baseDir={baseDir} title='Schema Sync' />}
         {activeTab === 'copy'     && <CopyTable    baseDir={baseDir} title='Copy Tables' />}
         {activeTab === 'datasync' && <DataSync     baseDir={baseDir} title='Data Sync' />}
         {activeTab === 'snapshot' && <DataSnapshot baseDir={baseDir} title='Data Snapshot' />}
+        {activeTab === 'createsql' && <CreateSQL   baseDir={baseDir} />}
       </div>
     </div>
   )

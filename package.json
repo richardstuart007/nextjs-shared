@@ -56,6 +56,7 @@
     "./dbClient": "./dist/backup/dbClient.js",
     "./schemaCompare": "./dist/backup/schemaCompare.js",
     "./BackupTable": "./src/backup/table.tsx",
+    "./CreateSQL": "./src/backup/CreateSQL.tsx",
     "./DatabaseTools": "./src/backup/DatabaseTools.tsx",
     "./CopyTable": "./src/backup/CopyTable.tsx",
     "./DataSnapshot": "./src/backup/DataSnapshot.tsx",

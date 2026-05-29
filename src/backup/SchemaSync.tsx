@@ -7,9 +7,9 @@ import MySelect from '../components/MySelect'
 import { MyTextarea } from '../components/MyTextarea'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
-import { compareSchemas, applySQL, generateCreateSQL, fetchTableCounts } from './schemaSync'
+import { compareSchemas, fetchTableCounts } from './schemaSync'
 import { generateAlterSQL } from './schemaUtils'
-import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary, TableDDL } from './schemaSync'
+import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSync'
 import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
 
@@ -47,14 +47,10 @@ export default function SchemaSync({
   const [targetEnv, setTargetEnv]       = useState('')
   const [result, setResult]             = useState<SchemaCompareResult | null>(null)
   const [sql, setSql]                   = useState('')
-  const [applyResult, setApplyResult]   = useState<{ ok: number; errors: Array<{ sql: string; error: string }> } | null>(null)
   const [excludePrefix, setExcludePrefix] = useState('bk_,local_,prod_,dev_')
   const [message, setMessage]           = useState('')
   const [running, setRunning]           = useState(false)
   const [counts, setCounts]             = useState<Record<string, number>>({})
-  const [tableDDLs, setTableDDLs]       = useState<TableDDL[]>([])
-  const [selectedTable, setSelectedTable] = useState('')
-  const [createMsg, setCreateMsg]       = useState('')
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -68,7 +64,6 @@ export default function SchemaSync({
       setTargetEnv(files[1]?.file ?? '')
       setResult(null)
       setSql('')
-      setApplyResult(null)
       setMessage('')
     })
   }, [directory])
@@ -78,7 +73,6 @@ export default function SchemaSync({
     setRunning(true)
     setResult(null)
     setSql('')
-    setApplyResult(null)
     setCounts({})
     setMessage('Comparing schemas...')
     try {
@@ -93,42 +87,6 @@ export default function SchemaSync({
       setCounts(c)
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
-    } finally {
-      setRunning(false)
-    }
-  }
-
-  async function handleApplySQL() {
-    if (!sql.trim() || !targetEnv) return
-    setRunning(true)
-    setApplyResult(null)
-    setMessage('Applying SQL to target...')
-    try {
-      const r = await applySQL(fullPath(targetEnv), sql)
-      setApplyResult(r)
-      setMessage(r.errors.length === 0
-        ? `Applied ${r.ok} statement${r.ok !== 1 ? 's' : ''} successfully`
-        : `Applied ${r.ok} ok, ${r.errors.length} failed`)
-    } catch (error) {
-      setMessage(`Error: ${(error as Error).message}`)
-    } finally {
-      setRunning(false)
-    }
-  }
-
-  async function handleGenerateCreateSQL() {
-    if (!sourceEnv) return
-    setRunning(true)
-    setTableDDLs([])
-    setSelectedTable('')
-    setCreateMsg('Generating CREATE SQL from source...')
-    try {
-      const ddls = await generateCreateSQL(fullPath(sourceEnv))
-      setTableDDLs(ddls)
-      setSelectedTable(ddls[0]?.table_name ?? '')
-      setCreateMsg('')
-    } catch (error) {
-      setCreateMsg(`Error: ${(error as Error).message}`)
     } finally {
       setRunning(false)
     }
@@ -259,86 +217,15 @@ export default function SchemaSync({
       {/* Generated SQL */}
       {hasDiffs && (
         <div className='space-y-2'>
-          <p className='text-xs font-semibold'>Generated SQL (review and edit before applying)</p>
+          <p className='text-xs font-semibold'>Generated SQL — copy and apply manually</p>
           <MyTextarea
             overrideClass='w-full h-48 font-mono bg-white px-2 py-2'
             value={sql}
             onChange={e => setSql(e.target.value)}
           />
-          <div className='flex items-center gap-3'>
-            <MyButton
-              onClick={handleApplySQL}
-              overrideClass='h-6 px-2 py-2 bg-red-500 hover:bg-red-600'
-              disabled={!sql.trim() || running}
-            >
-              Apply SQL to {targetLabel || 'target'}
-            </MyButton>
-            <span className='text-xs text-gray-500'>Applies to {targetLabel} database</span>
-          </div>
+          <p className='text-xs text-gray-500'>For new tables, use the Create SQL tab for full DDL including indexes.</p>
         </div>
       )}
-
-      {/* Apply result */}
-      {applyResult && applyResult.errors.length > 0 && (
-        <div className='space-y-1'>
-          <p className='text-xs font-semibold text-red-700'>Failed statements:</p>
-          {applyResult.errors.map((e, i) => (
-            <div key={i} className='text-xs bg-red-50 border border-red-200 rounded p-2'>
-              <code className='block font-mono'>{e.sql}</code>
-              <span className='text-red-600'>{e.error}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Copy reminder for affected tables */}
-      {hasDiffs && (
-        <div className='border-t pt-3'>
-          <p className='text-xs text-gray-500'>After applying SQL, use CopyTable to copy data for the affected tables.</p>
-        </div>
-      )}
-
-      {/* CREATE TABLE + indexes SQL — master/detail */}
-      <div className='border-t pt-3 space-y-2'>
-        <div className='flex items-center gap-3'>
-          <p className='text-xs font-semibold'>Create SQL</p>
-          <MyButton
-            onClick={handleGenerateCreateSQL}
-            overrideClass='h-6 px-2 py-2'
-            disabled={!sourceEnv || running}
-          >
-            Generate from {sourceLabel || 'source'}
-          </MyButton>
-          <span className='text-xs text-gray-400'>CREATE TABLE + indexes — use to recreate an environment</span>
-        </div>
-        {createMsg && <p className='text-xs text-red-700'>{createMsg}</p>}
-        {tableDDLs.length > 0 && (
-          <div className='flex gap-2 border rounded bg-white overflow-hidden' style={{ height: '24rem' }}>
-            {/* Left — table list */}
-            <div className='w-48 shrink-0 border-r overflow-y-auto'>
-              {tableDDLs.map(t => (
-                <button
-                  key={t.table_name}
-                  onClick={() => setSelectedTable(t.table_name)}
-                  className={`w-full text-left px-2 py-1 text-xs font-mono truncate border-b border-gray-100 hover:bg-blue-50 ${
-                    selectedTable === t.table_name ? 'bg-blue-100 font-semibold text-blue-800' : 'text-gray-700'
-                  }`}
-                >
-                  {t.table_name}
-                </button>
-              ))}
-            </div>
-            {/* Right — SQL for selected table */}
-            <div className='flex-1 overflow-auto p-2'>
-              {selectedTable && (
-                <pre className='text-xs font-mono whitespace-pre-wrap text-gray-800'>
-                  {tableDDLs.find(t => t.table_name === selectedTable)?.sql ?? ''}
-                </pre>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
