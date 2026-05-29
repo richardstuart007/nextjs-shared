@@ -29,9 +29,14 @@ export function myMergeClasses(
   }
 
   //
-  // Check if the class is a size class like 'text-xs', 'text-sm', etc.
+  // Check if the class is a text SIZE class (text-xs, text-sm, etc.) but NOT a colour class.
+  // Colour classes like text-black, text-white, text-blue-500 should be replaceable.
+  const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
   const isSizeClass = (cls: string) => {
-    return cls.startsWith('text-') && /-([a-z]+|[0-9]+)$/.test(cls)
+    const core = getCoreClass(cls)
+    if (!core.startsWith('text-')) return false
+    const suffix = core.slice('text-'.length)
+    return TEXT_SIZES.has(suffix)
   }
 
   //
