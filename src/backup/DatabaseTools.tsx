@@ -25,7 +25,7 @@ export default function DatabaseTools({
   const [activeTab, setActiveTab] = useState<Tab>('backup')
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col w-full'>
       <div className='flex border-b border-gray-300 shrink-0'>
         {TABS.map(tab => (
           <button
