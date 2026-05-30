@@ -47,7 +47,7 @@ export default function SchemaSync({
   const [targetEnv, setTargetEnv]       = useState('')
   const [result, setResult]             = useState<SchemaCompareResult | null>(null)
   const [sql, setSql]                   = useState('')
-  const [excludePrefix, setExcludePrefix] = useState('bk_,local_,prod_,dev_')
+  const [excludePrefix, setExcludePrefix] = useState('bk_,local_,prod_,dev_,z_')
   const [message, setMessage]           = useState('')
   const [running, setRunning]           = useState(false)
   const [counts, setCounts]             = useState<Record<string, number>>({})
