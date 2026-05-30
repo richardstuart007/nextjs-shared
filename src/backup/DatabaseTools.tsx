@@ -25,7 +25,7 @@ export default function DatabaseTools({
   const [activeTab, setActiveTab] = useState<Tab>('backup')
 
   return (
-    <div className='flex flex-col mt-4' style={{ height: 'calc(100vh - 4rem)' }}>
+    <div className='flex flex-col'>
       <div className='flex border-b border-gray-300 shrink-0'>
         {TABS.map(tab => (
           <button
@@ -42,7 +42,7 @@ export default function DatabaseTools({
         ))}
       </div>
 
-      <div className='flex-1 overflow-y-auto min-h-0'>
+      <div>
         {activeTab === 'backup'   && <BackupTable  tables={tables} />}
         {activeTab === 'schema'   && <SchemaSync   baseDir={baseDir} title='Schema Sync' />}
         {activeTab === 'copy'     && <CopyTable    baseDir={baseDir} title='Copy Tables' />}

@@ -171,7 +171,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
   }
 
   return (
-    <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-3xl'>
+    <div>
       <div className='flex items-center gap-2 mb-4'>
         {title && <h2 className='text-sm font-bold'>{title}</h2>}
         <MyHelp items={HELP_ITEMS} title='Copy Tables Help' label='Help' />

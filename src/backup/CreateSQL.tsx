@@ -67,7 +67,7 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
   }
 
   return (
-    <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-4xl space-y-4'>
+    <div className='space-y-4'>
       <div className='flex items-center gap-2'>
         <MyHelp items={HELP_ITEMS} title='Create SQL Help' label='Help' />
       </div>

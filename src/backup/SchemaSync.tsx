@@ -98,7 +98,7 @@ export default function SchemaSync({
   const hasDiffs = result && (result.onlyIn1.length + result.onlyIn2.length + result.changed.length) > 0
 
   return (
-    <div className='mt-4 py-2 px-4 bg-gray-50 rounded-lg shadow-md max-w-4xl space-y-4'>
+    <div className='space-y-4'>
       <div className='flex items-center gap-2'>
         {title && <h2 className='text-sm font-bold'>{title}</h2>}
         <MyHelp items={HELP_ITEMS} title='Schema Sync Help' label='Help' />
