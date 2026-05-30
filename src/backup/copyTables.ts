@@ -30,7 +30,7 @@ function spawnPg(args: string[]): { stdout: string; stderr: string } {
 //--------------------------------------------------------------------------
 //  Types
 //--------------------------------------------------------------------------
-export type CopyEvent = 'DROP' | 'CREATE_TABLE' | 'COPY' | 'INDEX' | 'SEQUENCE' | 'ERROR' | 'BACKUP'
+export type CopyEvent = 'CREATE_TABLE' | 'COPY' | 'INDEX' | 'SEQUENCE' | 'ERROR' | 'BACKUP' | 'SKIPPED'
 
 export type CopyLog = {
   event: CopyEvent
@@ -72,6 +72,35 @@ function stripUnsupportedParams(url: string): string {
   return url.replace(/[&?]timezone=[^&]*/g, '')
 }
 //--------------------------------------------------------------------------
+//  check_target_state — check existence and row count for each table in target
+//  Returns a map of tableName → { exists, count }
+//--------------------------------------------------------------------------
+export async function check_target_state(
+  targetUrl: string,
+  tables: string[]
+): Promise<Record<string, { exists: boolean; count: number }>> {
+  const cleanTarget = stripUnsupportedParams(targetUrl)
+  const result: Record<string, { exists: boolean; count: number }> = {}
+
+  for (const table of tables) {
+    const { stdout: existsOut } = spawnPg([
+      cleanTarget, '-t', '-c',
+      `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '${table}'`
+    ])
+    const exists = parseInt(existsOut.trim(), 10) === 1
+
+    if (!exists) {
+      result[table] = { exists: false, count: 0 }
+      continue
+    }
+
+    const { stdout: countOut } = spawnPg([cleanTarget, '-t', '-c', `SELECT COUNT(*) FROM "${table}"`])
+    result[table] = { exists: true, count: parseInt(countOut.trim(), 10) || 0 }
+  }
+
+  return result
+}
+//--------------------------------------------------------------------------
 //  Parse psql stdout into structured log entries
 //--------------------------------------------------------------------------
 function parsePsqlOutput(output: string): CopyLog[] {
@@ -83,9 +112,7 @@ function parsePsqlOutput(output: string): CopyLog[] {
     const line = lines[i]
     const trimmed = line.trim()
 
-    if (/^DROP TABLE/i.test(trimmed)) {
-      logs.push({ event: 'DROP', detail: trimmed })
-    } else if (/^CREATE TABLE/i.test(trimmed)) {
+    if (/^CREATE TABLE/i.test(trimmed)) {
       logs.push({ event: 'CREATE_TABLE', detail: trimmed })
     } else if (/^COPY (\d+)/.test(trimmed)) {
       const match = trimmed.match(/^COPY (\d+)/)!
@@ -154,9 +181,30 @@ export async function copy_tables({
     const tmpFile = join(tmpdir(), `copy_${table}_${Date.now()}.sql`)
 
     try {
-      // Step 1: dump single table
+      // Step 1: pre-flight check — refuse if target has rows
+      const state = await check_target_state(cleanTarget, [table])
+      const targetState = state[table]
+
+      if (targetState.exists && targetState.count > 0) {
+        const log: CopyLog = {
+          event: 'SKIPPED',
+          detail: `${table} — has ${targetState.count.toLocaleString()} rows in target, backup and clear manually first`
+        }
+        tableLogs.push(log)
+        allLogs.push(log)
+        write_Logging({ lg_caller: caller, lg_functionname: functionName, lg_msg: log.detail, lg_severity: 'E' })
+        continue
+      }
+
+      // Step 2: choose dump mode
+      // Table exists but empty → data-only (no CREATE TABLE)
+      // Table does not exist → full dump (CREATE TABLE + data, no DROP)
+      const dumpFlags = targetState.exists
+        ? `--no-owner --data-only -t ${table}`
+        : `--no-owner -t ${table}`
+
       try {
-        execPg(`pg_dump --no-owner --clean --if-exists -t ${table} "${cleanSource}" -f "${tmpFile}"`)
+        execPg(`pg_dump ${dumpFlags} "${cleanSource}" -f "${tmpFile}"`)
       } catch (error) {
         const msg = (error as Error).message
         const log: CopyLog = { event: 'ERROR', detail: `${table} — pg_dump failed: ${msg}` }
@@ -167,8 +215,8 @@ export async function copy_tables({
         continue
       }
 
-      // Step 2: filter lines the target doesn't support; strip setval
-      // (sequences are repaired in step 4 based on MAX(id))
+      // Step 3: filter lines the target doesn't support; strip setval
+      // (sequences are repaired in step 5 based on MAX(id))
       const filtered = readFileSync(tmpFile, 'utf8')
         .split('\n')
         .filter(line => !line.match(/transaction_timeout/))

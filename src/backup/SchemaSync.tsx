@@ -7,7 +7,7 @@ import { MyTextarea } from '../components/MyTextarea'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
 import { EnvDirectoryInput, EnvFileSelect } from './EnvFields'
-import { compareSchemas, fetchTableCounts } from './schemaSyncServer'
+import { compareSchemas, fetchTableCountsForEnv } from './schemaSyncServer'
 import { generateAlterSQL } from './schemaUtils'
 import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSyncServer'
 import { MyHelp } from '../components/MyHelp'
@@ -50,7 +50,8 @@ export default function SchemaSync({
   const [excludePrefix, setExcludePrefix] = useState('bk_,local_,prod_,dev_,z_')
   const [message, setMessage]           = useState('')
   const [running, setRunning]           = useState(false)
-  const [counts, setCounts]             = useState<Record<string, number>>({})
+  const [sourceCounts, setSourceCounts] = useState<Record<string, number>>({})
+  const [targetCounts, setTargetCounts] = useState<Record<string, number>>({})
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -75,7 +76,8 @@ export default function SchemaSync({
     setRunning(true)
     setResult(null)
     setSql('')
-    setCounts({})
+    setSourceCounts({})
+    setTargetCounts({})
     setMessage('Comparing schemas...')
     try {
       const r = await compareSchemas(fullPath(sourceEnv), fullPath(targetEnv), excludePrefix)
@@ -85,8 +87,12 @@ export default function SchemaSync({
       const diffCount = r.tableSummary.filter(t => t.status !== 'identical').length
       setMessage(diffCount === 0 ? 'Schemas are identical' : `Found differences in ${diffCount} table${diffCount !== 1 ? 's' : ''}`)
       const allTables = r.tableSummary.map(t => t.table_name)
-      const c = await fetchTableCounts(allTables)
-      setCounts(c)
+      const [sc, tc] = await Promise.all([
+        fetchTableCountsForEnv(fullPath(sourceEnv), allTables),
+        fetchTableCountsForEnv(fullPath(targetEnv), allTables),
+      ])
+      setSourceCounts(sc)
+      setTargetCounts(tc)
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
     } finally {
@@ -160,7 +166,7 @@ export default function SchemaSync({
       {message && <p className='text-xs text-red-700'>{message}</p>}
 
       {/* Table summary */}
-      {result && <TableSummarySection rows={result.tableSummary} label1={result.label1} label2={result.label2} counts={counts} />}
+      {result && <TableSummarySection rows={result.tableSummary} label1={result.label1} label2={result.label2} sourceCounts={sourceCounts} targetCounts={targetCounts} />}
 
       {/* Diff details */}
       {result && hasDiffs && (
@@ -211,12 +217,14 @@ function TableSummarySection({
   rows,
   label1,
   label2,
-  counts,
+  sourceCounts,
+  targetCounts,
 }: {
   rows: TableSummary[]
   label1: string
   label2: string
-  counts: Record<string, number>
+  sourceCounts: Record<string, number>
+  targetCounts: Record<string, number>
 }) {
   if (rows.length === 0) return null
   const statusCounts = rows.reduce<Record<string, number>>((acc, r) => {
@@ -238,13 +246,13 @@ function TableSummarySection({
             <tr>
               <th className='px-2 py-1 text-left text-gray-500 font-medium border-b'>Table</th>
               <th className='px-2 py-1 text-left text-gray-500 font-medium border-b'>Status</th>
-              <th className='px-2 py-1 text-right text-gray-500 font-medium border-b'>Rows</th>
+              <th className='px-2 py-1 text-right text-gray-500 font-medium border-b'>{label1}</th>
+              <th className='px-2 py-1 text-right text-gray-500 font-medium border-b'>{label2}</th>
             </tr>
           </thead>
           <tbody>
         {rows.map(r => {
           const meta = statusMeta(r.status, label1, label2)
-          const rowCount = counts[r.table_name]
           return (
             <tr key={r.table_name} className='border-b border-gray-100'>
               <td className={`px-2 py-1 font-mono ${r.status !== 'identical' ? 'font-semibold' : 'text-gray-500'}`}>
@@ -254,7 +262,10 @@ function TableSummarySection({
                 <span className={`px-1 rounded ${meta.className}`}>{meta.label}</span>
               </td>
               <td className='px-2 py-1 text-right tabular-nums text-gray-600'>
-                {rowCount != null ? rowCount.toLocaleString() : '—'}
+                {sourceCounts[r.table_name] != null ? sourceCounts[r.table_name].toLocaleString() : '—'}
+              </td>
+              <td className='px-2 py-1 text-right tabular-nums text-gray-600'>
+                {targetCounts[r.table_name] != null ? targetCounts[r.table_name].toLocaleString() : '—'}
               </td>
             </tr>
           )

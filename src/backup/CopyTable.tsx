@@ -7,6 +7,8 @@ import { read_url, get_tables, copy_tables, backup_tables, list_env_files } from
 import type { CopyLog, EnvFile } from './copyTables'
 import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
+import { MyConfirmDialog } from '../components/MyConfirmDialog'
+import type { ConfirmDialogInt } from '../components/MyConfirmDialog'
 import { EnvDirectoryInput, EnvFileSelect } from './EnvFields'
 
 const HELP_ITEMS: HelpItem[] = [
@@ -41,6 +43,9 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
   const [backupPrefix, setBackupPrefix] = useState('')
   const [backupLogs, setBackupLogs] = useState<CopyLog[]>([])
   const [backupConflicts, setBackupConflicts] = useState<string[]>([])
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogInt>({
+    isOpen: false, title: '', subTitle: '', onConfirm: () => {}
+  })
 
   function fullPath(filename: string) {
     return directory ? `${directory}/${filename}` : filename
@@ -97,7 +102,22 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
     }
   }
 
-  async function handleCopy() {
+  function handleCopy() {
+    const tableList = Array.from(selectedTables)
+    const preview = tableList.slice(0, 5).join(', ') + (tableList.length > 5 ? `, … (+${tableList.length - 5} more)` : '')
+    setConfirmDialog({
+      isOpen: true,
+      title: `Copy ${tableList.length} table${tableList.length !== 1 ? 's' : ''}`,
+      subTitle: `FROM ${sourceLocation}  →  TO ${targetLocation}`,
+      line1: preview,
+      line2: 'Tables with existing rows in target will be skipped.',
+      line3: 'To replace: backup and clear manually in pgAdmin4 first.',
+      onConfirm: performCopy,
+    })
+  }
+
+  async function performCopy() {
+    setConfirmDialog(prev => ({ ...prev, isOpen: false }))
     setMessage('Copying tables...')
     setRunning(true)
     setLogs([])
@@ -119,7 +139,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
         caller,
       })
       setLogs(result.logs)
-      setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors')
+      setMessage(result.success ? 'Copy completed successfully' : 'Copy completed with errors — see skipped tables above')
     } catch (error) {
       setMessage(`Error: ${(error as Error).message}`)
     } finally {
@@ -327,7 +347,9 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
               </thead>
               <tbody>
                 {logs.map((log, i) => (
-                  <tr key={i} className={log.event === 'ERROR' ? 'text-red-600' : ''}>
+                  <tr key={i} className={
+                    log.event === 'ERROR' || log.event === 'SKIPPED' ? 'text-red-600' : ''
+                  }>
                     <td className='px-2 py-0.5'>{log.event}</td>
                     <td className='px-2 py-0.5'>{log.detail}</td>
                   </tr>
@@ -337,6 +359,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
           </div>
         </div>
       )}
+    <MyConfirmDialog confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog} />
     </div>
   )
 }

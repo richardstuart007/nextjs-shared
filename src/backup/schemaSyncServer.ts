@@ -68,6 +68,23 @@ export async function fetchTableCounts(tables: string[]): Promise<Record<string,
   return counts
 }
 
+/** Count rows for the given table names in a specific database identified by an env file. */
+export async function fetchTableCountsForEnv(envFile: string, tables: string[]): Promise<Record<string, number>> {
+  if (tables.length === 0) return {}
+  const url = readEnvVar(envFile, 'POSTGRES_URL')
+  if (!url) return {}
+  const db = createArbitraryDb(url)
+  const unions = tables.map(t => `SELECT '${t}'::text AS t, COUNT(*) AS c FROM public."${t}"`).join(' UNION ALL ')
+  try {
+    const result = await db.query({ query: unions })
+    const counts: Record<string, number> = {}
+    for (const row of result.rows) counts[row.t] = parseInt(row.c, 10)
+    return counts
+  } catch {
+    return {}
+  }
+}
+
 export type TableDDL = {
   table_name: string
   sql: string
