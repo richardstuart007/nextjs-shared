@@ -80,30 +80,20 @@ export default function Table({ initialRows, initialTotalPages }: TableProps = {
 
   return (
     <>
-      <div className='mt-4 bg-gray-50 rounded-lg shadow-md max-w-full'>
-        <div className='overflow-x-auto overflow-y-auto max-h-[70vh]'>
+      <div>
+        <div>
           <table className='min-w-full text-gray-900 table-auto'>
             <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xxs'>
               <tr>
                 <th scope='col' className='font-medium px-2'>ID</th>
-                <th scope='col' className='font-medium px-2 whitespace-nowrap'>Date (UTC)</th>
-                <th scope='col' className='font-medium px-2'>Function Name</th>
                 <th scope='col' className='font-medium px-2 text-center'>Severity</th>
+                <th scope='col' className='font-medium px-2'>Caller</th>
+                <th scope='col' className='font-medium px-2'>Function Name</th>
                 <th scope='col' className='font-medium px-2'>Message</th>
+                <th scope='col' className='font-medium px-2 whitespace-nowrap'>Date (UTC)</th>
               </tr>
               <tr className='text-xxs align-bottom'>
                 <th scope='col' className='px-2'></th>
-                <th scope='col' className='px-2'></th>
-                <th scope='col' className='px-2'>
-                  <MyInput
-                    id='functionname'
-                    name='functionname'
-                    overrideClass='w-28 rounded-md border border-blue-500 font-normal text-xxs'
-                    type='text'
-                    value={functionname}
-                    onChange={e => setfunctionname(e.target.value)}
-                  />
-                </th>
                 <th scope='col' className='px-2'>
                   <div className='text-center'>
                     <MyInput
@@ -116,6 +106,17 @@ export default function Table({ initialRows, initialTotalPages }: TableProps = {
                     />
                   </div>
                 </th>
+                <th scope='col' className='px-2'></th>
+                <th scope='col' className='px-2'>
+                  <MyInput
+                    id='functionname'
+                    name='functionname'
+                    overrideClass='w-28 rounded-md border border-blue-500 font-normal text-xxs'
+                    type='text'
+                    value={functionname}
+                    onChange={e => setfunctionname(e.target.value)}
+                  />
+                </th>
                 <th scope='col' className='px-2'>
                   <MyInput
                     id='msg'
@@ -126,6 +127,7 @@ export default function Table({ initialRows, initialTotalPages }: TableProps = {
                     onChange={e => setmsg(e.target.value)}
                   />
                 </th>
+                <th scope='col' className='px-2'></th>
               </tr>
             </thead>
             <tbody className='bg-white text-xxs'>
@@ -133,17 +135,18 @@ export default function Table({ initialRows, initialTotalPages }: TableProps = {
                 tabledata.map(row => (
                   <tr key={row.lg_lgid} className='w-full border-b'>
                     <td className='px-2 text-xxs'>{row.lg_lgid}</td>
+                    <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
+                    <td className='px-2 text-xxs'>{row.lg_caller}</td>
+                    <td className='px-2 text-xxs'>{row.lg_functionname}</td>
+                    <td className='px-2 text-xxs'>{row.lg_msg}</td>
                     <td className='px-2 text-xxs whitespace-nowrap'>
                       {new Date(row.lg_datetime).toISOString().slice(0, 16).replace('T', ' ')}
                     </td>
-                    <td className='px-2 text-xxs'>{row.lg_functionname}</td>
-                    <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
-                    <td className='px-2 text-xxs'>{row.lg_msg}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5}>No data available</td>
+                  <td colSpan={6}>No data available</td>
                 </tr>
               )}
             </tbody>

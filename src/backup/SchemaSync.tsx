@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
-import MySelect from '../components/MySelect'
 import { MyTextarea } from '../components/MyTextarea'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
+import { EnvDirectoryInput, EnvFileSelect } from './EnvFields'
 import { compareSchemas, fetchTableCounts } from './schemaSyncServer'
 import { generateAlterSQL } from './schemaUtils'
 import type { SchemaCompareResult, ChangeRow, DiffRow, TableSummary } from './schemaSyncServer'
@@ -106,70 +106,35 @@ export default function SchemaSync({
         <MyHelp items={HELP_ITEMS} title='Schema Sync Help' label='Help' />
       </div>
 
-      {/* Directory */}
-      <div className='flex items-center gap-2'>
-        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-        <MyInput
-          overrideClass='flex-1'
-          type='text'
-          value={directory}
-          onChange={e => setDirectory(e.target.value)}
-        />
-        <MyHelp items={[{
-          heading: 'Directory',
-          body: 'Absolute path to the folder that contains your .env.* files (one per database). Each file must have POSTGRES_URL and POSTGRES_DATABASE_LOCATION.',
-        }]} />
-      </div>
+      <EnvDirectoryInput
+        value={directory}
+        onChange={setDirectory}
+        helpBody='Absolute path to the folder that contains your .env.* files (one per database). Each file must have POSTGRES_URL and POSTGRES_DATABASE_LOCATION.'
+      />
 
       {envFiles.length > 0 && (
         <>
-          {/* Source */}
-          <div className='flex items-center gap-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <MySelect value={sourceEnv} onChange={e => setSourceEnv((e.target as HTMLSelectElement).value)}>
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </MySelect>
-            {sourceLabel && (
-              <span className='text-sm font-bold uppercase bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-                {sourceLabel}
-              </span>
-            )}
-            <MyHelp items={[{
-              heading: 'Source',
-              body: 'The reference database. SQL is generated to make the target match this schema.',
-            }]} />
-          </div>
+          <EnvFileSelect
+            label='Source'
+            value={sourceEnv}
+            onChange={setSourceEnv}
+            envFiles={envFiles}
+            helpBody='The reference database. SQL is generated to make the target match this schema.'
+          />
 
-          {/* Target */}
-          <div className='flex items-center gap-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Target</label>
-            <MySelect value={targetEnv} onChange={e => setTargetEnv((e.target as HTMLSelectElement).value)}>
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </MySelect>
-            {targetLabel && (
-              <span className='text-sm font-bold uppercase bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
-                {targetLabel}
-              </span>
-            )}
-            <MyHelp items={[{
-              heading: 'Target',
-              body: 'The database to be modified. Generated SQL is applied here — review carefully before applying.',
-            }]} />
-          </div>
+          <EnvFileSelect
+            label='Target'
+            value={targetEnv}
+            onChange={setTargetEnv}
+            envFiles={envFiles}
+            helpBody='The database to be modified. Generated SQL is applied here — review carefully before applying.'
+          />
 
           {/* Exclude prefixes */}
           <div className='flex items-center gap-2'>
             <label className='text-xs w-20 text-right shrink-0'>Exclude</label>
             <MyInput
-              overrideClass='w-40'
+              overrideClass='w-72'
               type='text'
               value={excludePrefix}
               onChange={e => setExcludePrefix(e.target.value)}
@@ -267,7 +232,7 @@ function TableSummarySection({
         {(statusCounts.only_in_source ?? 0) > 0 && <span className='text-xs text-blue-700'>{statusCounts.only_in_source} only in {label1}</span>}
         {(statusCounts.only_in_target ?? 0) > 0 && <span className='text-xs text-orange-700'>{statusCounts.only_in_target} only in {label2}</span>}
       </div>
-      <div className='max-h-64 overflow-y-auto border rounded bg-white'>
+      <div className='border rounded bg-white'>
         <table className='min-w-full text-xs'>
           <thead className='bg-gray-50 sticky top-0'>
             <tr>
@@ -344,7 +309,7 @@ function DiffSection({
                       <td className='px-2 py-1 font-mono'>{r.column_name}</td>
                       <td className='px-2 py-1'>{r.data_type}{r.max_len ? `(${r.max_len})` : ''}</td>
                       <td className='px-2 py-1'>{r.is_nullable === 'YES' ? '✓' : ''}</td>
-                      <td className='px-2 py-1 text-gray-400 truncate max-w-[120px]'>{r.column_default ?? ''}</td>
+                      <td className='px-2 py-1 text-gray-400'>{r.column_default ?? ''}</td>
                       <td className='px-2 py-1'>{r.is_pk ? '✓' : ''}</td>
                       <td className='px-2 py-1'>{r.is_unique ? '✓' : ''}</td>
                       <td className='px-2 py-1'>{r.has_index ? '✓' : ''}</td>

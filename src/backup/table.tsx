@@ -25,24 +25,48 @@ import {
 
 const HELP_ITEMS: HelpItem[] = [
   {
+    heading: 'Backup tab',
+    body: 'Manage in-database backup copies of your tables. Each backup is a full copy of the base table stored in the same database under a z{prefix}_{table} name. Use the PC Folder section to also download/upload table data as JSON files.',
+  },
+  {
     heading: 'Backup prefix',
-    body: 'Enter a prefix (e.g. "1") then click Refresh in the Backup column to load backup tables named z{prefix}_{table}.',
+    body: 'A short label (e.g. "1", "pre-release") used to name backup tables: z{prefix}_{table}. Change the prefix and click Refresh to load a different set of backups.',
+  },
+  {
+    heading: 'SeqReset',
+    body: 'Resets the auto-increment sequence on the base table to MAX(id). Run this after copying data in to avoid primary key conflicts on future inserts.',
   },
   {
     heading: 'Duplicate',
-    body: 'Creates a new backup table with the same structure as the base table. Only available when no backup exists.',
+    body: 'Creates a new empty backup table with the same structure (columns, types, constraints) as the base table. Only available when no backup exists for this prefix.',
+  },
+  {
+    heading: 'Clear',
+    body: 'Deletes all rows from the backup table but keeps the table structure. Use before Copy if the backup already has data.',
   },
   {
     heading: 'Copy',
-    body: 'Copies all rows from the base table into the existing backup table. Clears backup first if it has rows.',
+    body: 'Copies all rows from the base table into the backup table. Automatically clears the backup first if it already has rows.',
   },
   {
     heading: 'ToBase',
-    body: 'Truncates the base table and copies all rows from the backup into it. Resets the sequence after copy.',
+    body: 'Restores the base table from the backup: truncates the base table, copies all backup rows in, then resets the sequence.',
+  },
+  {
+    heading: 'Drop',
+    body: 'Permanently drops the backup table. The base table is not affected.',
   },
   {
     heading: 'PC Folder',
-    body: 'Enter a subfolder under C:/backups/ to enable JSON download and upload. Use Down to export and Upload to import.',
+    body: 'Subfolder under C:/backups/ for JSON file operations. Type a name and click Refresh to scan it. Use Down to export a base table to JSON and Upload to import a JSON file into a backup table.',
+  },
+  {
+    heading: 'Down',
+    body: 'Exports all rows from the base table to a JSON file in the PC Folder. File is named {table}.json.',
+  },
+  {
+    heading: 'Upload',
+    body: 'Imports rows from a JSON file in the PC Folder into the backup table. Clears the backup first if it has rows, then resets the sequence.',
   },
 ]
 
@@ -777,14 +801,17 @@ export default function Table({ tables }: { tables: string[] }) {
         <th scope='col' className='text-xs   px-2 text-center'>Copy</th>
         <th scope='col' className='text-xs   px-2 text-center'>ToBase</th>
         <th scope='col' className='text-xs  px-2 text-center'>
-          <MyInput
-            id='dataDirectory'
-            name='dataDirectory'
-            overrideClass={`w-40  text-center`}
-            type='text'
-            value={dataDirectory}
-            onChange={e => setDataDirectory(e.target.value)}
-          />
+          <div className='inline-flex items-center gap-1'>
+            <MyInput
+              id='dataDirectory'
+              name='dataDirectory'
+              overrideClass={`w-40  text-center`}
+              type='text'
+              value={dataDirectory}
+              onChange={e => setDataDirectory(e.target.value)}
+            />
+            <MyHelp items={[{ heading: 'PC Folder', body: 'Subfolder under C:/backups/ for JSON exports and imports. Type a name and click Refresh to scan it.' }]} />
+          </div>
         </th>
         <th scope='col' className='text-xs   px-2 text-center'>Exists</th>
         <th scope='col' className='text-xs   px-2 text-right'>Records</th>
@@ -827,14 +854,17 @@ export default function Table({ tables }: { tables: string[] }) {
           </div>
         </th>
         <th scope='col' className='text-xs  px-2 text-left'>
-          <MyInput
-            id='prefixZ'
-            name='prefixZ'
-            overrideClass={`w-20 `}
-            type='text'
-            value={prefix_Z}
-            onChange={e => setprefix_Z(e.target.value)}
-          />
+          <div className='inline-flex items-center gap-1'>
+            <MyInput
+              id='prefixZ'
+              name='prefixZ'
+              overrideClass={`w-20 `}
+              type='text'
+              value={prefix_Z}
+              onChange={e => setprefix_Z(e.target.value)}
+            />
+            <MyHelp items={[{ heading: 'Backup prefix', body: 'Short label used to name backup tables: z{prefix}_{table}. Change and click Refresh to switch to a different backup set.' }]} />
+          </div>
         </th>
         <th scope='col' className='text-xs   px-2 text-center'>
           <div className='inline-flex justify-center items-center'>
@@ -1099,7 +1129,7 @@ export default function Table({ tables }: { tables: string[] }) {
         <MyHelp items={HELP_ITEMS} title='Backup Help' label='Help' />
       </div>
       <div>
-        <div className='overflow-x-auto overflow-y-auto max-h-[70vh]'>
+        <div>
           <table className='min-w-full text-gray-900 table-auto '>
             <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xs '>
               {render_tr1()}

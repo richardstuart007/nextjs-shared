@@ -84,6 +84,15 @@ function parsePgDumpByTable(raw: string): TableDDL[] {
   let om: RegExpExecArray | null
   while ((om = ownedRe.exec(text)) !== null) seqToTable.set(om[1], om[2])
 
+  // Second pass: also map sequences referenced in DEFAULT nextval() blocks (old-style serial columns)
+  const defaultRe = /-- Name: (\w+) \w+; Type: DEFAULT;[\s\S]*?nextval\('public\.(\S+?)'::regclass\)/g
+  let dm: RegExpExecArray | null
+  while ((dm = defaultRe.exec(text)) !== null) {
+    const tableName = dm[1]
+    const seqName = dm[2]
+    if (!seqToTable.has(seqName)) seqToTable.set(seqName, tableName)
+  }
+
   // Split into blocks on the section separator pattern
   const blocks = text.split(/\n--\n(?=-- Name:)/)
 

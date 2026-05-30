@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code when working with code in this repository.
 
+For consuming project setup, component APIs, and usage examples see [CONSUMING_PROJECTS.md](CONSUMING_PROJECTS.md).
+
 ## Commands
 
 ```bash

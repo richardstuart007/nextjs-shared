@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
-import { MyInput } from '../components/MyInput'
-import MySelect from '../components/MySelect'
 import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
 import { list_env_files } from './copyTables'
 import type { EnvFile } from './copyTables'
+import { EnvDirectoryInput, EnvFileSelect } from './EnvFields'
 import { generateCreateSQL } from './schemaSyncServer'
 import type { TableDDL } from './schemaSyncServer'
 
@@ -74,16 +73,7 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
         <MyHelp items={HELP_ITEMS} title='Create SQL Help' label='Help' />
       </div>
 
-      {/* Directory */}
-      <div className='flex items-center gap-2'>
-        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-        <MyInput
-          overrideClass='flex-1'
-          type='text'
-          value={directory}
-          onChange={e => setDirectory(e.target.value)}
-        />
-      </div>
+      <EnvDirectoryInput value={directory} onChange={setDirectory} />
 
       {envFiles.length === 0 && directory && (
         <p className='text-xs text-red-700'>No .env.* files found in directory</p>
@@ -91,22 +81,12 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
 
       {envFiles.length > 0 && (
         <>
-          {/* Source env */}
-          <div className='flex items-center gap-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <MySelect value={sourceEnv} onChange={e => setSourceEnv((e.target as HTMLSelectElement).value)}>
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </MySelect>
-            {sourceLabel && (
-              <span className='text-sm font-bold uppercase bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-                {sourceLabel}
-              </span>
-            )}
-          </div>
+          <EnvFileSelect
+            label='Source'
+            value={sourceEnv}
+            onChange={setSourceEnv}
+            envFiles={envFiles}
+          />
 
           <div className='ml-24'>
             <MyButton
@@ -127,9 +107,9 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
       )}
 
       {tableDDLs.length > 0 && (
-        <div className='flex gap-2 border rounded bg-white overflow-hidden' style={{ height: '32rem' }}>
+        <div className='flex gap-2 border rounded bg-white'>
           {/* Left — table list */}
-          <div className='w-48 shrink-0 border-r overflow-y-auto'>
+          <div className='w-48 shrink-0 border-r'>
             {tableDDLs.map(t => (
               <button
                 key={t.table_name}
@@ -143,7 +123,7 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
             ))}
           </div>
           {/* Right — SQL for selected table */}
-          <div className='flex-1 overflow-auto p-2'>
+          <div className='flex-1 p-2'>
             {selectedTable && (
               <pre className='text-xs font-mono whitespace-pre-wrap text-gray-800'>
                 {tableDDLs.find(t => t.table_name === selectedTable)?.sql ?? ''}

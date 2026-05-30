@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
-import MySelect from '../components/MySelect'
 import { read_url, get_tables, copy_tables, backup_tables, list_env_files } from './copyTables'
 import type { CopyLog, EnvFile } from './copyTables'
 import { MyHelp } from '../components/MyHelp'
 import type { HelpItem } from '../components/MyHelp'
+import { EnvDirectoryInput, EnvFileSelect } from './EnvFields'
 
 const HELP_ITEMS: HelpItem[] = [
   {
@@ -179,75 +179,33 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
         <MyHelp items={HELP_ITEMS} title='Copy Tables Help' label='Help' />
       </div>
 
-      <div className='flex items-center gap-2 mb-4'>
-        <label className='text-xs w-20 text-right shrink-0'>Directory</label>
-        <MyInput
-          id='directory'
-          name='directory'
-          overrideClass='flex-1 text-xs'
-          type='text'
-          placeholder='C:/Users/richa/github/next-bridgeschool'
-          value={directory}
-          onChange={e => setDirectory(e.target.value)}
-        />
-        <MyHelp items={[{
-          heading: 'Directory',
-          body: 'Absolute path to the folder that contains your .env.* files (one per database). Each file must have POSTGRES_URL and POSTGRES_DATABASE_LOCATION.',
-        }]} />
-      </div>
+      <EnvDirectoryInput
+        value={directory}
+        onChange={setDirectory}
+        placeholder='C:/Users/richa/github/next-bridgeschool'
+        helpBody='Absolute path to the folder that contains your .env.* files (one per database). Each file must have POSTGRES_URL and POSTGRES_DATABASE_LOCATION.'
+      />
 
       {envFiles.length === 0 ? (
         <p className='text-xs text-red-700 mb-4'>No .env.* files found in directory</p>
       ) : (
         <>
-          <div className='flex items-center gap-2 mb-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Source</label>
-            <MySelect
-              value={sourceEnvFile}
-              onChange={e => { setSourceEnvFile((e.target as HTMLSelectElement).value); setAvailableTables([]); setSelectedTables(new Set()) }}
-            >
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </MySelect>
-            {sourceLocation && (
-              <span className='text-sm font-bold uppercase tracking-wide bg-blue-600 text-white px-3 py-1 rounded-md shadow'>
-                {sourceLocation}
-              </span>
-            )}
-            <MyHelp items={[{
-              heading: 'Source',
-              body: 'Tables are read from this database. Selecting a new source clears the table list.',
-            }]} />
-          </div>
+          <EnvFileSelect
+            label='Source'
+            value={sourceEnvFile}
+            onChange={v => { setSourceEnvFile(v); setAvailableTables([]); setSelectedTables(new Set()) }}
+            envFiles={envFiles}
+            helpBody='Tables are read from this database. Selecting a new source clears the table list.'
+          />
 
-          <div className='flex items-center gap-2 mb-2'>
-            <label className='text-xs w-20 text-right shrink-0'>Target</label>
-            <MySelect
-              value={targetEnvFile}
-              onChange={e => setTargetEnvFile((e.target as HTMLSelectElement).value)}
-            >
-              {envFiles.map(e => (
-                <option key={e.file} value={e.file}>
-                  {e.file}{e.location ? ` (${e.location})` : ''}
-                </option>
-              ))}
-            </MySelect>
-            {targetLocation && (
-              <span className='text-sm font-bold uppercase tracking-wide bg-red-600 text-white px-3 py-1 rounded-md shadow animate-pulse'>
-                {targetLocation}
-              </span>
-            )}
-            {targetLocation && (
-              <span className='text-xs font-semibold text-red-700'>&#9888; WILL BE OVERWRITTEN</span>
-            )}
-            <MyHelp items={[{
-              heading: 'Target',
-              body: 'Selected tables will be truncated and replaced with data from the source. This cannot be undone.',
-            }]} />
-          </div>
+          <EnvFileSelect
+            label='Target'
+            value={targetEnvFile}
+            onChange={setTargetEnvFile}
+            envFiles={envFiles}
+            warning='⚠ WILL BE OVERWRITTEN'
+            helpBody='Selected tables will be truncated and replaced with data from the source. This cannot be undone.'
+          />
 
           <div className='flex items-center gap-2 mt-3 mb-4'>
             <div className='w-20 shrink-0' />
@@ -284,7 +242,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
               Copy {selectedTables.size} Tables
             </MyButton>
           </div>
-          <div className='grid grid-cols-3 gap-1 max-h-48 overflow-y-auto border p-2 rounded bg-white'>
+          <div className='grid grid-cols-3 gap-1 border p-2 rounded bg-white'>
             {availableTables.map(table => (
               <label key={table} className='flex items-center gap-1 text-xs cursor-pointer'>
                 <input
@@ -329,7 +287,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
                 </p>
               )}
               {backupLogs.length > 0 && (
-                <div className='ml-32 max-h-32 overflow-y-auto border rounded bg-white'>
+                <div className='ml-32 border rounded bg-white'>
                   <table className='min-w-full text-xs'>
                     <tbody>
                       {backupLogs.map((log, i) => (
@@ -359,7 +317,7 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
               <p className='text-xs text-gray-500'>{sourceLocation} → {targetLocation}</p>
             )}
           </div>
-          <div className='max-h-48 overflow-y-auto border rounded bg-white'>
+          <div className='border rounded bg-white'>
             <table className='min-w-full text-xs'>
               <thead className='bg-gray-100'>
                 <tr>

@@ -95,8 +95,8 @@ export default function Table_Cache() {
           Clear All
         </MyButton>
       </div>
-      <div className='mt-2 bg-gray-50 rounded-lg shadow-md max-w-full'>
-        <div className='overflow-x-auto overflow-y-auto max-h-[70vh]'>
+      <div>
+        <div>
           <table className='min-w-full text-gray-900 table-auto'>
             <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xxs'>
               <tr>
@@ -157,15 +157,15 @@ export default function Table_Cache() {
                     onClick={() => handleRowClick(entry)}
                   >
                     <td className='px-2'>{idx + 1}</td>
-                    <td className='px-2 max-w-[120px] truncate'>
+                    <td className='px-2'>
                       <TablesBadge tables={entry.tables} />
                     </td>
-                    <td className='px-2 max-w-[100px] truncate'>{entry.caller}</td>
+                    <td className='px-2'>{entry.caller}</td>
                     <td className='px-2 text-center'>
                       {entry.rowCount >= 0 ? entry.rowCount : entry.info}
                     </td>
                     <td className='px-2 text-center'>{entry.hitCount}</td>
-                    <td className='px-2 font-mono max-w-[700px] truncate'>
+                    <td className='px-2 font-mono'>
                       {entry.sql}
                     </td>
                     <td className='px-2' onClick={e => e.stopPropagation()}>
@@ -191,7 +191,7 @@ export default function Table_Cache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} maxWidth='max-w-5xl'>
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)}>
         {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>
@@ -255,7 +255,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
           :
         </p>
         {rows && columns.length > 0 ? (
-          <div className='overflow-auto max-h-[50vh] border rounded'>
+          <div className='border rounded'>
             <table className='min-w-full text-xxs text-gray-900'>
               <thead className='sticky top-0 bg-gray-100'>
                 <tr>
@@ -284,7 +284,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
             </table>
           </div>
         ) : (
-          <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all overflow-auto max-h-[50vh]'>
+          <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
             {JSON.stringify(data, null, 2)}
           </pre>
         )}
