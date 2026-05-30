@@ -1070,7 +1070,7 @@ export default function Table({ tables }: { tables: string[] }) {
   //----------------------------------------------------------------------------------------------
   return (
     <>
-      <div className='mt-4 py-2 px-2 bg-gray-50 rounded-lg shadow-md max-w-full'>
+      <div>
         <div>
           <table className='min-w-full text-gray-900 table-auto '>
             <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xs '>
