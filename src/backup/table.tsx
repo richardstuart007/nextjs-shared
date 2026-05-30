@@ -725,7 +725,7 @@ export default function Table({ tables }: { tables: string[] }) {
             Postgres Backup Tables
           </div>
         </th>
-        <th className='pb-2 px-8' colSpan={4}>
+        <th className='pb-2 px-2' colSpan={4}>
           <div className='font-bold rounded-md border border-blue-500 py-1 text-center'>
             {`PC Folder (${dirPathPrefix}${dataDirectory})`}
           </div>
@@ -755,7 +755,7 @@ export default function Table({ tables }: { tables: string[] }) {
           <MyInput
             id='dataDirectory'
             name='dataDirectory'
-            overrideClass={`w-40  text-center`}
+            overrideClass={`w-28 text-center`}
             type='text'
             value={dataDirectory}
             onChange={e => setDataDirectory(e.target.value)}
