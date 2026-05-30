@@ -943,7 +943,7 @@ export default function Table({ tables }: { tables: string[] }) {
           const row_tabledata_count = tabledata_count[index]
           const row_tabledata_count_Z = tabledata_count_Z[index]
           return (
-            <tr key={row_tabledata} className='w-full border-b'>
+            <tr key={row_tabledata} className='w-full'>
               <td className='text-xs px-2 pt-2'>{row_tabledata}</td>
               <td className='text-xs px-2 pt-2 text-right'>{row_tabledata_count}</td>
               <td className='text-xs px-2 py-1 text-center'>
@@ -1070,7 +1070,7 @@ export default function Table({ tables }: { tables: string[] }) {
   //----------------------------------------------------------------------------------------------
   return (
     <>
-      <div className='mt-4 py-2 px-2 bg-gray-50 rounded-lg shadow-md max-w-full'>
+      <div>
         <div className='overflow-x-auto overflow-y-auto max-h-[70vh]'>
           <table className='min-w-full text-gray-900 table-auto '>
             <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xs '>
