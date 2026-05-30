@@ -14,12 +14,37 @@ import MyPagination from '../components/MyPagination'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import { table_seqReset } from '../tables/tableGeneric/table_seq_reset'
+import { MyHelp } from '../components/MyHelp'
+import type { HelpItem } from '../components/MyHelp'
 import {
   table_write_toJSON,
   directory_list,
   table_write_fromJSON,
   file_count_json
 } from './backupUtils'
+
+const HELP_ITEMS: HelpItem[] = [
+  {
+    heading: 'Backup prefix',
+    body: 'Enter a prefix (e.g. "1") then click Refresh in the Backup column to load backup tables named z{prefix}_{table}.',
+  },
+  {
+    heading: 'Duplicate',
+    body: 'Creates a new backup table with the same structure as the base table. Only available when no backup exists.',
+  },
+  {
+    heading: 'Copy',
+    body: 'Copies all rows from the base table into the existing backup table. Clears backup first if it has rows.',
+  },
+  {
+    heading: 'ToBase',
+    body: 'Truncates the base table and copies all rows from the backup into it. Resets the sequence after copy.',
+  },
+  {
+    heading: 'PC Folder',
+    body: 'Enter a subfolder under C:/backups/ to enable JSON download and upload. Use Down to export and Upload to import.',
+  },
+]
 
 const ROWS_PER_PAGE = 50
 
@@ -933,7 +958,7 @@ export default function Table({ tables }: { tables: string[] }) {
   //----------------------------------------------------------------------------------------------
   function render_body() {
     return (
-      <tbody className='bg-white '>
+      <tbody>
         {tabledata?.map((row_tabledata, index) => {
           const row_existsInZ = exists_Z[index] || false
           const row_existsInD = exists_D[index] || false
@@ -943,7 +968,7 @@ export default function Table({ tables }: { tables: string[] }) {
           const row_tabledata_count = tabledata_count[index]
           const row_tabledata_count_Z = tabledata_count_Z[index]
           return (
-            <tr key={row_tabledata} className='w-full'>
+            <tr key={row_tabledata} className={`w-full ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
               <td className='text-xs px-2 pt-2'>{row_tabledata}</td>
               <td className='text-xs px-2 pt-2 text-right'>{row_tabledata_count}</td>
               <td className='text-xs px-2 py-1 text-center'>
@@ -1070,6 +1095,9 @@ export default function Table({ tables }: { tables: string[] }) {
   //----------------------------------------------------------------------------------------------
   return (
     <>
+      <div className='flex items-center gap-2 mb-2'>
+        <MyHelp items={HELP_ITEMS} title='Backup Help' label='Help' />
+      </div>
       <div>
         <div className='overflow-x-auto overflow-y-auto max-h-[70vh]'>
           <table className='min-w-full text-gray-900 table-auto '>

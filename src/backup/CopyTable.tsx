@@ -52,7 +52,8 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
 
   useEffect(() => {
     if (!directory) return
-    list_env_files(directory).then(files => {
+    async function load() {
+      const files = await list_env_files(directory)
       setEnvFiles(files)
       setSourceEnvFile(files[0]?.file ?? '')
       setTargetEnvFile(files[1]?.file ?? '')
@@ -62,7 +63,8 @@ export default function CopyTable({ baseDir = '', caller = 'CopyTable', title = 
       setBackupLogs([])
       setBackupConflicts([])
       setMessage('')
-    })
+    }
+    load()
   }, [directory])
 
   const sourceLocation = locationFor(sourceEnvFile)

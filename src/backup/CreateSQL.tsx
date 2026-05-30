@@ -37,13 +37,15 @@ export default function CreateSQL({ baseDir = '' }: { baseDir?: string }) {
 
   useEffect(() => {
     if (!directory) return
-    list_env_files(directory).then(files => {
+    async function load() {
+      const files = await list_env_files(directory)
       setEnvFiles(files)
       setSourceEnv(files[0]?.file ?? '')
       setTableDDLs([])
       setSelectedTable('')
       setMessage('')
-    })
+    }
+    load()
   }, [directory])
 
   const sourceLabel = envFiles.find(e => e.file === sourceEnv)?.location ?? ''

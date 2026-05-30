@@ -58,14 +58,16 @@ export default function SchemaSync({
 
   useEffect(() => {
     if (!directory) return
-    list_env_files(directory).then(files => {
+    async function load() {
+      const files = await list_env_files(directory)
       setEnvFiles(files)
       setSourceEnv(files[0]?.file ?? '')
       setTargetEnv(files[1]?.file ?? '')
       setResult(null)
       setSql('')
       setMessage('')
-    })
+    }
+    load()
   }, [directory])
 
   async function handleCompare() {
