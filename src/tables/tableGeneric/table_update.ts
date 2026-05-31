@@ -3,21 +3,15 @@
 import { sql } from '../db'
 import { write_Logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
-//
-// Column-value pairs
-//
-interface ColumnValuePair {
-  column: string
-  value: string | number | boolean | string[] | number[]
-}
+import { WriteColumnValuePair } from '../structures'
 //
 // Props
 //
 interface Props {
   caller: string
   table: string
-  columnValuePairs: ColumnValuePair[]
-  whereColumnValuePairs: ColumnValuePair[]
+  columnValuePairs: WriteColumnValuePair[]
+  whereColumnValuePairs: WriteColumnValuePair[]
   noLog?: boolean
 }
 

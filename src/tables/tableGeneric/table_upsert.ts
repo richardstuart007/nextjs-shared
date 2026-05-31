@@ -3,21 +3,16 @@
 import { sql } from '../db'
 import { write_Logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
-//
-// Define the column-value pair interface
-//
-interface ColumnValuePair {
-  column: string
-  value: string | number | boolean | string[] | number[]
-}
+import { WriteColumnValuePair } from '../structures'
 //
 // Define the props interface for the upsert function
 //
 interface Props {
   caller: string
   table: string
-  columnValuePairs: ColumnValuePair[]
+  columnValuePairs: WriteColumnValuePair[]
   conflictColumns: string[]
+  updateColumns?: string[]   // when set, only these non-conflict columns are updated on conflict
   noLog?: boolean
 }
 
@@ -25,6 +20,7 @@ export async function table_upsert({
   table,
   columnValuePairs,
   conflictColumns,
+  updateColumns,
   caller,
   noLog = false
 }: Props): Promise<any[]> {
@@ -37,10 +33,14 @@ export async function table_upsert({
   const placeholders = columnValuePairs.map((_, index) => `$${index + 1}`).join(', ')
   //
   // Build the ON CONFLICT ... DO UPDATE SET clause
-  // Update all columns that are not part of the conflict key
+  // Exclude conflict columns; also exclude any not in updateColumns (when specified)
   //
   const updateClause = columnValuePairs
-    .filter(({ column }) => !conflictColumns.includes(column))
+    .filter(({ column }) => {
+      if (conflictColumns.includes(column)) return false
+      if (updateColumns && !updateColumns.includes(column)) return false
+      return true
+    })
     .map(({ column }) => `${column} = EXCLUDED.${column}`)
     .join(', ')
   //

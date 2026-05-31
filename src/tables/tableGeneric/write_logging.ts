@@ -1,22 +1,14 @@
 'use server'
 
 import { sql } from '../db'
-//---------------------------------------------------------------------
-//  Write Logging
-//---------------------------------------------------------------------
-type Props = {
-  lg_functionname: string
-  lg_msg: string
-  lg_severity?: string
-  lg_caller: string
-}
+import { WriteLoggingProps } from '../structures'
 
 export async function write_Logging({
   lg_functionname,
   lg_msg,
   lg_severity = 'E',
   lg_caller = ''
-}: Props): Promise<boolean> {
+}: WriteLoggingProps): Promise<boolean> {
   const functionName = 'write_Logging'
   try {
     //

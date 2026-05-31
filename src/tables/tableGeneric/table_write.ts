@@ -3,20 +3,14 @@
 import { sql } from '../db'
 import { write_Logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
-//
-// Define the column-value pair interface
-//
-interface ColumnValuePair {
-  column: string
-  value: string | number | boolean | string[] | number[]
-}
+import { WriteColumnValuePair } from '../structures'
 //
 // Define the props interface for the insert function
 //
 interface Props {
   caller: string
   table: string
-  columnValuePairs: ColumnValuePair[]
+  columnValuePairs: WriteColumnValuePair[]
   noLog?: boolean
 }
 

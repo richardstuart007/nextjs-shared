@@ -1,16 +1,4 @@
-export type Comparison_operator =
-  | '='
-  | '<>'
-  | 'LIKE'
-  | 'NOT LIKE'
-  | '>'
-  | '>='
-  | '<'
-  | '<='
-  | 'IN'
-  | 'NOT IN'
-  | 'IS NULL'
-  | 'IS NOT NULL'
+export type { Comparison_operator } from '../structures'
 
 export const Comparison_values = [
   { optionLabel: 'Equal', optionValue: '=' },

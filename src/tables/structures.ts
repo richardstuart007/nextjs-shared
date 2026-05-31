@@ -1,11 +1,30 @@
-import { Comparison_operator } from './tableGeneric/table_comparison_values'
+//
+// Comparison operators
+//
+export type Comparison_operator =
+  | '='
+  | '<>'
+  | 'LIKE'
+  | 'NOT LIKE'
+  | '>'
+  | '>='
+  | '<'
+  | '<='
+  | 'IN'
+  | 'NOT IN'
+  | 'IS NULL'
+  | 'IS NOT NULL'
 //
 // Column-value pairs
 //
 export type ColumnValuePair = {
   column: string
-  value: string | number | (string | number)[]
+  value: string | number | boolean | null | (string | number)[]
   operator?: Comparison_operator
+}
+export type WriteColumnValuePair = {
+  column: string
+  value: string | number | boolean | null | string[] | number[]
 }
 export type TableColumnValuePairs = {
   table: string
@@ -33,4 +52,10 @@ export type table_Logging = {
   lg_functionname: string
   lg_msg: string
   lg_datetime: Date
+}
+export type WriteLoggingProps = {
+  lg_functionname: string
+  lg_msg: string
+  lg_severity?: string
+  lg_caller: string
 }
