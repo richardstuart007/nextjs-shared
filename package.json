@@ -13,6 +13,7 @@
     "./MyLink": "./src/components/MyLink.tsx",
     "./MyLoadingMessage": "./src/components/MyLoadingMessage.tsx",
     "./MyHelp": "./src/components/MyHelp.tsx",
+    "./MyHelpField": "./src/components/MyHelpField.tsx",
     "./MyMergeClasses": "./src/components/MyMergeClasses.ts",
     "./MyPagination": "./src/components/MyPagination.tsx",
     "./MyPopup": "./src/components/MyPopup.tsx",

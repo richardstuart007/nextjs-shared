@@ -337,7 +337,8 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 | `nextjs-shared/MyPagination` | Pagination controls |
 | `nextjs-shared/MyLink` | Styled anchor |
 | `nextjs-shared/MyPopup` | Popup overlay |
-| `nextjs-shared/MyHelp` | Help button with popover items |
+| `nextjs-shared/MyHelp` | Help button with popover — pass `items` (structured heading+body) or `text` (plain string, supports newlines) |
+| `nextjs-shared/MyHelpField` | Hover tooltip `?` icon for inline field hints — pass `text` string |
 | `nextjs-shared/MyHourGlass` | Loading spinner |
 | `nextjs-shared/MyLoadingMessage` | Loading text |
 | `nextjs-shared/MyBox` | Styled container box |
