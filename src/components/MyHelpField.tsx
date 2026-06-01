@@ -15,7 +15,7 @@ export function MyHelpField({ text, className = '' }: { text: string; className?
           ?
         </span>
         {show && (
-          <div className='absolute left-0 top-full mt-1 z-50 w-64 bg-gray-800 text-white text-xs rounded px-2 py-1.5 shadow-lg pointer-events-none whitespace-normal'>
+          <div className='absolute left-0 top-full mt-1 z-50 w-64 bg-blue-50 border border-blue-200 text-gray-700 text-xs rounded px-2 py-1.5 shadow-md pointer-events-none whitespace-normal'>
             {text}
           </div>
         )}
