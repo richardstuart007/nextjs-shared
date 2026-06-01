@@ -339,6 +339,7 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 | `nextjs-shared/MyPopup` | Popup overlay |
 | `nextjs-shared/MyHelp` | Help button with popover — pass `items` (structured heading+body) or `text` (plain string, supports newlines) |
 | `nextjs-shared/MyHelpField` | Hover tooltip `?` icon for inline field hints — pass `text` string |
+| `nextjs-shared/MyHelpStep` | Wide structured help popover for pipeline/process steps — pass `title`, `input[]`, `processing`, `output[]`, optional `consumers[]` and `label`. Renders an Input / Processing / Output / Consumers table. Anchors to the nearest `position:relative` ancestor. |
 | `nextjs-shared/MyHourGlass` | Loading spinner |
 | `nextjs-shared/MyLoadingMessage` | Loading text |
 | `nextjs-shared/MyBox` | Styled container box |
