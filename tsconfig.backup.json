@@ -10,6 +10,10 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["src/backup/**/*.ts"],
+  "include": [
+    "src/backup/backupUtils.ts",
+    "src/backup/copyTables.ts",
+    "src/backup/dbClient.ts"
+  ],
   "exclude": ["node_modules"]
 }
