@@ -248,11 +248,16 @@ function TableSummarySection({
               <th className='px-2 py-1 text-left text-gray-500 font-medium border-b'>Status</th>
               <th className='px-2 py-1 text-right text-gray-500 font-medium border-b'>{label1}</th>
               <th className='px-2 py-1 text-right text-gray-500 font-medium border-b'>{label2}</th>
+              <th className='px-2 py-1 text-left text-gray-500 font-medium border-b'>Counts</th>
             </tr>
           </thead>
           <tbody>
         {rows.map(r => {
           const meta = statusMeta(r.status, label1, label2)
+          const sc = sourceCounts[r.table_name]
+          const tc = targetCounts[r.table_name]
+          const countsLoaded = sc != null && tc != null
+          const countsMatch = countsLoaded && sc === tc
           return (
             <tr key={r.table_name} className='border-b border-gray-100'>
               <td className={`px-2 py-1 font-mono ${r.status !== 'identical' ? 'font-semibold' : 'text-gray-500'}`}>
@@ -262,10 +267,17 @@ function TableSummarySection({
                 <span className={`px-1 rounded ${meta.className}`}>{meta.label}</span>
               </td>
               <td className='px-2 py-1 text-right tabular-nums text-gray-600'>
-                {sourceCounts[r.table_name] != null ? sourceCounts[r.table_name].toLocaleString() : '—'}
+                {sc != null ? sc.toLocaleString() : '—'}
               </td>
               <td className='px-2 py-1 text-right tabular-nums text-gray-600'>
-                {targetCounts[r.table_name] != null ? targetCounts[r.table_name].toLocaleString() : '—'}
+                {tc != null ? tc.toLocaleString() : '—'}
+              </td>
+              <td className='px-2 py-1'>
+                {countsLoaded && (
+                  <span className={`px-1 rounded ${countsMatch ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    {countsMatch ? '✓ Identical' : '! Different'}
+                  </span>
+                )}
               </td>
             </tr>
           )
