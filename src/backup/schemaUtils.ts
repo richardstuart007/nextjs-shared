@@ -82,6 +82,11 @@ export async function fetchSchema(db: ArbitraryDb): Promise<SchemaRow[]> {
   return result.rows as SchemaRow[]
 }
 
+function normalizeDefault(d: string | null): string | null {
+  if (!d) return d
+  return d.replace(/nextval\('public\.([^']+)'(::regclass)?\)/g, "nextval('$1'$2)")
+}
+
 /** Compare two SchemaRow arrays and return columns only in each side, changed columns, and a per-table status summary. */
 export function diffSchemas(
   rows1: SchemaRow[],
@@ -109,7 +114,7 @@ export function diffSchemas(
       src.data_type !== tgt.data_type ||
       src.max_len !== tgt.max_len ||
       src.is_nullable !== tgt.is_nullable ||
-      src.column_default !== tgt.column_default
+      normalizeDefault(src.column_default) !== normalizeDefault(tgt.column_default)
     ) {
       changed.push({ table_name: src.table_name, column_name: src.column_name, source: src, target: tgt })
     }
