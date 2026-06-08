@@ -115,6 +115,17 @@ export default async function DbToolsPage() {
 | `tables` | `string[]` | `[]` | Tables shown in the Backup tab |
 | `baseDir` | `string` | `''` | Absolute path to project root for env file discovery |
 
+### System requirement — pg_dump / psql
+
+The Copy Tables and Create SQL tabs shell out to `pg_dump` and `psql`. These must be available either on `PATH` or in a standard PostgreSQL bin folder. On Windows the following are searched automatically before `PATH`:
+
+```
+C:\Program Files\PostgreSQL\18\bin
+C:\Program Files\PostgreSQL\17\bin
+C:\Program Files\PostgreSQL\16\bin
+C:\Program Files\PostgreSQL\15\bin
+```
+
 ---
 
 ## 5. Logging
