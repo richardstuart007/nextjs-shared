@@ -53,9 +53,9 @@
     "./userCache_store": "./src/tables/cache/userCache_store.ts",
     "./db": "./src/tables/db.ts",
     "./dbArbitrary": "./src/tables/dbArbitrary.ts",
-    "./backupUtils": "./dist/backup/backupUtils.js",
-    "./copyTables": "./dist/backup/copyTables.js",
-    "./dbClient": "./dist/backup/dbClient.js",
+    "./backupUtils": "./src/backup/backupUtils.ts",
+    "./copyTables": "./src/backup/copyTables.ts",
+    "./dbClient": "./src/backup/dbClient.ts",
     "./BackupTable": "./src/backup/table.tsx",
     "./CreateSQL": "./src/backup/CreateSQL.tsx",
     "./DatabaseTools": "./src/backup/DatabaseTools.tsx",
@@ -79,7 +79,6 @@
     "react": ">=19"
   },
   "scripts": {
-    "build:backup": "tsc -p tsconfig.backup.json"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

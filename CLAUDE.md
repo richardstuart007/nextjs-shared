@@ -10,9 +10,6 @@ For consuming project setup, component APIs, and usage examples see [CONSUMING_P
 # Type check
 npx tsc --noEmit
 
-# Compile backup utilities to dist/backup/
-npm run build:backup
-
 # Format
 npm run prettier
 
@@ -38,7 +35,7 @@ Consumer projects never call the DB directly — they always go through this pac
 - Postgres (`pg` library) — no ORM
 - React components (for Next.js consumers)
 
-### Exports (src/ directly — except backup utilities which resolve to dist/backup/)
+### Exports (all resolve to src/ directly)
 
 **Database — generic table operations**
 - `fetchFiltered` — paginated filtered SELECT
@@ -86,4 +83,4 @@ src/
 ### Coding conventions
 - Server actions use `write_Logging` (not `console.error`) for errors, severity `'E'`
 - Log messages include both a consequence string and `(error as Error).message`
-- Only `dist/backup/` is committed — run `npm run build:backup` after editing backup source files (`src/backup/*.ts`). The main `tsconfig.json` has `noEmit: true` and produces no output.
+- All exports resolve directly to `src/` TypeScript files. There is no compiled `dist/` output — the main `tsconfig.json` has `noEmit: true`.
