@@ -11,7 +11,7 @@ export function myMergeClasses(
   overrideClass: string
 ): string {
   //
-  //  Classes to replace (including text and background colors, but not size classes)
+  //  Classes to replace (including text size, color, and background)
   //
   const patternsToReplace = ['h-', 'w-', 'px-', 'py-', 'text-', 'bg-']
 
@@ -29,26 +29,14 @@ export function myMergeClasses(
   }
 
   //
-  // Check if the class is a text SIZE class (text-xs, text-sm, etc.) but NOT a colour class.
-  // Colour classes like text-black, text-white, text-blue-500 should be replaceable.
-  const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
-  const isSizeClass = (cls: string) => {
-    const core = getCoreClass(cls)
-    if (!core.startsWith('text-')) return false
-    const suffix = core.slice('text-'.length)
-    return TEXT_SIZES.has(suffix)
-  }
-
-  //
-  // Replace default classes with matching override classes (excluding size classes)
+  // Replace default classes with matching override classes
   //
   const updatedClassArray = defaultClassArray.map(defaultCls => {
     const matchingOverride = overrideClassArray.find(overrideCls =>
       patternsToReplace.some(
         pattern =>
           getCoreClass(defaultCls).startsWith(pattern) &&
-          getCoreClass(overrideCls).startsWith(pattern) &&
-          !isSizeClass(overrideCls) // Do not replace size-related classes
+          getCoreClass(overrideCls).startsWith(pattern)
       )
     )
     return matchingOverride || defaultCls
@@ -63,8 +51,7 @@ export function myMergeClasses(
         patternsToReplace.some(
           pattern =>
             getCoreClass(defaultCls).startsWith(pattern) &&
-            getCoreClass(overrideCls).startsWith(pattern) &&
-            !isSizeClass(overrideCls) // Do not replace size-related classes
+            getCoreClass(overrideCls).startsWith(pattern)
         )
       )
   )
