@@ -84,3 +84,65 @@ src/
 - Server actions use `write_Logging` (not `console.error`) for errors, severity `'E'`
 - Log messages include both a consequence string and `(error as Error).message`
 - All exports resolve directly to `src/` TypeScript files. There is no compiled `dist/` output — the main `tsconfig.json` has `noEmit: true`.
+
+---
+
+## Component authoring rules
+
+### overrideClass — main element
+Every component that renders a single styled element (button, input, select, textarea) must accept `overrideClass?: string` and merge it via `myMergeClasses(defaultClass, overrideClass)`. Define default classes as a joined array, one concern per line:
+```ts
+const defaultClass = [
+  'h-8 px-2',
+  'text-xs text-white',
+  'bg-blue-500 hover:bg-blue-600',
+].join(' ')
+const classValue = myMergeClasses(defaultClass, overrideClass)
+```
+
+### Sub-element override props
+Any sub-element with hardcoded Tailwind classes (label, title heading, wrapper div) MUST expose those classes as a named override prop with the hardcoded string as the default. Never leave appearance locked behind a hardcode a caller cannot reach.
+
+Naming convention:
+- Main element wrapper → `className` (plain passthrough, no merge needed)
+- Label element → `labelClass`
+- Title heading → `titleClass`
+- Container/wrapper div → `containerClass`
+
+Example — MySelect label:
+```ts
+// Prop
+labelClass?: string
+// Default
+labelClass = 'font-bold text-xs whitespace-nowrap'
+// Usage in JSX
+<label htmlFor={autoId} className={labelClass}>{label}</label>
+```
+A caller that needs a smaller label passes `labelClass='font-bold text-xxs whitespace-nowrap'`.
+
+### Form element id / htmlFor
+Every `<select>`, `<input>`, and `<textarea>` that renders alongside a `<label>` must link them. Accept `id` via props; if none is passed, derive one from the `label` prop:
+```ts
+const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
+// then: <label htmlFor={autoId}> and <select id={autoId}>
+```
+
+### myMergeClasses behaviour
+`myMergeClasses` replaces default classes with matching override classes based on Tailwind prefix patterns (`h-`, `w-`, `px-`, `py-`, `text-`, `bg-`). Key rules:
+- Variant prefixes (`hover:`, `focus:`, `sm:`, etc.) are stripped before matching, so `hover:bg-blue-600` is replaced only by another `hover:bg-*` override, not a bare `bg-*`.
+- `text-*` colour classes (e.g. `text-white`) are never replaced by `text-*` size classes (e.g. `text-xxs`) and vice versa — the `canReplace` guard prevents this.
+- Classes in `overrideClass` that match no default pattern are appended.
+
+### Tailwind v4 — custom text sizes in consuming projects
+`theme.extend.fontSize` in `tailwind.config.ts` is silently ignored in Tailwind v4. Custom text-size utilities must be declared with `@utility` in the consuming project's `globals.css`:
+```css
+@utility text-xxs {
+  font-size: 0.625rem;
+  line-height: 1rem;
+}
+@utility text-xxx {
+  font-size: 0.5rem;
+  line-height: 0.875rem;
+}
+```
+Without this, the class appears in the HTML but no CSS rule is generated and the text renders at the inherited/default size.

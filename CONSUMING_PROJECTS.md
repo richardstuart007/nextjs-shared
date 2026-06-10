@@ -355,6 +355,39 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 | `nextjs-shared/MyLoadingMessage` | Loading text |
 | `nextjs-shared/MyBox` | Styled container box |
 
+### MySelect props
+
+| Prop | Type | Default | Purpose |
+|---|---|---|---|
+| `label` | `string` | — | Label text rendered to the left of the select |
+| `options` | `string[]` | `[]` | Option values (renders `<option>` elements); omit to pass `children` directly |
+| `overrideClass` | `string` | `''` | Tailwind overrides for the `<select>` element (merged via `myMergeClasses`) |
+| `labelClass` | `string` | `'font-bold text-xs whitespace-nowrap'` | Tailwind classes for the label element |
+| `id` | `string` | derived from `label` | Explicit id; if omitted, derived from label text (e.g. "Depth" → `"depth"`) |
+
+### MyBox props
+
+| Prop | Type | Default | Purpose |
+|---|---|---|---|
+| `title` | `string` | — | Optional heading rendered inside the box |
+| `className` | `string` | `''` | Extra Tailwind classes added to the outer `<div>` |
+| `titleClass` | `string` | `'text-xs font-bold mb-2'` | Tailwind classes for the title `<h3>` |
+
+### Tailwind v4 — custom text sizes
+
+`theme.extend.fontSize` in `tailwind.config.ts` is **silently ignored** in Tailwind v4. Any custom text-size utility (e.g. `text-xxs`) must be declared with `@utility` in the consuming project's `globals.css` — otherwise the class appears in the HTML but renders at the inherited default size:
+
+```css
+@utility text-xxs {
+  font-size: 0.625rem;
+  line-height: 1rem;
+}
+@utility text-xxx {
+  font-size: 0.5rem;
+  line-height: 0.875rem;
+}
+```
+
 ---
 
 ## 9. Consuming Project Conventions

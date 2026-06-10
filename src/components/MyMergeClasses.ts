@@ -22,10 +22,19 @@ export function myMergeClasses(
   const defaultClassArray = defaultClass.split(' ')
 
   //
-  // Function to extract the core property (e.g., "md:h-" → "h-")
+  // Extract the variant prefix (e.g., "hover:" from "hover:bg-blue-600", "" from "bg-blue-600")
+  //
+  const getVariantPrefix = (cls: string): string => {
+    const match = cls.match(/^([a-z][a-z0-9-]*:)+/)
+    return match ? match[0] : ''
+  }
+
+  //
+  // Extract the core property, stripping all variant/responsive prefixes
+  // e.g., "hover:bg-blue-600" → "bg-blue-600", "md:h-8" → "h-8"
   //
   const getCoreClass = (cls: string) => {
-    return cls.replace(/^(sm:|md:|lg:|xl:|2xl:)/, '') // Remove responsive prefix
+    return cls.replace(/^([a-z][a-z0-9-]*:)+/, '')
   }
 
   //
@@ -52,6 +61,7 @@ export function myMergeClasses(
         pattern =>
           getCoreClass(defaultCls).startsWith(pattern) &&
           getCoreClass(overrideCls).startsWith(pattern) &&
+          getVariantPrefix(defaultCls) === getVariantPrefix(overrideCls) &&
           canReplace(getCoreClass(defaultCls), getCoreClass(overrideCls))
       )
     )
@@ -68,6 +78,7 @@ export function myMergeClasses(
           pattern =>
             getCoreClass(defaultCls).startsWith(pattern) &&
             getCoreClass(overrideCls).startsWith(pattern) &&
+            getVariantPrefix(defaultCls) === getVariantPrefix(overrideCls) &&
             canReplace(getCoreClass(defaultCls), getCoreClass(overrideCls))
         )
       )
