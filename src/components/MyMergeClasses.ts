@@ -29,6 +29,21 @@ export function myMergeClasses(
   }
 
   //
+  // Check if the class is a text SIZE class (text-xs, text-sm, etc.) — not a colour class.
+  //
+  const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
+  const isSizeClass = (cls: string) => {
+    const core = getCoreClass(cls)
+    if (!core.startsWith('text-')) return false
+    const suffix = core.slice('text-'.length)
+    return TEXT_SIZES.has(suffix)
+  }
+
+  // Allow replacement only when both are sizes OR both are colours — prevents text-xxs clobbering text-white.
+  const canReplace = (defaultCls: string, overrideCls: string) =>
+    isSizeClass(defaultCls) === isSizeClass(overrideCls)
+
+  //
   // Replace default classes with matching override classes
   //
   const updatedClassArray = defaultClassArray.map(defaultCls => {
@@ -36,7 +51,8 @@ export function myMergeClasses(
       patternsToReplace.some(
         pattern =>
           getCoreClass(defaultCls).startsWith(pattern) &&
-          getCoreClass(overrideCls).startsWith(pattern)
+          getCoreClass(overrideCls).startsWith(pattern) &&
+          canReplace(getCoreClass(defaultCls), getCoreClass(overrideCls))
       )
     )
     return matchingOverride || defaultCls
@@ -51,7 +67,8 @@ export function myMergeClasses(
         patternsToReplace.some(
           pattern =>
             getCoreClass(defaultCls).startsWith(pattern) &&
-            getCoreClass(overrideCls).startsWith(pattern)
+            getCoreClass(overrideCls).startsWith(pattern) &&
+            canReplace(getCoreClass(defaultCls), getCoreClass(overrideCls))
         )
       )
   )
