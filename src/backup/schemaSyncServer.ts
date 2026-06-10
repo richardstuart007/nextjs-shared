@@ -74,11 +74,17 @@ export async function fetchTableCountsForEnv(envFile: string, tables: string[]):
   const url = readEnvVar(envFile, 'POSTGRES_URL')
   if (!url) return {}
   const db = createArbitraryDb(url)
-  const unions = tables.map(t => `SELECT '${t}'::text AS t, COUNT(*) AS c FROM public."${t}"`).join(' UNION ALL ')
   try {
-    const result = await db.query({ query: unions })
+    const checkResult = await db.query({
+      query: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1::text[])`,
+      params: [tables],
+    })
+    const existing: string[] = checkResult.rows.map((r: { table_name: string }) => r.table_name)
+    if (existing.length === 0) return {}
+    const unions = existing.map(t => `SELECT '${t}'::text AS t, COUNT(*) AS c FROM public."${t}"`).join(' UNION ALL ')
+    const countResult = await db.query({ query: unions })
     const counts: Record<string, number> = {}
-    for (const row of result.rows) counts[row.t] = parseInt(row.c, 10)
+    for (const row of countResult.rows) counts[row.t] = parseInt(row.c, 10)
     return counts
   } catch {
     return {}
