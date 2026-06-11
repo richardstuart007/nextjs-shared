@@ -63,7 +63,11 @@
     "./SchemaSync": "./src/backup/SchemaSync.tsx",
     "./schemaSync": "./src/backup/schemaSyncServer.ts",
     "./routes/schema-compare": "./src/backup/routes/schema-compare/route.ts",
-    "./routes/copy": "./src/backup/routes/copy/route.ts"
+    "./routes/copy": "./src/backup/routes/copy/route.ts",
+    "./chess/constants": "./src/chess/constants.ts",
+    "./chess/parsePgn": "./src/chess/parsePgn.ts",
+    "./chess/sync": "./src/chess/sync.ts",
+    "./chess/deconstruct": "./src/chess/deconstruct.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
