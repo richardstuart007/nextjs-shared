@@ -22,7 +22,7 @@ export default function MySelect({ label, options = [], overrideClass = '', labe
   return (
     <div className='flex items-center gap-2'>
       {label && <label htmlFor={autoId} className={labelClass}>{label}</label>}
-      <select id={autoId} className={classValue} {...rest}>
+      <select id={autoId} className={classValue} suppressHydrationWarning {...rest}>
         {options.length > 0
           ? options.map(opt => <option key={opt} value={opt}>{opt}</option>)
           : children}

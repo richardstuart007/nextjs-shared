@@ -23,5 +23,5 @@ export function MyInput({ overrideClass = '', ...rest }: Props) {
   //
   //  Output
   //
-  return <input {...rest} className={classValue} />
+  return <input {...rest} className={classValue} suppressHydrationWarning />
 }
