@@ -107,13 +107,6 @@ export async function deconstructGames(
       if (playerSide?.result === 'win') playerResult = 'win'
       else if (opponentSide?.result === 'win') playerResult = 'loss'
 
-      // Compute post-game rating from PGN RatingDiff header
-      const ratingDiffTag = isWhite ? 'WhiteRatingDiff' : 'BlackRatingDiff'
-      const ratingDiffMatch = pgn.match(new RegExp(`\\[${ratingDiffTag}\\s+"([^"]*)"\\]`))
-      const playerRatingBefore = isWhite ? (rawData.white?.rating ?? 0) : (rawData.black?.rating ?? 0)
-      const ratingDiff = ratingDiffMatch ? parseInt(ratingDiffMatch[1], 10) : null
-      const playerRatingAfter = ratingDiff !== null && !isNaN(ratingDiff) ? playerRatingBefore + ratingDiff : null
-
       await table_write({
         caller: 'deconstructGames',
         table: DECON_TABLE,
@@ -136,8 +129,7 @@ export async function deconstructGames(
           { column: 'gd_eco_code', value: headers.eco },
           { column: 'gd_opening_name', value: headers.openingName },
           { column: 'gd_game_url', value: rawData.url ?? '' },
-          { column: 'gd_opening_moves', value: parsePgnOpening(pgn) },
-          { column: 'gd_player_rating_after', value: playerRatingAfter }
+          { column: 'gd_opening_moves', value: parsePgnOpening(pgn) }
         ]
       })
 

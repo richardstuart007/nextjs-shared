@@ -1,0 +1,36 @@
+-- Chess tables used by nextjs-shared/src/chess/ functions.
+-- These tables live in the consuming project's database.
+-- This file is documentation only — it is not executed by the app.
+
+CREATE TABLE tgr_gamesraw (
+  gr_grid            SERIAL PRIMARY KEY,
+  gr_player_username VARCHAR(64) NOT NULL,
+  gr_chesscom_uuid   VARCHAR(64) NOT NULL UNIQUE,
+  gr_raw_data        JSONB NOT NULL,
+  gr_pgn             TEXT,
+  gr_end_time        INTEGER NOT NULL,
+  gr_time_class      VARCHAR(16)
+);
+
+CREATE TABLE tgd_gamesdecon (
+  gd_gdid              SERIAL PRIMARY KEY,
+  gd_grid              INTEGER NOT NULL REFERENCES tgr_gamesraw(gr_grid),
+  gd_white_username    VARCHAR(64) NOT NULL,
+  gd_black_username    VARCHAR(64) NOT NULL,
+  gd_white_rating      INTEGER NOT NULL,
+  gd_black_rating      INTEGER NOT NULL,
+  gd_player_username   VARCHAR(64) NOT NULL,
+  gd_player_color      VARCHAR(5) NOT NULL,
+  gd_player_result     VARCHAR(8) NOT NULL,
+  gd_opponent_username VARCHAR(64) NOT NULL,
+  gd_opponent_rating   INTEGER NOT NULL,
+  gd_time_class        VARCHAR(16) NOT NULL,
+  gd_time_control      VARCHAR(32),
+  gd_is_rated          BOOLEAN NOT NULL DEFAULT TRUE,
+  gd_termination       VARCHAR(64),
+  gd_end_time          INTEGER NOT NULL,
+  gd_eco_code          VARCHAR(8),
+  gd_opening_name      TEXT,
+  gd_game_url          TEXT,
+  gd_opening_moves     TEXT
+);
