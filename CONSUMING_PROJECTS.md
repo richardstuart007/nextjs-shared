@@ -32,103 +32,10 @@ CREATE TABLE IF NOT EXISTS public.xlg_logging (
 | `POSTGRES_URL` | Yes | Postgres connection string |
 | `NEXT_PUBLIC_APPENV_LOG_I` | No | Set to `'false'` to suppress `'I'` severity log entries |
 | `NEXT_PUBLIC_APPENV_ISDEV` | No | Set to `'true'` to show a dev/environment badge in the UI |
-| `POSTGRES_DATABASE_LOCATION` | Yes (backup tools) | Human-readable label shown in Schema Sync / Copy Tables (e.g. `'LOCAL'`, `'PROD'`) |
 
 ---
 
-## 3. Admin Layout Setup (DatabaseTools)
-
-The `DatabaseTools` component needs full viewport width and no spurious scrollbars.  
-The root layout of most projects constrains width (`max-w-7xl`) and adds padding (`py-6 px-4`).  
-Override both in the admin section layout.
-
-**`src/app/admin/layout.tsx`** (or wherever admin lives):
-```tsx
-'use client'
-import { Suspense } from 'react'
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className='relative left-1/2 w-screen -translate-x-1/2 -my-6'>
-      <Suspense>{children}</Suspense>
-    </div>
-  )
-}
-```
-
-> `w-screen left-1/2 -translate-x-1/2` breaks out of any `max-w-*` ancestor.  
-> `-my-6` cancels the root layout's `py-6` padding.  
-> Adjust `-my-6` to match your root layout's vertical padding.
-
----
-
-## 4. DatabaseTools Component
-
-A 4-tab admin panel: **Backup**, **Schema Sync**, **Copy Tables**, **Create SQL**.
-
-### Setup — two API routes required
-
-**`src/app/api/backup/copy/route.ts`**:
-```ts
-export { POST } from 'nextjs-shared/routes/copy'
-```
-
-**`src/app/api/backup/schema-compare/route.ts`**:
-```ts
-export { GET } from 'nextjs-shared/routes/schema-compare'
-```
-
-### Page
-
-```tsx
-import { sql } from 'nextjs-shared/db'
-import dynamic from 'next/dynamic'
-
-const DatabaseTools = dynamic(() => import('nextjs-shared/DatabaseTools'), { ssr: false })
-
-export default async function DbToolsPage() {
-  const db = await sql()
-  const result = await db.query({
-    query: `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`,
-    params: [],
-    functionName: 'DbToolsPage',
-    caller: 'DbToolsPage',
-  })
-  const tables: string[] = result.rows.map((r: { tablename: string }) => r.tablename)
-  return (
-    <div className='mx-4 my-4 border border-gray-300 rounded-lg p-4'>
-      <h1 className='text-xl font-bold mb-2'>Database Tools</h1>
-      <DatabaseTools tables={tables} baseDir={process.cwd().replace(/\\/g, '/')} />
-    </div>
-  )
-}
-```
-
-> `ssr: false` prevents hydration mismatches from browser extensions modifying inputs.  
-> `baseDir` is the absolute path to the project root — used by Schema Sync and Copy Tables to find `.env.*` files.  
-> `tables` is the list of application tables shown in the Backup tab.
-
-### Props
-
-| Prop | Type | Default | Purpose |
-|---|---|---|---|
-| `tables` | `string[]` | `[]` | Tables shown in the Backup tab |
-| `baseDir` | `string` | `''` | Absolute path to project root for env file discovery |
-
-### System requirement — pg_dump / psql
-
-The Copy Tables and Create SQL tabs shell out to `pg_dump` and `psql`. These must be available either on `PATH` or in a standard PostgreSQL bin folder. On Windows the following are searched automatically before `PATH`:
-
-```
-C:\Program Files\PostgreSQL\18\bin
-C:\Program Files\PostgreSQL\17\bin
-C:\Program Files\PostgreSQL\16\bin
-C:\Program Files\PostgreSQL\15\bin
-```
-
----
-
-## 5. Logging
+## 3. Logging
 
 ### Write a log entry
 
@@ -162,7 +69,7 @@ Log message format: `'consequence string: ' + (error as Error).message`
 
 ---
 
-## 6. Generic Table Operations
+## 4. Generic Table Operations
 
 All are `'use server'` functions. Import individually.
 
@@ -300,7 +207,7 @@ const [rows, totalPages] = await Promise.all([
 
 ---
 
-## 7. Cache
+## 5. Cache
 
 The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, and `fetchTotalPages`, and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
 
@@ -331,7 +238,7 @@ export default function CachePage() {
 
 ---
 
-## 8. UI Components
+## 6. UI Components
 
 All are React client components. They accept an `overrideClass` prop to merge Tailwind classes.
 
@@ -390,7 +297,7 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 
 ---
 
-## 9. Consuming Project Conventions
+## 7. Consuming Project Conventions
 
 - **Never call the database directly** — always use functions from this package
 - **Error logging** — use `write_Logging` with severity `'E'`, never `console.error` alone
@@ -400,7 +307,7 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 
 ---
 
-## 10. Coding Conventions for Claude
+## 8. Coding Conventions for Claude
 
 These apply whenever writing or modifying code in a consuming project.
 
@@ -452,7 +359,7 @@ These apply whenever writing or modifying code in a consuming project.
 ### Layout (consuming project responsibility)
 - **This package provides bare components with no width, height, or scroll opinions**
 - The consuming project's page/layout controls all sizing, padding, borders, and scroll behaviour
-- Admin pages: use full viewport width (see Section 3)
+- Admin pages: use full viewport width
 - Consumer-facing pages: the consuming project decides appropriate constraints for the device
 
 ### Function comment headers
