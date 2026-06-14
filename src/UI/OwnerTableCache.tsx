@@ -8,14 +8,14 @@ import {
   cacheAction_getEntryData
 } from '../tables/cache/cache_actions'
 import type { CacheEntryInfo } from '../tables/cache/userCache_store'
-import { MyInput } from './MyInput'
-import { MyButton } from './MyButton'
-import MyPopup from './MyPopup'
+import { MyInput } from '../components/MyInput'
+import { MyButton } from '../components/MyButton'
+import MyPopup from '../components/MyPopup'
 
 type PopupState = { entry: CacheEntryInfo; data: any } | null
 
-export default function Table_Cache() {
-  const functionName = 'Table_Cache'
+export default function OwnerTableCache() {
+  const functionName = 'OwnerTableCache'
   const [entries, setEntries] = useState<CacheEntryInfo[]>([])
   const [keyFilter, setKeyFilter] = useState('')
   const [tableFilter, setTableFilter] = useState('')
@@ -153,7 +153,7 @@ export default function Table_Cache() {
                 filteredEntries.map((entry, idx) => (
                   <tr
                     key={entry.sql}
-                    className='w-full border-b cursor-pointer hover:bg-blue-50'
+                    className='w-full border-b border-gray-100 cursor-pointer hover:bg-blue-50'
                     onClick={() => handleRowClick(entry)}
                   >
                     <td className='px-2'>{idx + 1}</td>
@@ -191,7 +191,7 @@ export default function Table_Cache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)}>
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} maxWidth='max-w-[95vw]'>
         {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>
@@ -213,8 +213,10 @@ function TablesBadge({ tables }: { tables: string[] }) {
 const MAX_DISPLAY_ROWS = 100
 
 function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any }) {
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const rows = Array.isArray(data) ? data : null
   const columns = rows && rows.length > 0 ? Object.keys(rows[0]) : []
+  const selectedRow = selectedIdx !== null && rows ? rows[selectedIdx] : null
 
   return (
     <div>
@@ -255,33 +257,63 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
           :
         </p>
         {rows && columns.length > 0 ? (
-          <div className='border rounded'>
-            <table className='min-w-full text-xxs text-gray-900'>
-              <thead className='sticky top-0 bg-gray-100'>
-                <tr>
-                  {columns.map(col => (
-                    <th key={col} className='px-2 py-1 font-medium text-left whitespace-nowrap'>
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.slice(0, MAX_DISPLAY_ROWS).map((row: any, i: number) => (
-                  <tr key={i} className='border-t'>
+          <div className='flex gap-4'>
+            <div className='flex-1 border rounded overflow-auto'>
+              <table className='min-w-full text-xxs text-gray-900'>
+                <thead className='sticky top-0 bg-gray-100'>
+                  <tr>
                     {columns.map(col => (
-                      <td key={col} className='px-2 py-0.5 whitespace-nowrap'>
-                        {row[col] === null || row[col] === undefined ? (
-                          <span className='text-gray-400'>null</span>
-                        ) : (
-                          String(row[col])
-                        )}
-                      </td>
+                      <th key={col} className='px-2 py-1 font-medium text-left whitespace-nowrap'>
+                        {col}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.slice(0, MAX_DISPLAY_ROWS).map((row: any, i: number) => (
+                    <tr
+                      key={i}
+                      className={`border-t border-gray-100 cursor-pointer ${i === selectedIdx ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
+                      onClick={() => setSelectedIdx(i)}
+                    >
+                      {columns.map(col => (
+                        <td key={col} className='px-2 py-0.5 max-w-xs'>
+                          {row[col] === null || row[col] === undefined ? (
+                            <span className='text-gray-400'>null</span>
+                          ) : (
+                            <div className='truncate'>{fmtCellValue(row[col])}</div>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {selectedRow !== null && (
+              <div className='w-80 border-l pl-4 shrink-0'>
+                <p className='text-xs font-medium text-gray-500 mb-2'>
+                  Row {selectedIdx! + 1} of {rows.length}
+                </p>
+                <dl className='space-y-2'>
+                  {Object.entries(selectedRow).map(([col, val]) => (
+                    <div key={col} className='text-xs'>
+                      <dt className='font-medium text-gray-500'>{col}</dt>
+                      <dd className='mt-0.5'>
+                        {val === null || val === undefined ? (
+                          <span className='text-gray-400'>null</span>
+                        ) : (
+                          <pre className='bg-gray-100 rounded px-2 py-0.5 font-mono whitespace-pre-wrap break-all'>
+                            {fmtCellValue(val)}
+                          </pre>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
           </div>
         ) : (
           <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
@@ -291,4 +323,9 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
       </div>
     </div>
   )
+}
+
+function fmtCellValue(val: unknown): string {
+  if (val instanceof Date) return val.toISOString().slice(0, 16).replace('T', ' ')
+  return String(val)
 }

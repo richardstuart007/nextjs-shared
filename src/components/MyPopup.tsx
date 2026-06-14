@@ -13,7 +13,7 @@ export default function MyPopup({ isOpen, onClose, children, maxWidth = 'max-w-m
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50'>
+    <div className='fixed inset-0 flex justify-center items-center z-50'>
       <div className={`relative bg-white p-6 rounded-lg shadow-lg w-full max-h-[90vh] overflow-y-auto ${maxWidth}`}>
         <MyButton
           onClick={onClose}

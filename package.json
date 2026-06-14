@@ -21,8 +21,11 @@
     "./MySelect": "./src/components/MySelect.tsx",
     "./MyTextarea": "./src/components/MyTextarea.tsx",
     "./MyToggle": "./src/components/MyToggle.tsx",
-    "./Table_Cache": "./src/components/Table_Cache.tsx",
-    "./Table_Logging": "./src/components/Table_Logging.tsx",
+    "./DevLayoutHeader": "./src/UI/DevLayoutHeader.tsx",
+    "./OwnerLayout": "./src/UI/OwnerLayout.tsx",
+    "./OwnerPage": "./src/UI/OwnerPage.tsx",
+    "./OwnerTableCache": "./src/UI/OwnerTableCache.tsx",
+    "./OwnerTableLogging": "./src/UI/OwnerTableLogging.tsx",
     "./widthUtils": "./src/components/widthUtils.ts",
     "./table_fetch": "./src/tables/tableGeneric/table_fetch.ts",
     "./table_fetch_join": "./src/tables/tableGeneric/table_fetch_join.ts",
@@ -72,11 +75,21 @@
     "react": ">=19"
   },
   "scripts": {
+    "dev": "next dev --turbopack --port 3009",
+    "build": "next build",
+    "start": "next start"
   },
   "devDependencies": {
+    "@heroicons/react": "^2.1.5",
+    "@tailwindcss/forms": "^0.5",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.7",
+    "next": "^16.2.4",
+    "react": "^19",
+    "react-dom": "^19",
+    "tailwindcss": "^4",
     "typescript": "^5.2.2"
   }
 }

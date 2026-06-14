@@ -54,7 +54,12 @@ Consumer projects never call the DB directly — they always go through this pac
 
 **UI Components**
 - `MyButton`, `MyInput`, `MyDropdown`, `MyTextarea`, `MyConfirmDialog`
+
+**Full UI panels (src/UI/)**
+- `OwnerLayout` — dev-only guard layout with sessionStorage back-link
+- `OwnerPage` — tabbed page chrome; accepts `tabs: { label, content }[]`
 - `Table_Logging` — paginated view of `xlg_logging`
+- `Table_Cache` — cache inspector
 
 **Cache**
 - `userCache_store` — per-user server-side cache (cache key = SQL string)
@@ -72,8 +77,8 @@ Table names use `x` prefix to avoid clashing with consumer project table names. 
 
 ```
 src/
-  backup/         schemaCompare.ts, copyTables.ts, table.tsx
-  components/     Shared React components (MyButton, Table_Logging, etc.)
+  components/     Primitive shared React components (MyButton, MyInput, etc.)
+  UI/             Full UI panels (OwnerLayout, OwnerPage, Table_Cache, Table_Logging)
   tables/
     db.ts         Postgres connection helper (sql())
     structures.ts Row types and shared type definitions
