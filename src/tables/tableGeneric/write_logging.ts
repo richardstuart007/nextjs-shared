@@ -18,6 +18,13 @@ export async function write_Logging({
       return false
     }
     //
+    // No database — fall back to console
+    //
+    if (!process.env.POSTGRES_URL) {
+      console.log(`[${lg_severity}] ${lg_functionname} | ${lg_msg}`)
+      return false
+    }
+    //
     //  Get datetime in UTC
     //
     const currentDate = new Date()
