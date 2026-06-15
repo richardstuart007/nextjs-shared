@@ -184,7 +184,7 @@ export default function OwnerSyncVersions() {
 
       {syncResults && syncResults.some(r => r.changes.length > 0) && (
         <div className='mt-3 text-xxs text-gray-500'>
-          Run <span className='font-mono'>npm install --force</span> in each updated project to apply changes.
+          In each updated project run: <span className='font-mono'>Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json; npm install</span>
         </div>
       )}
     </div>

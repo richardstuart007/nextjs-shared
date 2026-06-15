@@ -19,6 +19,28 @@ npm run prettier:check
 
 No test runner is configured. Use `npx tsc --noEmit` to verify correctness after changes.
 
+## Release rules
+
+**Before every commit to GitHub:**
+1. Bump the version number in `package.json` — this prevents npm from serving a cached copy to consuming projects
+2. After pushing, run the following in every consuming project to pull the updated package:
+   ```powershell
+   Remove-Item -Recurse -Force node_modules
+   Remove-Item -Force package-lock.json
+   npm install
+   Remove-Item -Recurse -Force .next
+   npx tsc --noEmit
+   npm run build
+   ```
+   Deleting `node_modules` and `package-lock.json` and running a full `npm install` is the reliable way to pull the latest GitHub commit. `npm update nextjs-shared` is avoided because with `save-exact=false` it can silently rewrite the GitHub ref in `package.json`.
+
+**Never rename an existing export, function, component, or type without explicit instruction from the user.** Every name in this package is consumed by all projects under `C:\Users\richa\github`. A rename silently breaks every consuming project. If a rename seems warranted, stop and ask first.
+
+**When nextjs-shared changes affect consuming projects** (new exports, removed exports, API changes):
+- Identify which consuming projects are affected
+- Update their import paths / usage as needed
+- Reinstall and verify they build correctly before reporting the task as done
+
 ## Purpose
 
 `nextjs-shared` is a private npm package (`github:richardstuart007/nextjs-shared`) consumed by other Next.js projects. It provides:
@@ -45,7 +67,7 @@ Consumer projects never call the DB directly — they always go through this pac
 - `table_update` — UPDATE a row
 - `table_delete` — DELETE a row
 - `table_check` — check row existence
-- `write_Logging` — write to `xlg_logging`
+- `write_logging` — write to `xlg_logging`
 
 **Database — backup / schema utilities**
 - `schemaSnapshot` — snapshot a DB's public schema into `xsc_schema`
@@ -86,7 +108,7 @@ src/
 ```
 
 ### Coding conventions
-- Server actions use `write_Logging` (not `console.error`) for errors, severity `'E'`
+- Server actions use `write_logging` (not `console.error`) for errors, severity `'E'`
 - Log messages include both a consequence string and `(error as Error).message`
 - All exports resolve directly to `src/` TypeScript files. There is no compiled `dist/` output — the main `tsconfig.json` has `noEmit: true`.
 

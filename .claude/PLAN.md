@@ -18,17 +18,27 @@ import { write_logging } from 'nextjs-shared/write_logging'   // after
 - [x] Run `npx tsc --noEmit` — clean
 - [x] Test: run `npm run locallocal`, generate logs + cache, verify `/owner` tab works end-to-end
 - [x] Bump version in `package.json` → 2.0.2
-- [ ] Commit and push nextjs-shared
+- [x] Commit and push nextjs-shared (v2.0.2, commit e2bfd2b)
 
 ### Steps — consuming projects (after push)
 
-Sequence per project: (1) global search/replace `write_Logging` → `write_logging` in all `.ts` files, (2) `npm install --force` to import the updated package, (3) `npx tsc --noEmit` to verify.
-Projects with 0 occurrences skip the search/replace step.
+Sequence per project:
+1. Update `.claude/PLAN.md` — add task for this rename
+2. Search/replace `write_Logging` → `write_logging` in all `.ts` files (skip for projects with 0 occurrences)
+3. Update `.claude/CHANGES.md` — record files changed
+4. `Remove-Item -Recurse -Force node_modules`
+5. `Remove-Item -Force package-lock.json`
+6. `npm install`
+7. `Remove-Item -Recurse -Force .next`
+8. `npx tsc --noEmit`
+9. `npm run build`
+10. Commit all (code + PLAN.md + CHANGES.md + package-lock.json)
+11. Clear CHANGES.md
 
-- [ ] `next-bridgeschool` (27 occurrences) — search/replace → import → tsc
-- [ ] `next-bridge` (19 occurrences) — search/replace → import → tsc
-- [ ] `infostore` (4 occurrences) — search/replace → import → tsc
-- [ ] `next-chess-analysis` (1 occurrence) — search/replace → import → tsc
-- [ ] `nextjs-chess` (0 occurrences) — import → tsc
-- [ ] `next-dbadmin` (0 occurrences) — import → tsc
-- [ ] `richard-dashboard` (0 occurrences) — import → tsc
+- [x] infostore (4 occurrences) — committed 2026-06-15
+- [x] next-bridgeschool (27 occurrences) — committed 2026-06-15
+- [x] next-bridge (19 occurrences) — committed 2026-06-15
+- [x] next-chess-analysis (1 occurrence) — committed 2026-06-15
+- [ ] nextjs-chess (0 occurrences — skip step 2)
+- [ ] next-dbadmin (0 occurrences — skip step 2)
+- [ ] richard-dashboard (0 occurrences — skip step 2)

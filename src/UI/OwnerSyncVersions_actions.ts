@@ -34,6 +34,7 @@ function readPkgFlat(pkgPath: string): Record<string, string> | null {
       ...(pkg.dependencies ?? {}),
       ...(pkg.devDependencies ?? {}),
       ...(pkg.peerDependencies ?? {}),
+      ...(pkg.overrides ?? {}),
     }
   } catch {
     return null
@@ -160,7 +161,7 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
 
   for (const { name, absPath } of projects) {
     const pkgPath = join(absPath, 'package.json')
-    let pkg: Record<string, Record<string, string> | undefined>
+    let pkg: Record<string, Record<string, string> | undefined> & { overrides?: Record<string, string> }
     try {
       pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
     } catch {
@@ -170,18 +171,43 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
 
     const allChanges: string[] = []
 
+    // Phase 1 — update deps/devDeps/peerDeps to npm latest (overrides handles the actual pin)
     for (const section of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
       const sec = pkg[section]
       if (!sec) continue
       for (const [dep, cur] of Object.entries(sec)) {
         if (cur.includes(':')) continue  // skip GitHub/git/file URL references
-        const effective = targets[dep] ?? latest[dep]
-        if (effective && effective !== '?' && cur !== effective) {
-          sec[dep] = effective
-          allChanges.push(`${dep}: ${cur} → ${effective}`)
+        const latestVer = latest[dep]
+        if (latestVer && latestVer !== '?' && cur !== latestVer) {
+          sec[dep] = latestVer
+          allChanges.push(`${dep}: ${cur} → ${latestVer}`)
         }
       }
     }
+
+    // Phase 2 — write targets into overrides block; remove overrides for de-targeted packages
+    const newOverrides: Record<string, string> = { ...(pkg.overrides ?? {}) }
+
+    for (const [dep, targetVer] of Object.entries(targets)) {
+      const isInProject = (['dependencies', 'devDependencies', 'peerDependencies'] as const).some(
+        s => pkg[s]?.[dep] != null
+      )
+      if (!isInProject) continue
+      if (newOverrides[dep] !== targetVer) {
+        newOverrides[dep] = targetVer
+        allChanges.push(`${dep}: override pinned to ${targetVer}`)
+      }
+    }
+
+    for (const dep of Object.keys(newOverrides)) {
+      if (packages.includes(dep) && !targets[dep]) {
+        delete newOverrides[dep]
+        allChanges.push(`${dep}: override removed`)
+      }
+    }
+
+    pkg.overrides = Object.keys(newOverrides).length > 0 ? newOverrides : undefined
+    if (pkg.overrides === undefined) delete pkg.overrides
 
     if (allChanges.length > 0) {
       writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
@@ -190,12 +216,14 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
     const npmrcPath = join(absPath, '.npmrc')
     let npmrcStatus = 'already set'
     if (!existsSync(npmrcPath)) {
-      writeFileSync(npmrcPath, 'save-exact=true\n', 'utf-8')
+      writeFileSync(npmrcPath, 'save-exact=false\n', 'utf-8')
       npmrcStatus = 'created'
     } else {
       const existing = readFileSync(npmrcPath, 'utf-8')
-      if (!existing.includes('save-exact=true')) {
-        writeFileSync(npmrcPath, existing.trimEnd() + '\nsave-exact=true\n', 'utf-8')
+      if (!existing.includes('save-exact=false')) {
+        const updated = existing.replace(/save-exact=true/g, 'save-exact=false')
+        const final = updated.includes('save-exact=false') ? updated : updated.trimEnd() + '\nsave-exact=false\n'
+        writeFileSync(npmrcPath, final, 'utf-8')
         npmrcStatus = 'updated'
       }
     }

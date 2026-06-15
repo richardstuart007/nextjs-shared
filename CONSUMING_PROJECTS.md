@@ -5,10 +5,33 @@ Import as: `"nextjs-shared": "github:richardstuart007/nextjs-shared"` in `packag
 
 ---
 
+## 0. Pulling the latest nextjs-shared
+
+Run these commands in order in the consuming project's terminal:
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
+npm install
+Remove-Item -Recurse -Force .next
+npx tsc --noEmit
+npm run build
+```
+
+**Why delete everything and reinstall?**  
+`nextjs-shared` is installed from GitHub via a git ref. npm records the resolved commit hash in `package-lock.json`. Deleting both `node_modules` and `package-lock.json` forces npm to re-resolve the git ref to the latest commit on the next `npm install`. Partial approaches (`npm update nextjs-shared`, `npm install --force`) either leave stale cached modules or silently rewrite the GitHub ref in `package.json`.
+
+After running, verify the version with:
+
+```powershell
+node -e "const p = require('./node_modules/nextjs-shared/package.json'); console.log(p.version)"
+```
+
+---
+
 ## 1. Database Setup
 
-Run `src/schema.sql` once in every database (local, dev, prod).  
-This creates the `xlg_logging` table that all logging writes to.
+**Projects with a database:** Run `src/schema.sql` once in every database (local, dev, prod). This creates the `xlg_logging` table that all logging writes to.
 
 ```sql
 -- src/schema.sql
@@ -23,13 +46,15 @@ CREATE TABLE IF NOT EXISTS public.xlg_logging (
 );
 ```
 
+**Projects without a database:** Skip this step and omit `POSTGRES_URL` from `.env`. Logging will fall back to `console.log` automatically. Do not use any `table_fetch`, `table_write`, or other DB functions — only UI components, `write_logging` (console fallback), and `userCache_store` are safe without a database.
+
 ---
 
 ## 2. Environment Variables
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `POSTGRES_URL` | Yes | Postgres connection string |
+| `POSTGRES_URL` | No | Postgres connection string. If omitted, all `write_logging` calls fall back to `console.log` and DB operations will fail. |
 | `NEXT_PUBLIC_APPENV_LOG_I` | No | Set to `'false'` to suppress `'I'` severity log entries |
 | `NEXT_PUBLIC_APPENV_ISDEV` | No | Set to `'true'` to show a dev/environment badge in the UI |
 
@@ -40,9 +65,9 @@ CREATE TABLE IF NOT EXISTS public.xlg_logging (
 ### Write a log entry
 
 ```ts
-import { write_Logging } from 'nextjs-shared/write_logging'
+import { write_logging } from 'nextjs-shared/write_logging'
 
-await write_Logging({
+await write_logging({
   lg_functionname: 'myFunction',
   lg_msg: 'Something happened: ' + error.message,
   lg_caller: 'myPage',
@@ -53,10 +78,10 @@ await write_Logging({
 ### Display the log table
 
 ```tsx
-import Table_Logging from 'nextjs-shared/Table_Logging'
+import OwnerTableLogging from 'nextjs-shared/OwnerTableLogging'
 
 export default function LoggingPage() {
-  return <Table_Logging />
+  return <OwnerTableLogging />
 }
 ```
 
@@ -64,7 +89,7 @@ No props required. Displays `xlg_logging` with filters for severity, function na
 
 ### Coding convention
 
-All server actions use `write_Logging` (not `console.error`) for errors.  
+All server actions use `write_logging` (not `console.error`) for errors.  
 Log message format: `'consequence string: ' + (error as Error).message`
 
 ---
@@ -229,10 +254,10 @@ cache_clearTable('my_table', 'myFunction') // clear entries for a table
 
 Display the cache contents:
 ```tsx
-import Table_Cache from 'nextjs-shared/Table_Cache'
+import OwnerTableCache from 'nextjs-shared/OwnerTableCache'
 
 export default function CachePage() {
-  return <Table_Cache />
+  return <OwnerTableCache />
 }
 ```
 
@@ -297,17 +322,95 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 
 ---
 
-## 7. Consuming Project Conventions
+## 7. Owner Route (`/owner`)
+
+Each consuming project builds its own `/owner` page. `nextjs-shared` provides the layout shell, tab chrome, and panel components — the consuming project decides which tabs to show.
+
+### Standard layout (`src/app/owner/layout.tsx`)
+
+All consuming projects must use `OwnerLayout` from nextjs-shared. This gives the standard `px-6 py-4 bg-green-100` container and the sessionStorage back-link — matching the appearance of the nextjs-shared dev UI. Do **not** write a custom layout.
+
+```tsx
+import OwnerLayout from 'nextjs-shared/OwnerLayout'
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <OwnerLayout>{children}</OwnerLayout>
+}
+```
+
+### Standard page (`src/app/owner/page.tsx`)
+
+Use `OwnerPage` from nextjs-shared for the tab bar. Pass each tab's label and content. Do **not** add extra `px-*` wrappers — `OwnerLayout` already provides horizontal padding.
+
+```tsx
+import OwnerPage from 'nextjs-shared/OwnerPage'
+import OwnerTableLogging from 'nextjs-shared/OwnerTableLogging'
+import OwnerTableCache from 'nextjs-shared/OwnerTableCache'
+
+export default function Page() {
+  return (
+    <OwnerPage
+      tabs={[
+        { label: 'Logging', content: <OwnerTableLogging /> },
+        { label: 'Cache', content: <OwnerTableCache /> },
+      ]}
+    />
+  )
+}
+```
+
+### Projects with additional tabs (e.g. Tools)
+
+Add project-specific tabs alongside Logging/Cache:
+
+```tsx
+import OwnerPage from 'nextjs-shared/OwnerPage'
+import OwnerTableLogging from 'nextjs-shared/OwnerTableLogging'
+import OwnerTableCache from 'nextjs-shared/OwnerTableCache'
+
+export default function Page() {
+  return (
+    <OwnerPage
+      tabs={[
+        { label: 'Tools', content: <MyToolsPanel /> },
+        { label: 'Logging', content: <OwnerTableLogging /> },
+        { label: 'Cache', content: <OwnerTableCache /> },
+      ]}
+    />
+  )
+}
+```
+
+### Projects without a database
+
+Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use only project-specific tabs:
+
+```tsx
+<OwnerPage tabs={[{ label: 'Tools', content: <MyToolsPanel /> }]} />
+```
+
+### Available owner panel components
+
+| Import | Requires DB | Description |
+|---|---|---|
+| `nextjs-shared/OwnerLayout` | No | Standard layout shell: `px-6 py-4 bg-green-100` + sessionStorage back-link |
+| `nextjs-shared/OwnerPage` | No | Tab bar chrome — pass `tabs: { label, content }[]` |
+| `nextjs-shared/OwnerTableLogging` | Yes | Paginated, filterable view of `xlg_logging` |
+| `nextjs-shared/OwnerTableCache` | Yes | Inspector for the server-side cache |
+
+---
+
+## 8. Consuming Project Conventions
 
 - **Never call the database directly** — always use functions from this package
-- **Error logging** — use `write_Logging` with severity `'E'`, never `console.error` alone
+- **Error logging** — use `write_logging` with severity `'E'`, never `console.error` alone
 - **Table naming** — application tables use a short prefix (e.g. `tus_users`, `trf_reference`). Tables owned by `nextjs-shared` use the `x` prefix (`xlg_logging`)
 - **Column naming** — columns are prefixed with the table code (e.g. `us_usid`, `lg_msg`)
 - **Cache** — `skipCache: true` on any fetch that must see live data (e.g. admin pages, post-mutation refetches)
 
 ---
 
-## 8. Coding Conventions for Claude
+## 9. Coding Conventions for Claude
 
 These apply whenever writing or modifying code in a consuming project.
 
@@ -337,11 +440,11 @@ These apply whenever writing or modifying code in a consuming project.
   ```
 
 ### Error handling
-- Server actions catch errors, log with `write_Logging`, and either return a safe default or rethrow
+- Server actions catch errors, log with `write_logging`, and either return a safe default or rethrow
 - Log message format: `'Consequence description: ' + (error as Error).message`
 - Always include both `lg_functionname` (the function that failed) and `lg_caller` (what called it)
 - Severity: `'E'` for errors that affect the user, `'W'` for warnings, `'I'` for info/debug
-- Do not use `console.error` as the only error output — always pair it with `write_Logging`
+- Do not use `console.error` as the only error output — always pair it with `write_logging`
 
 ### Server actions
 - Mark files with `'use server'` at the top
@@ -410,11 +513,11 @@ Keep the description short — one or two lines. Focus on the WHY and any non-ob
 - Prefer `type` over `interface` for data shapes
 
 ### Database / table conventions
-- Table names: 3-character lowercase prefix + underscore + name (e.g. `tus_users`, `trf_reference`)
-- Column names: same 3-character prefix (e.g. `tus_tusid`, `tus_name`)
-- Primary key column: `{prefix}{prefix}id` (e.g. `tus_tusid`, `xlg_lgid`)
-- Existing tables with 2-character column prefixes keep their current names — 3-character applies to new tables only
-- Tables owned by `nextjs-shared` use the `x` prefix — do not create project tables with `x` prefix
+- Table names: `t` + 3-character identifier + `_` + descriptive name (e.g. `tusr_users`, `tref_reference`)
+- Column names: the 3-character identifier only — no leading `t` (e.g. `usr_usrid`, `usr_name`)
+- Existing tables with 2-character identifiers (e.g. `tse_sessions` → columns `se_*`) keep their names — this convention applies to new tables only
+- Tables owned by `nextjs-shared` use `x` as the first character instead of `t` (e.g. `xlg_logging` → columns `lg_*`) — do not create project tables with `x` prefix
+- Identifier uniqueness: the 3-character identifier must be unique across the entire schema — verify before creating any new table
 - **Do not use `table.column` notation in SQL** — all column names are unique across the schema due to prefixing, so qualification is unnecessary. The only exception is a self-join where the same table appears twice:
   ```sql
   -- Correct
