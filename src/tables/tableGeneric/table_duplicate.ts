@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 
 interface Props {
   table_from: string
@@ -37,7 +37,7 @@ export async function table_duplicate({
     //
   } catch (error) {
     const errorMessage = (error as Error).message
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

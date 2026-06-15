@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 //
 //  Input values
 //
@@ -74,7 +74,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //
     if (!sequenceName) {
       const message = `No sequence found for ${tableName}`
-      write_Logging({
+      write_logging({
         lg_caller: caller,
         lg_functionname: functionName,
         lg_msg: message,
@@ -86,7 +86,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //  Sequence found - message
     //
     const message = `Sequence found: ${sequenceName} for ${tableName}.${columnName}`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: message,
@@ -107,7 +107,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //
     if (maxValue === null || maxValue === undefined) {
       const message = `No maxValue found for Table ${tableName} column ${columnName}`
-      write_Logging({
+      write_logging({
         lg_caller: caller,
         lg_functionname: functionName,
         lg_msg: message,
@@ -119,7 +119,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //  maxValue found - message
     //
     const message1 = `maxValue found: ${sequenceName} for ${tableName}.${columnName} with maxValue(${maxValue})`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: message1,
@@ -139,7 +139,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
   } catch (error) {
     const errorMessage = `Table(${tableName}) FAILED`
     console.error(`${functionName}: ${errorMessage}`, error)
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

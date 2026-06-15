@@ -1,6 +1,6 @@
 'use server'
 
-import { write_Logging } from '../tables/tableGeneric/write_logging'
+import { write_logging } from '../tables/tableGeneric/write_logging'
 import { table_fetch } from '../tables/tableGeneric/table_fetch'
 
 //----------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ export async function action_generateLogs(): Promise<string> {
     }
   ]
   for (const entry of entries) {
-    await write_Logging({
+    await write_logging({
       lg_caller: caller,
       lg_functionname: entry.fn,
       lg_msg: entry.msg,

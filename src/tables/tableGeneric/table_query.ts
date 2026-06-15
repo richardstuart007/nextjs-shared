@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 
 //----------------------------------------------------------------------------------
 //  Execute a raw SQL query through the shared db connection with logging.
@@ -45,7 +45,7 @@ export async function table_query({
     //
   } catch (error) {
     const errorMessage = `SQL FAILED: ${(error as Error).message}`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

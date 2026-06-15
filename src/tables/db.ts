@@ -1,6 +1,6 @@
 import { Client } from 'pg'
 import { Pool } from '@neondatabase/serverless'
-import { write_Logging } from './tableGeneric/write_logging'
+import { write_logging } from './tableGeneric/write_logging'
 //
 // Placeholder for the `query` method
 //
@@ -58,8 +58,8 @@ async function createDbQueryHandler(): Promise<void> {
         return result
       } catch (error) {
         const errorMessage = (error as Error).message
-        if (functionName !== 'write_Logging') {
-          write_Logging({
+        if (functionName !== 'write_logging') {
+          write_logging({
             lg_caller: caller,
             lg_functionname: functionName,
             lg_msg: errorMessage,
@@ -103,8 +103,8 @@ async function createDbQueryHandler(): Promise<void> {
         return result
       } catch (error) {
         const errorMessage = (error as Error).message
-        if (functionName !== 'write_Logging') {
-          write_Logging({
+        if (functionName !== 'write_logging') {
+          write_logging({
             lg_caller: caller,
             lg_functionname: functionName,
             lg_msg: errorMessage,
@@ -131,7 +131,7 @@ async function log_query(
   //
   //  Do not recursive for logging
   //
-  if (functionName === 'write_Logging') return
+  if (functionName === 'write_logging') return
   //
   //  Values (if any)
   //
@@ -139,7 +139,7 @@ async function log_query(
   //
   //  Logging
   //
-  write_Logging({
+  write_logging({
     lg_functionname: functionName,
     lg_msg: `DB_SQL | ${query}${valuesJson}`,
     lg_severity: 'I',

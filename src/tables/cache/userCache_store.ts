@@ -1,4 +1,4 @@
-import { write_Logging } from '../tableGeneric/write_logging'
+import { write_logging } from '../tableGeneric/write_logging'
 
 type CacheEntry<T> = {
   data: T
@@ -41,7 +41,7 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
   if (entry) {
     entry.hitCount = (entry.hitCount ?? 0) + 1
     const hitMsg = `CACHE_HIT | ${entry.sql} | rows: ${getDataInfo(entry.data)}`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: hitMsg,
@@ -51,7 +51,7 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
   }
 
   const missMsg = `CACHE_MISS | ${normalizedSql}`
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: missMsg,
@@ -68,7 +68,7 @@ export function cache_set<T>(sql: string, data: T, caller: string = ''): void {
   const normalizedSql = normalizeSql(sql)
 
   const setMsg = `CACHE_SAV | ${normalizedSql} | rows: ${getDataInfo(data)}`
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: setMsg,
@@ -104,7 +104,7 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
 
   if (cleared > 0) {
     const clearMsg = `CACHE_CLR_USER | UserId: ${userId} | Cleared ${cleared} entries: ${entries.join(', ')}`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: clearMsg,
@@ -112,7 +112,7 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
     })
   } else {
     const noEntriesMsg = `CACHE_CLR_USER | UserId: ${userId} | No entries found`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: noEntriesMsg,
@@ -143,7 +143,7 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
 
   if (cleared > 0) {
     const clearMsg = `CACHE_CLR_TABLE | Table: ${tableName} | Cleared ${cleared} entries: ${entries.join(', ')}`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: clearMsg,
@@ -151,7 +151,7 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
     })
   } else {
     const noEntriesMsg = `CACHE_CLR_TABLE | Table: ${tableName} | No entries found`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: noEntriesMsg,
@@ -171,7 +171,7 @@ export function cache_clearAll(caller: string = ''): void {
   cache.clear()
 
   const clearAllMsg = `CACHE_CLR_ALL | Removed ${count} total entries`
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: clearAllMsg,
@@ -186,7 +186,7 @@ export function cache_getStats(caller: string = '') {
   const functionName = 'cache_getStats'
   const sqls: string[] = Array.from(cache.keys())
 
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: `CACHE_STATS | Total entries: ${cache.size}`,
@@ -194,7 +194,7 @@ export function cache_getStats(caller: string = '') {
   })
 
   sqls.forEach(function (sql) {
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: `  - ${sql}`,
@@ -250,7 +250,7 @@ export function cache_deleteEntry(sql: string, caller: string = ''): boolean {
   const normalizedSql = normalizeSql(sql)
   const deleted = cache.delete(normalizedSql)
 
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: `CACHE_DEL | ${deleted ? 'Deleted' : 'Not found'} | ${normalizedSql}`,

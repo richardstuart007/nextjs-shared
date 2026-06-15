@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
 import { WriteColumnValuePair } from '../structures'
 //
@@ -55,7 +55,7 @@ export async function table_write({ table, columnValuePairs, caller, noLog = fal
   } catch (error) {
     const errorMessage = `Table(${table}) SQL(${sqlQuery}) FAILED`
     console.error(`${functionName}: ${errorMessage}`, error)
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

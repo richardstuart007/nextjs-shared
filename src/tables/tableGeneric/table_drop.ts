@@ -1,6 +1,6 @@
 'use server'
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 
 export async function table_drop(table: string, caller: string = ''): Promise<boolean> {
   const functionName = 'table_drop'
@@ -21,7 +21,7 @@ export async function table_drop(table: string, caller: string = ''): Promise<bo
     //
     const errorMessage = `Table(${table}) DROP FAILED`
     console.error(`${functionName}: ${errorMessage}`, error)
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

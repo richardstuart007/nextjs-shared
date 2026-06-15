@@ -7,13 +7,13 @@ import {
   cache_getEntryData,
   CacheEntryInfo
 } from './userCache_store'
-import { write_Logging } from '../tableGeneric/write_logging'
+import { write_logging } from '../tableGeneric/write_logging'
 
 const functionName = 'cache_actions'
 
 export async function cacheAction_clearAll(caller: string = functionName) {
   cache_clearAll(caller)
-  write_Logging({
+  write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: 'CACHE_CLR_ALL | Admin triggered',

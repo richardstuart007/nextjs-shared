@@ -3,13 +3,13 @@
 import { sql } from '../db'
 import { WriteLoggingProps } from '../structures'
 
-export async function write_Logging({
+export async function write_logging({
   lg_functionname,
   lg_msg,
   lg_severity = 'E',
   lg_caller = ''
 }: WriteLoggingProps): Promise<boolean> {
-  const functionName = 'write_Logging'
+  const functionName = 'write_logging'
   try {
     //
     // Skip 'I' severity when globally suppressed
@@ -69,7 +69,7 @@ export async function write_Logging({
     //  Errors
     //
   } catch (error) {
-    console.error('write_Logging failed — does the xlg_logging table exist? Run src/schema.sql.', (error as Error).message)
+    console.error('write_logging failed — does the xlg_logging table exist? Run src/schema.sql.', (error as Error).message)
     return false
   }
 }

@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../../db'
-import { write_Logging } from '../write_logging'
+import { write_logging } from '../write_logging'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
 import { buildSqlQuery } from './buildSqlQuery'
@@ -71,7 +71,7 @@ export async function table_fetch_pages_filtered({
     return data.rows.length > 0 ? data.rows : []
   } catch (error) {
     const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
@@ -137,7 +137,7 @@ export async function table_fetch_pages_total({
     return totalPages
   } catch (error) {
     const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,

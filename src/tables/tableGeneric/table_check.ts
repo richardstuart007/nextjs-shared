@@ -1,7 +1,7 @@
 'use server'
 
 import { sql } from '../db'
-import { write_Logging } from './write_logging'
+import { write_logging } from './write_logging'
 import { TableColumnValuePairs } from '../structures'
 
 export async function table_check(
@@ -48,7 +48,7 @@ export async function table_check(
       //
       if (data.rows.length > 0) {
         const errorMessage = `Keys exist in ${table} with conditions: ${JSON.stringify(whereColumnValuePairs)}`
-        write_Logging({
+        write_logging({
           lg_caller: caller,
           lg_functionname: functionName,
           lg_msg: errorMessage,
@@ -66,7 +66,7 @@ export async function table_check(
     //
   } catch (error) {
     const errorMessage = (error as Error).message
-    write_Logging({
+    write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
