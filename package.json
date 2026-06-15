@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Shared UI components for Next.js projects",
   "exports": {
     "./MyBox": "./src/components/MyBox.tsx",
@@ -64,8 +64,7 @@
     "@neondatabase/serverless": "1.1.0",
     "clsx": "2.1.1",
     "csv-parser": "3.2.1",
-    "pg": "8.21.0",
-    "postcss": "8.5.15"
+    "pg": "8.21.0"
   },
   "peerDependencies": {
     "@heroicons/react": "2.2.0",
@@ -94,6 +93,6 @@
     "typescript": "6.0.3"
   },
   "overrides": {
-    "postcss": ">=8.5.10"
+    "postcss": "8.5.10"
   }
 }

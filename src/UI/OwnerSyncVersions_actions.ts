@@ -197,12 +197,26 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
         newOverrides[dep] = targetVer
         allChanges.push(`${dep}: override pinned to ${targetVer}`)
       }
+      // Remove from all dep sections — override is the sole source of truth for this package
+      for (const section of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
+        if (pkg[section]?.[dep] != null) {
+          delete pkg[section]![dep]
+          allChanges.push(`${dep}: removed from ${section} (override takes precedence)`)
+        }
+      }
     }
 
     for (const dep of Object.keys(newOverrides)) {
       if (packages.includes(dep) && !targets[dep]) {
         delete newOverrides[dep]
         allChanges.push(`${dep}: override removed`)
+        // Add back to dependencies at npm latest so the package is not lost
+        const latestVer = latest[dep]
+        if (latestVer && latestVer !== '?') {
+          pkg.dependencies ??= {}
+          pkg.dependencies[dep] = latestVer
+          allChanges.push(`${dep}: restored to dependencies at ${latestVer}`)
+        }
       }
     }
 
