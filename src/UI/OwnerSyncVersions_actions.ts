@@ -121,6 +121,50 @@ export async function action_fetchLatestVersions(packages: string[]): Promise<Re
 }
 
 //----------------------------------------------------------------------------------
+//  bumpDownPatch — subtract 1 from the patch segment of a semver string
+//----------------------------------------------------------------------------------
+function bumpDownPatch(version: string): string {
+  const parts = version.split('.')
+  if (parts.length < 3) return version
+  const patch = parseInt(parts[2], 10)
+  if (isNaN(patch) || patch === 0) return version
+  return `${parts[0]}.${parts[1]}.${patch - 1}`
+}
+
+//----------------------------------------------------------------------------------
+//  action_readLocalPackageVersions — read version from local source for GitHub-referenced packages
+//----------------------------------------------------------------------------------
+export async function action_readLocalPackageVersions(packages: string[]): Promise<Record<string, string>> {
+  const result: Record<string, string> = {}
+  for (const pkg of packages) {
+    const localPkgPath = join(GITHUB_DIR, pkg, 'package.json')
+    if (!existsSync(localPkgPath)) continue
+    try {
+      const data = JSON.parse(readFileSync(localPkgPath, 'utf-8')) as { version?: string }
+      if (data.version) result[pkg] = bumpDownPatch(data.version)
+    } catch { /* skip */ }
+  }
+  return result
+}
+
+//----------------------------------------------------------------------------------
+//  action_readProjectVersions — read each project's own version from its package.json
+//----------------------------------------------------------------------------------
+export async function action_readProjectVersions(): Promise<Record<string, string>> {
+  const projects = discoverProjects()
+  const result: Record<string, string> = {}
+  for (const { name, absPath } of projects) {
+    const pkgPath = join(absPath, 'package.json')
+    if (!existsSync(pkgPath)) continue
+    try {
+      const data = JSON.parse(readFileSync(pkgPath, 'utf-8')) as { version?: string }
+      if (data.version) result[name] = bumpDownPatch(data.version)
+    } catch { /* skip */ }
+  }
+  return result
+}
+
+//----------------------------------------------------------------------------------
 //  action_readTargets — read saved target versions from sync-targets.json
 //----------------------------------------------------------------------------------
 export async function action_readTargets(): Promise<Record<string, string>> {
@@ -189,9 +233,9 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
     const newOverrides: Record<string, string> = { ...(pkg.overrides ?? {}) }
 
     for (const [dep, targetVer] of Object.entries(targets)) {
-      const isInProject = (['dependencies', 'devDependencies', 'peerDependencies'] as const).some(
-        s => pkg[s]?.[dep] != null
-      )
+      const isInProject =
+        (['dependencies', 'devDependencies', 'peerDependencies'] as const).some(s => pkg[s]?.[dep] != null) ||
+        pkg.overrides?.[dep] != null
       if (!isInProject) continue
       if (newOverrides[dep] !== targetVer) {
         newOverrides[dep] = targetVer

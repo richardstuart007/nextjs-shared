@@ -29,7 +29,27 @@ node -e "const p = require('./node_modules/nextjs-shared/package.json'); console
 
 ---
 
-## 1. Database Setup
+## 1. Required devDependencies
+
+`nextjs-shared` exports raw TypeScript source files (`.ts`/`.tsx`) that are compiled directly by the consuming project's TypeScript build. This means type declaration packages used inside `nextjs-shared` must also be present in the consuming project's `devDependencies`, even if the project does not use `pg` directly.
+
+Add the following to every consuming project's `devDependencies`:
+
+```json
+"@types/pg": "8.20.0"
+```
+
+**Why:** `nextjs-shared` uses the `pg` library for Postgres connections. Its source file `src/tables/db.ts` imports from `pg`. TypeScript resolves type declarations from `node_modules` in the consuming project — the `@types/pg` `devDependency` inside `nextjs-shared` is not installed when the package is consumed, so without this entry the production build fails with:
+
+```
+Type error: Could not find a declaration file for module 'pg'
+```
+
+This error only appears on production builds (e.g. Vercel) because local dev may have a warm `node_modules` from when `nextjs-shared` was developed directly.
+
+---
+
+## 2. Database Setup
 
 **Projects with a database:** Run `src/schema.sql` once in every database (local, dev, prod). This creates the `xlg_logging` table that all logging writes to.
 
@@ -50,7 +70,7 @@ CREATE TABLE IF NOT EXISTS public.xlg_logging (
 
 ---
 
-## 2. Environment Variables
+## 3. Environment Variables
 
 | Variable | Required | Purpose |
 |---|---|---|
@@ -60,7 +80,7 @@ CREATE TABLE IF NOT EXISTS public.xlg_logging (
 
 ---
 
-## 3. Logging
+## 4. Logging
 
 ### Write a log entry
 
@@ -94,7 +114,7 @@ Log message format: `'consequence string: ' + (error as Error).message`
 
 ---
 
-## 4. Generic Table Operations
+## 5. Generic Table Operations
 
 All are `'use server'` functions. Import individually.
 
@@ -232,7 +252,7 @@ const [rows, totalPages] = await Promise.all([
 
 ---
 
-## 5. Cache
+## 6. Cache
 
 The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, and `fetchTotalPages`, and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
 
@@ -263,7 +283,7 @@ export default function CachePage() {
 
 ---
 
-## 6. UI Components
+## 7. UI Components
 
 All are React client components. They accept an `overrideClass` prop to merge Tailwind classes.
 
@@ -322,7 +342,7 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 
 ---
 
-## 7. Owner Route (`/owner`)
+## 8. Owner Route (`/owner`)
 
 Each consuming project builds its own `/owner` page. `nextjs-shared` provides the layout shell, tab chrome, and panel components — the consuming project decides which tabs to show.
 
@@ -400,7 +420,7 @@ Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use
 
 ---
 
-## 8. Consuming Project Conventions
+## 9. Consuming Project Conventions
 
 - **Never call the database directly** — always use functions from this package
 - **Error logging** — use `write_logging` with severity `'E'`, never `console.error` alone
@@ -410,7 +430,7 @@ Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use
 
 ---
 
-## 9. Coding Conventions for Claude
+## 10. Coding Conventions for Claude
 
 These apply whenever writing or modifying code in a consuming project.
 
