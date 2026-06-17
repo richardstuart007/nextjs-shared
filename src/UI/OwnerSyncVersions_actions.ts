@@ -14,6 +14,18 @@ export type SyncResult = {
 
 export type VersionMatrix = Record<string, Record<string, string | null>>
 
+export type VersionsResult = {
+  matrix: VersionMatrix
+  parseErrors: string[]
+}
+
+export type SyncTargets = {
+  deps: Record<string, string>
+  overrides: Record<string, string>
+}
+
+export type SectionMatrix = Record<string, Record<string, string | null>>
+
 //----------------------------------------------------------------------------------
 //  discoverProjects — scan GITHUB_DIR for subdirs that have a package.json
 //----------------------------------------------------------------------------------
@@ -56,16 +68,61 @@ function collectPackages(projects: { absPath: string }[]): string[] {
 //----------------------------------------------------------------------------------
 //  action_readVersions — matrix of every package version per project
 //----------------------------------------------------------------------------------
-export async function action_readVersions(): Promise<VersionMatrix> {
+export async function action_readVersions(): Promise<VersionsResult> {
   const projects = discoverProjects()
   const packages = collectPackages(projects)
   const matrix: VersionMatrix = {}
+  const parseErrors: string[] = []
   for (const { name, absPath } of projects) {
     const flat = readPkgFlat(join(absPath, 'package.json'))
-    if (flat === null) continue
+    if (flat === null) {
+      parseErrors.push(name)
+      const row: Record<string, string | null> = {}
+      for (const pkg of packages) row[pkg] = null
+      matrix[name] = row
+      continue
+    }
     const row: Record<string, string | null> = {}
     for (const pkg of packages) {
       row[pkg] = flat[pkg] ?? null
+    }
+    matrix[name] = row
+  }
+  return { matrix, parseErrors }
+}
+
+//----------------------------------------------------------------------------------
+//  action_readSections — per-project, per-package: which section(s) the package lives in
+//----------------------------------------------------------------------------------
+export async function action_readSections(): Promise<SectionMatrix> {
+  const projects = discoverProjects()
+  const packages = collectPackages(projects)
+  const sectionCodes: { key: 'dependencies' | 'devDependencies' | 'peerDependencies' | 'overrides'; code: string }[] = [
+    { key: 'dependencies', code: 'd' },
+    { key: 'devDependencies', code: 'v' },
+    { key: 'peerDependencies', code: 'p' },
+    { key: 'overrides', code: 'o' },
+  ]
+  const matrix: SectionMatrix = {}
+  for (const { name, absPath } of projects) {
+    const pkgPath = join(absPath, 'package.json')
+    if (!existsSync(pkgPath)) continue
+    let pkg: Record<string, Record<string, string> | undefined>
+    try {
+      pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+    } catch {
+      const row: Record<string, string | null> = {}
+      for (const pkgName of packages) row[pkgName] = null
+      matrix[name] = row
+      continue
+    }
+    const row: Record<string, string | null> = {}
+    for (const pkgName of packages) {
+      let code = ''
+      for (const { key, code: letter } of sectionCodes) {
+        if (pkg[key]?.[pkgName] != null) code += letter
+      }
+      row[pkgName] = code !== '' ? code : null
     }
     matrix[name] = row
   }
@@ -165,31 +222,36 @@ export async function action_readProjectVersions(): Promise<Record<string, strin
 }
 
 //----------------------------------------------------------------------------------
-//  action_readTargets — read saved target versions from sync-targets.json
+//  action_readTargets — read saved targets from sync-targets.json (with migration from old flat format)
 //----------------------------------------------------------------------------------
-export async function action_readTargets(): Promise<Record<string, string>> {
+export async function action_readTargets(): Promise<SyncTargets> {
   try {
-    return JSON.parse(readFileSync(TARGETS_FILE, 'utf-8')) as Record<string, string>
+    const raw = JSON.parse(readFileSync(TARGETS_FILE, 'utf-8')) as Record<string, unknown>
+    if ('deps' in raw || 'overrides' in raw) {
+      return { deps: (raw.deps ?? {}) as Record<string, string>, overrides: (raw.overrides ?? {}) as Record<string, string> }
+    }
+    // migrate old flat format — treat everything as overrides
+    return { deps: {}, overrides: raw as Record<string, string> }
   } catch {
-    return {}
+    return { deps: {}, overrides: {} }
   }
 }
 
 //----------------------------------------------------------------------------------
-//  action_saveTarget — save or update a target version for a package
+//  action_saveTarget — save or update a target version for a package in the given section
 //----------------------------------------------------------------------------------
-export async function action_saveTarget(pkg: string, version: string): Promise<void> {
+export async function action_saveTarget(pkg: string, version: string, kind: 'deps' | 'overrides'): Promise<void> {
   const targets = await action_readTargets()
-  targets[pkg] = version
+  targets[kind][pkg] = version
   writeFileSync(TARGETS_FILE, JSON.stringify(targets, null, 2) + '\n', 'utf-8')
 }
 
 //----------------------------------------------------------------------------------
-//  action_deleteTarget — remove a target version for a package
+//  action_deleteTarget — remove a target version for a package from the given section
 //----------------------------------------------------------------------------------
-export async function action_deleteTarget(pkg: string): Promise<void> {
+export async function action_deleteTarget(pkg: string, kind: 'deps' | 'overrides'): Promise<void> {
   const targets = await action_readTargets()
-  delete targets[pkg]
+  delete targets[kind][pkg]
   writeFileSync(TARGETS_FILE, JSON.stringify(targets, null, 2) + '\n', 'utf-8')
 }
 
@@ -200,7 +262,7 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
   const projects = discoverProjects()
   const packages = collectPackages(projects)
   const latest = await action_fetchLatestVersions(packages)
-  const targets = await action_readTargets()
+  const targets: SyncTargets = await action_readTargets()
   const results: SyncResult[] = []
 
   for (const { name, absPath } of projects) {
@@ -229,10 +291,26 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
       }
     }
 
-    // Phase 2 — write targets into overrides block; remove overrides for de-targeted packages
+    // Phase 2a — dep targets: pin directly in whichever dep section the package lives in
+    for (const [dep, targetVer] of Object.entries(targets.deps)) {
+      const directSection = (['dependencies', 'devDependencies', 'peerDependencies'] as const)
+        .find(s => pkg[s]?.[dep] != null)
+      if (!directSection) continue
+      if (pkg[directSection]![dep] !== targetVer) {
+        pkg[directSection]![dep] = targetVer
+        allChanges.push(`${dep}: pinned to ${targetVer} in ${directSection}`)
+      }
+      // Remove from overrides if it was previously there
+      if (pkg.overrides?.[dep] != null) {
+        delete pkg.overrides![dep]
+        allChanges.push(`${dep}: removed from overrides (now pinned in ${directSection})`)
+      }
+    }
+
+    // Phase 2b — override targets: write to npm overrides block
     const newOverrides: Record<string, string> = { ...(pkg.overrides ?? {}) }
 
-    for (const [dep, targetVer] of Object.entries(targets)) {
+    for (const [dep, targetVer] of Object.entries(targets.overrides)) {
       const isInProject =
         (['dependencies', 'devDependencies', 'peerDependencies'] as const).some(s => pkg[s]?.[dep] != null) ||
         pkg.overrides?.[dep] != null
@@ -241,20 +319,13 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
         newOverrides[dep] = targetVer
         allChanges.push(`${dep}: override pinned to ${targetVer}`)
       }
-      // Remove from all dep sections — override is the sole source of truth for this package
-      for (const section of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
-        if (pkg[section]?.[dep] != null) {
-          delete pkg[section]![dep]
-          allChanges.push(`${dep}: removed from ${section} (override takes precedence)`)
-        }
-      }
     }
 
+    // Remove overrides for packages no longer in override targets
     for (const dep of Object.keys(newOverrides)) {
-      if (packages.includes(dep) && !targets[dep]) {
+      if (!targets.overrides[dep]) {
         delete newOverrides[dep]
         allChanges.push(`${dep}: override removed`)
-        // Add back to dependencies at npm latest so the package is not lost
         const latestVer = latest[dep]
         if (latestVer && latestVer !== '?') {
           pkg.dependencies ??= {}
@@ -274,14 +345,22 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
     const npmrcPath = join(absPath, '.npmrc')
     let npmrcStatus = 'already set'
     if (!existsSync(npmrcPath)) {
-      writeFileSync(npmrcPath, 'save-exact=false\n', 'utf-8')
+      writeFileSync(npmrcPath, 'save-exact=false\nlegacy-peer-deps=true\n', 'utf-8')
       npmrcStatus = 'created'
     } else {
-      const existing = readFileSync(npmrcPath, 'utf-8')
-      if (!existing.includes('save-exact=false')) {
-        const updated = existing.replace(/save-exact=true/g, 'save-exact=false')
-        const final = updated.includes('save-exact=false') ? updated : updated.trimEnd() + '\nsave-exact=false\n'
-        writeFileSync(npmrcPath, final, 'utf-8')
+      let content = readFileSync(npmrcPath, 'utf-8')
+      let changed = false
+      if (!content.includes('save-exact=false')) {
+        content = content.replace(/save-exact=true/g, 'save-exact=false')
+        if (!content.includes('save-exact=false')) content = content.trimEnd() + '\nsave-exact=false\n'
+        changed = true
+      }
+      if (!content.includes('legacy-peer-deps=true')) {
+        content = content.trimEnd() + '\nlegacy-peer-deps=true\n'
+        changed = true
+      }
+      if (changed) {
+        writeFileSync(npmrcPath, content, 'utf-8')
         npmrcStatus = 'updated'
       }
     }
