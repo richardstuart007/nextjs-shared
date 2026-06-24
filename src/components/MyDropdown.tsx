@@ -1,7 +1,11 @@
+'use client'
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { table_fetch, table_fetch_Props } from '../tables/tableGeneric/table_fetch'
+import { write_logging } from '../tables/tableGeneric/write_logging'
 import { MyInput } from './MyInput'
+
 //
 //  Define the options
 //
@@ -20,12 +24,34 @@ type DropdownProps<T extends string, U extends string> = {
   orderBy?: string
   optionLabel: string
   optionValue: string | number
+  defaultClass?: string
+  defaultClass_Label?: string
+  defaultClass_Search?: string
   overrideClass_Label?: string
   overrideClass_Search?: string
   overrideClass_Dropdown?: string
   includeBlank?: boolean
 }
 
+const functionName = 'MyDropdown'
+export const MyDropdown_dftClass_Shared = [
+  'h-6 md:h-8',
+  'py-[2px] px-1 md:px-2',
+  'text-xs',
+  'rounded-md',
+  'border border-blue-500',
+  'focus:border-1 focus:border-blue-500',
+  'hover:border-blue-500',
+  'transition-colors',
+  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+  'w-72',
+].join(' ')
+export const MyDropdown_labelDftClass_Shared = 'block text-gray-900 mb-1 text-xs w-72'
+export const MyDropdown_searchDftClass_Shared = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
+
+//----------------------------------------------------------------------------------
+//  MyDropdown — searchable dropdown with optional database fetch
+//----------------------------------------------------------------------------------
 export default function MyDropdown<T extends string, U extends string>({
   selectedOption,
   setSelectedOption,
@@ -39,65 +65,51 @@ export default function MyDropdown<T extends string, U extends string>({
   orderBy = '',
   optionLabel,
   optionValue,
-  overrideClass_Label = 'w-72',
-  overrideClass_Search = 'w-72',
-  overrideClass_Dropdown = 'w-72',
+  defaultClass = MyDropdown_dftClass_Shared,
+  defaultClass_Label = MyDropdown_labelDftClass_Shared,
+  defaultClass_Search = MyDropdown_searchDftClass_Shared,
+  overrideClass_Label = '',
+  overrideClass_Search = '',
+  overrideClass_Dropdown = '',
   includeBlank = false
 }: DropdownProps<T, U>) {
-  const functionName = 'MyDropdown'
-  //
-  //  State
-  //
+  //----------------------------------------------------------------------------------------------
+  //  STATE DECLARATIONS
+  //----------------------------------------------------------------------------------------------
   const [dropdownOptions, setDropdownOptions] = useState<
     { value: string | number; label: string }[]
   >([])
-  //
-  //  Add the optional blank option
-  //
-  const updatedOptions = useMemo(
-    () => (includeBlank ? [{ value: '', label: '' }, ...dropdownOptions] : dropdownOptions),
-    [includeBlank, dropdownOptions]
-  )
-  //
-  // Filter options based on search term
-  //
   const [searchTerm, setSearchTerm] = useState<string>('')
-  const filteredOptions = useMemo(
-    () =>
-      updatedOptions.filter(option =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [updatedOptions, searchTerm]
-  )
-
   const [loading, setLoading] = useState(true)
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
+  //  Add the optional blank option
+  //----------------------------------------------------------------------------------------------
+  const updatedOptions = useMemo(() => {
+    const result = includeBlank ? [{ value: '', label: '' }, ...dropdownOptions] : dropdownOptions
+    return result
+  }, [includeBlank, dropdownOptions])
+
+  //----------------------------------------------------------------------------------------------
+  //  Filter options based on search term
+  //----------------------------------------------------------------------------------------------
+  const filteredOptions = useMemo(() => {
+    const result = updatedOptions.filter(option =>
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    return result
+  }, [updatedOptions, searchTerm])
+
+  //----------------------------------------------------------------------------------------------
   //  Determine Classes
-  //---------------------------------------------------------------------
-  //
-  //  Determine Class - Label
-  //
-  const className_Label = myMergeClasses('block text-gray-900 mb-1 text-xs', overrideClass_Label)
-  //
-  //  Determine Class - Search
-  //
-  const className_Search = myMergeClasses(
-    'px-2 rounded-md border border-blue-500 py-[6px] text-xs',
-    overrideClass_Search
-  )
-  //
-  //  Determine Class - Dropdown
-  //
-  const className_Dropdown = myMergeClasses(
-    'px-2 rounded-md border border-blue-500 py-[2px] text-xs',
-    overrideClass_Dropdown
-  )
-  //---------------------------------------------------------------------
-  //  Filter Options
-  //---------------------------------------------------------------------
-  //
-  // If there's only one option, set it as the selected option
-  //
+  //----------------------------------------------------------------------------------------------
+  const className_Label = myMergeClasses(defaultClass_Label, overrideClass_Label)
+  const className_Search = myMergeClasses(defaultClass_Search, overrideClass_Search)
+  const className_Dropdown = myMergeClasses(defaultClass, overrideClass_Dropdown)
+
+  //----------------------------------------------------------------------------------------------
+  //  Filter Options - If there's only one option, set it as the selected option
+  //----------------------------------------------------------------------------------------------
   useEffect(() => {
     if (filteredOptions.length === 1 && selectedOption !== filteredOptions[0].value) {
       const value = filteredOptions[0].value
@@ -105,79 +117,84 @@ export default function MyDropdown<T extends string, U extends string>({
       setSelectedOption(valueUpdate)
     }
   }, [filteredOptions, selectedOption, setSelectedOption])
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  Fetch dropdown options
-  //---------------------------------------------------------------------
-  const fetchOptions = useCallback(
-    async function () {
-      async function determineRows(): Promise<Array<RowData<T, U>>> {
-        //
-        //  Passed data
-        //
-        if (tableData) {
-          return tableData
-        }
-        //
-        //  Get data
-        //
-        if (table) {
-          const fetchParams: any = {
-            caller: functionName,
-            table,
-            orderBy: orderBy || optionLabel,
-            columns: optionLabel === optionValue ? [optionLabel] : [optionLabel, optionValue],
-            distinct: true
-          } as table_fetch_Props
-
-          if (tableColumn && tableColumnValue) {
-            fetchParams.whereColumnValuePairs = [{ column: tableColumn, value: tableColumnValue }]
-          }
-          const data = await table_fetch(fetchParams)
-          return data
-        }
-        throw new Error('Either tableData or table must be provided')
+  //----------------------------------------------------------------------------------------------
+  const fetchOptions = useCallback(async () => {
+    async function determineRows(): Promise<Array<RowData<T, U>>> {
+      //
+      //  Passed data
+      //
+      if (tableData) {
+        return tableData
       }
+      //
+      //  Get data
+      //
+      if (table) {
+        const fetchParams = {
+          caller: functionName,
+          table,
+          orderBy: orderBy || optionLabel,
+          columns: optionLabel === optionValue ? [optionLabel] : [optionLabel, optionValue],
+          distinct: true
+        } as table_fetch_Props
 
-      try {
-        //
-        //  Ensure nothing is displayed whilst loading data
-        //
-        setLoading(true)
-        //
-        //  Get the data
-        //
-        const rows = await determineRows()
-        //
-        //  Load the options
-        //
-        const updOptions = rows.map(row => ({
-          value: row[optionValue as keyof RowData<T, U>],
-          label: row[optionLabel as keyof RowData<T, U>]?.toString() || ''
-        }))
-        //
-        //  Set options
-        //
-        setDropdownOptions(updOptions)
-        //
-        //  Errors
-        //
-      } catch (error) {
-        console.error('Error fetching dropdown options:', error)
-      } finally {
-        setLoading(false)
+        if (tableColumn && tableColumnValue) {
+          fetchParams.whereColumnValuePairs = [{ column: tableColumn, value: tableColumnValue }]
+        }
+        const data = await table_fetch(fetchParams)
+        return data
       }
-    },
-    [optionValue, optionLabel, tableData, table, tableColumn, tableColumnValue, orderBy]
-  )
-  //---------------------------------------------------------------------
+      throw new Error('Either tableData or table must be provided')
+    }
+
+    try {
+      //
+      //  Ensure nothing is displayed whilst loading data
+      //
+      setLoading(true)
+      //
+      //  Get the data
+      //
+      const rows = await determineRows()
+      //
+      //  Load the options
+      //
+      const updOptions = rows.map(row => ({
+        value: row[optionValue as keyof RowData<T, U>],
+        label: row[optionLabel as keyof RowData<T, U>]?.toString() || ''
+      }))
+      //
+      //  Set options
+      //
+      setDropdownOptions(updOptions)
+      //
+      //  Errors
+      //
+    } catch (error) {
+      await write_logging({
+        lg_functionname: functionName,
+        lg_caller: functionName,
+        lg_msg: 'Error fetching dropdown options: ' + (error as Error).message,
+        lg_severity: 'E'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [optionValue, optionLabel, tableData, table, tableColumn, tableColumnValue, orderBy])
+
+  //----------------------------------------------------------------------------------------------
   //  Fetch options on component mount and whenever dependencies change
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   useEffect(() => {
     fetchOptions()
   }, [fetchOptions])
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  Update the selected value if only one
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   useEffect(() => {
     if (dropdownOptions.length === 1) {
       const value = dropdownOptions[0].value
@@ -185,21 +202,24 @@ export default function MyDropdown<T extends string, U extends string>({
       setSelectedOption(valueUpdate)
     }
   }, [dropdownOptions, setSelectedOption])
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  Loading
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderLoadingState() {
     return <p className='font-medium'>Loading options...</p>
   }
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  No options
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderEmptyState() {
     return <p className='font-medium'>No options available</p>
   }
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  One option
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderSingleOption() {
     const singleOption = dropdownOptions[0]
     return (
@@ -213,9 +233,10 @@ export default function MyDropdown<T extends string, U extends string>({
       </div>
     )
   }
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  Select option
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderDropdown() {
     return (
       <div className='font-medium'>
@@ -270,9 +291,10 @@ export default function MyDropdown<T extends string, U extends string>({
       </div>
     )
   }
-  //---------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------
   //  Return based on state
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   if (loading) return renderLoadingState()
   if (dropdownOptions.length === 0) return renderEmptyState()
   if (dropdownOptions.length === 1) return renderSingleOption()

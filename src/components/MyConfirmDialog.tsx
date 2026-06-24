@@ -1,8 +1,10 @@
+'use client'
+
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid'
 import MyPopup from './MyPopup'
 import { MyButton } from './MyButton'
 
-export interface ConfirmDialogInt {
+export type ConfirmDialogInt = {
   isOpen: boolean
   title: string
   subTitle: string
@@ -15,27 +17,53 @@ export interface ConfirmDialogInt {
   onConfirm: () => void | Promise<void>
 }
 
-interface ConfirmDialogProps {
+type Props = {
   confirmDialog: ConfirmDialogInt
   setConfirmDialog: React.Dispatch<React.SetStateAction<ConfirmDialogInt>>
+  iconContainerClass?: string
+  titleClass?: string
+  subTitleClass?: string
+  lineClass?: string
+  noButtonClass?: string
+  yesButtonClass?: string
 }
 
-export function MyConfirmDialog({ confirmDialog, setConfirmDialog }: ConfirmDialogProps) {
+export const MyConfirmDialog_iconContainerDftClass_Shared = 'bg-red-100 text-red-600 rounded-full p-4 inline-block'
+export const MyConfirmDialog_titleDftClass_Shared         = 'text-lg font-semibold mt-2'
+export const MyConfirmDialog_subTitleDftClass_Shared      = 'text-sm text-red-600'
+export const MyConfirmDialog_lineDftClass_Shared          = 'text-sm text-green-600'
+export const MyConfirmDialog_noButtonDftClass_Shared      = 'bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none'
+export const MyConfirmDialog_yesButtonDftClass_Shared     = 'bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 focus:outline-none'
+
+//----------------------------------------------------------------------------------
+//  MyConfirmDialog — modal confirmation dialog with optional detail lines
+//----------------------------------------------------------------------------------
+export function MyConfirmDialog({
+  confirmDialog,
+  setConfirmDialog,
+  iconContainerClass = MyConfirmDialog_iconContainerDftClass_Shared,
+  titleClass = MyConfirmDialog_titleDftClass_Shared,
+  subTitleClass = MyConfirmDialog_subTitleDftClass_Shared,
+  lineClass = MyConfirmDialog_lineDftClass_Shared,
+  noButtonClass = MyConfirmDialog_noButtonDftClass_Shared,
+  yesButtonClass = MyConfirmDialog_yesButtonDftClass_Shared,
+}: Props) {
   //
   //  Ignore the dialog if not open
   //
   if (!confirmDialog.isOpen) return null
   //
-  // Build optionalLines: only include lines that were explicitly provided
+  //  Build optionalLines: only include lines that were explicitly provided;
+  //  filter removes nulls and narrows type to string
   //
   const optionalLines = [
-    confirmDialog.line1 !== undefined ? confirmDialog.line1 : null,
-    confirmDialog.line2 !== undefined ? confirmDialog.line2 : null,
-    confirmDialog.line3 !== undefined ? confirmDialog.line3 : null,
-    confirmDialog.line4 !== undefined ? confirmDialog.line4 : null,
-    confirmDialog.line5 !== undefined ? confirmDialog.line5 : null,
-    confirmDialog.line6 !== undefined ? confirmDialog.line6 : null
-  ].filter((line): line is string => line !== null) // remove nulls, assert type
+    confirmDialog.line1 ?? null,
+    confirmDialog.line2 ?? null,
+    confirmDialog.line3 ?? null,
+    confirmDialog.line4 ?? null,
+    confirmDialog.line5 ?? null,
+    confirmDialog.line6 ?? null
+  ].filter((line): line is string => line !== null)
 
   return (
     <MyPopup
@@ -43,29 +71,26 @@ export function MyConfirmDialog({ confirmDialog, setConfirmDialog }: ConfirmDial
       onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
     >
       <div className='text-center mb-4'>
-        <div className='bg-secondary-light text-secondary-main rounded-full p-4 inline-block'>
+        <div className={iconContainerClass}>
           <ExclamationCircleIcon className='h-24 w-24 text-current' />
         </div>
-        <h2 className='text-lg font-semibold mt-2'>{confirmDialog.title}</h2>
-        <p className='text-sm text-red-600'>{confirmDialog.subTitle}</p>
-
-        {/* Render optional lines 1–6 if they exist */}
+        <h2 className={titleClass}>{confirmDialog.title}</h2>
+        <p className={subTitleClass}>{confirmDialog.subTitle}</p>
         {optionalLines.map((line, index) => (
-          <p key={index} className='text-sm text-green-600'>
+          <p key={index} className={lineClass}>
             {line}
           </p>
         ))}
       </div>
-
       <div className='flex justify-center space-x-4'>
         <MyButton
-          overrideClass='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none'
+          overrideClass={noButtonClass}
           onClick={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
         >
           No
         </MyButton>
         <MyButton
-          overrideClass='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none'
+          overrideClass={yesButtonClass}
           onClick={confirmDialog.onConfirm}
         >
           Yes

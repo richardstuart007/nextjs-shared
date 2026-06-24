@@ -1,4 +1,5 @@
-// src/ui/components/myCheckbox.tsx
+'use client'
+
 import { useState, useMemo } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
@@ -14,6 +15,10 @@ type CheckBoxProps = {
   searchEnabled?: boolean
   name: string
   label?: string
+  defaultClass_Label?: string
+  defaultClass_Search?: string
+  defaultClass_Container?: string
+  defaultClass_CheckboxItem?: string
   overrideClass_Label?: string
   overrideClass_Search?: string
   overrideClass_Container?: string
@@ -22,8 +27,13 @@ type CheckBoxProps = {
   maxSelections?: number
   minSelections?: number
   showResortButton?: boolean
-  sortBy?: 'value' | 'label' // Add sortBy prop
+  sortBy?: 'value' | 'label'
 }
+
+export const MyCheckbox_labelDftClass_Shared     = 'block text-gray-900 mb-1 text-xs w-72'
+export const MyCheckbox_searchDftClass_Shared    = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
+export const MyCheckbox_containerDftClass_Shared = 'border border-blue-500 rounded-md p-2 overflow-y-auto w-72'
+export const MyCheckbox_itemDftClass_Shared      = 'flex items-center space-x-2 py-1'
 
 export default function MyCheckBox({
   selectedOptions = [],
@@ -32,9 +42,13 @@ export default function MyCheckBox({
   searchEnabled = false,
   name,
   label,
-  overrideClass_Label = 'w-72',
-  overrideClass_Search = 'w-72',
-  overrideClass_Container = 'w-72',
+  defaultClass_Label = MyCheckbox_labelDftClass_Shared,
+  defaultClass_Search = MyCheckbox_searchDftClass_Shared,
+  defaultClass_Container = MyCheckbox_containerDftClass_Shared,
+  defaultClass_CheckboxItem = MyCheckbox_itemDftClass_Shared,
+  overrideClass_Label = '',
+  overrideClass_Search = '',
+  overrideClass_Container = '',
   overrideClass_CheckboxItem = '',
   showSelectedCount = true,
   maxSelections,
@@ -42,18 +56,18 @@ export default function MyCheckBox({
   showResortButton = true,
   sortBy = 'label'
 }: CheckBoxProps) {
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  STATE DECLARATIONS
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [showSelectedFirst, setShowSelectedFirst] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  Sort options based on sortBy prop
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   const sortedOptions = useMemo(() => {
-    return [...options].sort((a, b) => {
+    const result = [...options].sort((a, b) => {
       if (sortBy === 'value') {
         if (typeof a.value === 'number' && typeof b.value === 'number') {
           return a.value - b.value
@@ -63,53 +77,44 @@ export default function MyCheckBox({
         return a.label.localeCompare(b.label)
       }
     })
+    return result
   }, [options, sortBy])
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  className Labels
-  //---------------------------------------------------------------------
-  const className_Label = myMergeClasses('block text-gray-900 mb-1 text-xs', overrideClass_Label)
-  const className_Search = myMergeClasses(
-    'px-2 rounded-md border border-blue-500 py-[6px] text-xs',
-    overrideClass_Search
-  )
-  const className_Container = myMergeClasses(
-    'border border-blue-500 rounded-md p-2 overflow-y-auto',
-    overrideClass_Container
-  )
-  const className_CheckboxItem = myMergeClasses(
-    'flex items-center space-x-2 py-1',
-    overrideClass_CheckboxItem
-  )
-  const className_ResortButton = myMergeClasses(
-    'text-[10px] px-1 py-0 h-5 bg-green-500 hover:bg-green-600',
-    ''
-  )
+  //----------------------------------------------------------------------------------------------
+  const className_Label = myMergeClasses(defaultClass_Label, overrideClass_Label)
+  const className_Search = myMergeClasses(defaultClass_Search, overrideClass_Search)
+  const className_Container = myMergeClasses(defaultClass_Container, overrideClass_Container)
+  const className_CheckboxItem = myMergeClasses(defaultClass_CheckboxItem, overrideClass_CheckboxItem)
+  const className_ResortButton = 'text-[10px] px-1 py-0 h-5 bg-green-500 hover:bg-green-600'
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  filteredOptions - Filters and optionally shows selected first
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   const filteredOptions = useMemo(
-    function () {
-      // Filter options based on search term
-      const filtered = sortedOptions.filter(function (option) {
-        return option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      })
+    () => {
+      //
+      //  Filter options based on search term
+      //
+      const filtered = sortedOptions.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
 
       if (!showSelectedFirst) {
         return filtered
       }
 
-      // Separate selected and unselected
-      const selected = filtered.filter(function (option) {
-        return selectedOptions.includes(option.value)
-      })
-      const unselected = filtered.filter(function (option) {
-        return !selectedOptions.includes(option.value)
-      })
+      //
+      //  Separate selected and unselected
+      //
+      const selected = filtered.filter(option => selectedOptions.includes(option.value))
+      const unselected = filtered.filter(option => !selectedOptions.includes(option.value))
 
-      // Sort both arrays by the same sortBy rule
-      const sortFn = function (
+      //
+      //  Sort both arrays by the same sortBy rule
+      //
+      function sortFn(
         a: { value: string | number; label: string },
         b: { value: string | number; label: string }
       ) {
@@ -126,38 +131,47 @@ export default function MyCheckBox({
       selected.sort(sortFn)
       unselected.sort(sortFn)
 
-      // Return selected first, then unselected
-      return [...selected, ...unselected]
+      //
+      //  Return selected first, then unselected
+      //
+      const result = [...selected, ...unselected]
+      return result
     },
     [sortedOptions, searchTerm, selectedOptions, showSelectedFirst, sortBy]
   )
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  sortSelected - Sorts selected options by their labels
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function sortSelected(selected: Array<string | number>): Array<string | number> {
-    // Create a map of value to label for quick lookup
+    //
+    //  Create a map of value to label for quick lookup
+    //
     const valueToLabel = new Map<string | number, string>()
-    options.forEach(function (option) {
+    options.forEach(option => {
       valueToLabel.set(option.value, option.label)
     })
 
-    return [...selected].sort(function (a, b) {
+    const result = [...selected].sort((a, b) => {
       const labelA = valueToLabel.get(a) || String(a)
       const labelB = valueToLabel.get(b) || String(b)
       return labelA.localeCompare(labelB)
     })
+    return result
   }
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  handleCheckboxChange - Handles checkbox selection with min/max validation
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function handleCheckboxChange(value: string | number, checked: boolean) {
-    setError('') // Clear previous errors
+    //
+    //  Clear previous errors
+    //
+    setError('')
 
     if (checked) {
       //
-      // Check max selection limit
+      //  Check max selection limit
       //
       if (maxSelections !== undefined && selectedOptions.length >= maxSelections) {
         setError(`Maximum ${maxSelections} selection${maxSelections !== 1 ? 's' : ''} allowed`)
@@ -167,7 +181,7 @@ export default function MyCheckBox({
       setSelectedOptions(sortSelected(newSelection))
     }
     //
-    // Check min selection limit before removing
+    //  Check min selection limit before removing
     //
     else {
       if (minSelections !== undefined && selectedOptions.length <= minSelections) {
@@ -177,32 +191,32 @@ export default function MyCheckBox({
       //
       //  Save the changes
       //
-      const newSelection = selectedOptions.filter(function (item) {
-        return item !== value
-      })
+      const newSelection = selectedOptions.filter(item => item !== value)
       setSelectedOptions(sortSelected(newSelection))
     }
   }
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  isSelected - Checks if a value is in the selectedOptions array
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function isSelected(value: string | number): boolean {
-    return selectedOptions.includes(value)
+    const result = selectedOptions.includes(value)
+    return result
   }
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  renderHiddenInputs - Renders hidden inputs for form submission
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderHiddenInputs() {
-    return selectedOptions.map(function (value, index) {
-      return <input key={`${name}_${index}`} type='hidden' name={`${name}[]`} value={value} />
-    })
+    const result = selectedOptions.map((value, index) => (
+      <input key={`${name}_${index}`} type='hidden' name={`${name}[]`} value={value} />
+    ))
+    return result
   }
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  renderCheckboxes - Main render function for checkbox group
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   function renderCheckboxes() {
     return (
       <div className='font-medium'>
@@ -218,7 +232,7 @@ export default function MyCheckBox({
           <div className='flex justify-start mb-2'>
             <MyButton
               overrideClass={className_ResortButton}
-              onClick={function (e) {
+              onClick={e => {
                 e.preventDefault()
                 setShowSelectedFirst(!showSelectedFirst)
               }}
@@ -235,7 +249,7 @@ export default function MyCheckBox({
             type='text'
             placeholder='Search...'
             value={searchTerm}
-            onChange={function (e) {
+            onChange={e => {
               setSearchTerm(e.target.value)
             }}
           />
@@ -247,22 +261,20 @@ export default function MyCheckBox({
         {/* Checkbox Group */}
         <div className={className_Container}>
           {filteredOptions.length > 0 ? (
-            filteredOptions.map(function (option) {
-              return (
-                <label key={option.value} className={className_CheckboxItem}>
-                  <input
-                    type='checkbox'
-                    value={option.value}
-                    checked={isSelected(option.value)}
-                    onChange={function (e) {
-                      handleCheckboxChange(option.value, e.target.checked)
-                    }}
-                    className='h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
-                  />
-                  <span className='text-xs text-gray-900 cursor-pointer'>{option.label}</span>
-                </label>
-              )
-            })
+            filteredOptions.map(option => (
+              <label key={option.value} className={className_CheckboxItem}>
+                <input
+                  type='checkbox'
+                  value={option.value}
+                  checked={isSelected(option.value)}
+                  onChange={e => {
+                    handleCheckboxChange(option.value, e.target.checked)
+                  }}
+                  className='h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                />
+                <span className='text-xs text-gray-900 cursor-pointer'>{option.label}</span>
+              </label>
+            ))
           ) : (
             <p className='text-xs text-gray-500'>No options found</p>
           )}
@@ -283,9 +295,10 @@ export default function MyCheckBox({
     )
   }
 
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   //  RETURN
-  //---------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   if (options.length === 0) return <p className='font-medium text-xs'>No options available</p>
-  return renderCheckboxes()
+  const checkboxes = renderCheckboxes()
+  return checkboxes
 }

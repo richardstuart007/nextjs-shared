@@ -22,8 +22,8 @@ import {
 import sectionExceptions from './section-exceptions.json'
 
 function semverCompare(a: string, b: string): number {
-  const pa = a.split('.').map(Number)
-  const pb = b.split('.').map(Number)
+  const pa = a.replace(/-.*$/, '').split('.').map(Number)
+  const pb = b.replace(/-.*$/, '').split('.').map(Number)
   for (let i = 0; i < 3; i++) {
     const diff = (pa[i] ?? 0) - (pb[i] ?? 0)
     if (diff !== 0) return diff
@@ -50,7 +50,6 @@ export default function OwnerSyncVersions() {
   const [localVersions, setLocalVersions] = useState<Record<string, string>>({})
   const [projectVersions, setProjectVersions] = useState<Record<string, string>>({})
   const [targets, setTargets] = useState<SyncTargets>({ deps: {}, overrides: {} })
-  const [targetError, setTargetError] = useState<string | null>(null)
   const [syncResults, setSyncResults] = useState<SyncResult[] | null>(null)
   const [sections, setSections] = useState<SectionMatrix | null>(null)
   const [syncing, setSyncing] = useState(false)
@@ -110,7 +109,6 @@ export default function OwnerSyncVersions() {
 
   async function handleTargetBlur(pkg: string, value: string, kind: 'deps' | 'overrides') {
     const trimmed = value.trim()
-    setTargetError(null)
 
     if (trimmed === '') {
       await action_deleteTarget(pkg, kind)
@@ -120,15 +118,6 @@ export default function OwnerSyncVersions() {
         return next
       })
       return
-    }
-
-    const latestVer = latest?.[pkg]
-    if (latestVer && latestVer !== '?') {
-      const base = extractBaseVersion(trimmed)
-      if (semverCompare(base, latestVer) > 0) {
-        setTargetError(`${pkg}: target ${trimmed} exceeds latest ${latestVer} — not saved`)
-        return
-      }
     }
 
     if (trimmed !== targets[kind][pkg]) {
@@ -196,7 +185,7 @@ export default function OwnerSyncVersions() {
         )}
         <div className='ml-auto'>
           <MyButton onClick={handleSync} disabled={syncing || !matrix} overrideClass='bg-red-600 hover:bg-red-700'>
-            {syncing ? 'Syncing...' : 'Sync All'}
+            {syncing ? 'Syncing...' : 'Sync'}
           </MyButton>
         </div>
       </div>
@@ -210,10 +199,6 @@ export default function OwnerSyncVersions() {
         </span>
       </div>
 
-      {targetError && (
-        <p className='mb-3 text-xxs text-red-600 font-semibold'>{targetError}</p>
-      )}
-
       {!matrix ? (
         <p className='text-xxs text-gray-400'>Loading...</p>
       ) : (
@@ -224,8 +209,8 @@ export default function OwnerSyncVersions() {
                 <th className='w-44 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Package</th>
                 <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Latest</th>
                 <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Installed</th>
-                <th className='w-20 px-2 py-1 font-bold text-blue-600 border border-gray-200'>Dep</th>
-                <th className='w-20 px-2 py-1 font-bold text-amber-600 border border-gray-200'>Override</th>
+                <th className='w-28 px-2 py-1 font-bold text-blue-600 border border-gray-200'>Dep</th>
+                <th className='w-28 px-2 py-1 font-bold text-amber-600 border border-gray-200'>Override</th>
                 {projects.map(p => (
                   <th key={p} className={`w-32 px-2 py-1 font-bold border border-gray-200 ${parseErrors.includes(p) ? 'text-red-600' : 'text-gray-600'}`}>
                     {p}{parseErrors.includes(p) ? ' !' : ''}
@@ -267,7 +252,7 @@ export default function OwnerSyncVersions() {
                     </td>
                     <td className='px-1 py-0.5 border border-gray-200'>
                       <MyInput
-                        overrideClass='h-5 w-full text-xxs font-mono rounded-none border-0'
+                        overrideClass='h-5 w-full text-xxs font-mono rounded-none border-0 bg-transparent text-left px-0'
                         defaultValue={depTarget ?? ''}
                         placeholder=''
                         onBlur={e => handleTargetBlur(pkg, e.target.value, 'deps')}
@@ -275,7 +260,7 @@ export default function OwnerSyncVersions() {
                     </td>
                     <td className='px-1 py-0.5 border border-gray-200'>
                       <MyInput
-                        overrideClass='h-5 w-full text-xxs font-mono rounded-none border-0'
+                        overrideClass='h-5 w-full text-xxs font-mono rounded-none border-0 bg-transparent text-left px-0'
                         defaultValue={overrideTarget ?? ''}
                         placeholder=''
                         onBlur={e => handleTargetBlur(pkg, e.target.value, 'overrides')}

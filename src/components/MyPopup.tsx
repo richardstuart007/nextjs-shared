@@ -1,24 +1,53 @@
+'use client'
+
 import { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { MyButton } from './MyButton'
+import { myMergeClasses } from './MyMergeClasses'
 
-interface PopupProps {
+type Props = {
   isOpen: boolean
   onClose: () => void
   children: ReactNode
-  maxWidth?: string
+  defaultClass?: string
+  overrideClass?: string
+  overlayClass?: string
+  closeButtonClass?: string
 }
 
-export default function MyPopup({ isOpen, onClose, children, maxWidth = 'max-w-md' }: PopupProps) {
+export const MyPopup_dftClass_Shared = [
+  'relative',
+  'w-full max-w-md max-h-[90vh]',
+  'p-4 md:p-6',
+  'rounded-lg',
+  'bg-white',
+  'shadow-lg',
+  'overflow-y-auto',
+].join(' ')
+
+export const MyPopup_overlayDftClass_Shared      = 'fixed inset-0 flex justify-center items-center z-50'
+export const MyPopup_closeButtonDftClass_Shared  = 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800'
+
+//----------------------------------------------------------------------------------
+//  MyPopup — modal overlay panel with close button
+//----------------------------------------------------------------------------------
+export default function MyPopup({
+  isOpen,
+  onClose,
+  children,
+  defaultClass = MyPopup_dftClass_Shared,
+  overrideClass = '',
+  overlayClass = MyPopup_overlayDftClass_Shared,
+  closeButtonClass = MyPopup_closeButtonDftClass_Shared,
+}: Props) {
   if (!isOpen) return null
 
+  const className = myMergeClasses(defaultClass, overrideClass)
+
   return (
-    <div className='fixed inset-0 flex justify-center items-center z-50'>
-      <div className={`relative bg-white p-6 rounded-lg shadow-lg w-full max-h-[90vh] overflow-y-auto ${maxWidth}`}>
-        <MyButton
-          onClick={onClose}
-          overrideClass='absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800'
-        >
+    <div className={overlayClass}>
+      <div className={className}>
+        <MyButton onClick={onClose} overrideClass={closeButtonClass}>
           <XMarkIcon className='h-6 w-6' />
         </MyButton>
         <div className='mt-4'>{children}</div>

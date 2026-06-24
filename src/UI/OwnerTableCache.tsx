@@ -191,7 +191,7 @@ export default function OwnerTableCache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} maxWidth='max-w-[95vw]'>
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw]'>
         {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>

@@ -9,23 +9,40 @@ export type MyHelpStepProps = {
   output:     string[]
   consumers?: string[]
   label?:     string
+  buttonClass?: string
+  panelClass?: string
 }
 
-export function MyHelpStep({ title, input, processing, output, consumers, label = 'Help' }: MyHelpStepProps) {
+export const MyHelpStep_buttonDftClass_Shared = 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none'
+export const MyHelpStep_panelDftClass_Shared  = 'absolute z-20 mt-1 left-0 w-[min(2000px,90vw)] p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs'
+
+//----------------------------------------------------------------------------------------------
+//  MyHelpStep — toggleable step help panel showing input/processing/output/consumers
+//----------------------------------------------------------------------------------------------
+export function MyHelpStep({
+  title,
+  input,
+  processing,
+  output,
+  consumers,
+  label = 'Help',
+  buttonClass = MyHelpStep_buttonDftClass_Shared,
+  panelClass = MyHelpStep_panelDftClass_Shared,
+}: MyHelpStepProps) {
   const [open, setOpen] = useState(false)
 
   return (
     <span className='inline-block'>
       <button
         onClick={() => setOpen(o => !o)}
-        className='text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none'
+        className={buttonClass}
         type='button'
       >
         {label}
       </button>
 
       {open && (
-        <div className='absolute z-20 mt-1 left-0 w-[min(2000px,90vw)] p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs'>
+        <div className={panelClass}>
 
           <div className='flex justify-between items-center mb-3'>
             <p className='font-semibold text-blue-800 text-sm'>{title}</p>

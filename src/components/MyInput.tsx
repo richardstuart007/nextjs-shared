@@ -1,27 +1,33 @@
+'use client'
+
 import { myMergeClasses } from './MyMergeClasses'
 
-interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
+type Props = React.InputHTMLAttributes<HTMLInputElement> & {
+  defaultClass?: string
   overrideClass?: string
 }
 
-export function MyInput({ overrideClass = '', ...rest }: Props) {
-  //
-  //  Default Class
-  //
-  const defaultClass = [
-    'h-6 px-1 md:px-2 items-center',
-    'text-xs font-normal',
-    'border border-blue-500 rounded-md',
-    'focus:border-1 focus:border-blue-500',
-    'hover:border-1 hover:border-blue-500',
-    'aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
-  ].join(' ')
+export const MyInput_dftClass_Shared = [
+  'h-6 md:h-8',
+  'px-1 md:px-2',
+  'font-normal text-xs',
+  'rounded-md',
+  'border border-blue-500',
+  'focus:border-1 focus:border-blue-500',
+  'hover:border-1 hover:border-blue-500',
+  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+].join(' ')
+
+//----------------------------------------------------------------------------------
+//  MyInput — text input with Tailwind class overrides
+//----------------------------------------------------------------------------------
+export function MyInput({ defaultClass = MyInput_dftClass_Shared, overrideClass = '', ...rest }: Props) {
   //
   // Use the mergeClasses function to combine the classes
   //
-  const classValue = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(defaultClass, overrideClass)
   //
   //  Output
   //
-  return <input {...rest} className={classValue} suppressHydrationWarning />
+  return <input {...rest} className={className} suppressHydrationWarning />
 }
