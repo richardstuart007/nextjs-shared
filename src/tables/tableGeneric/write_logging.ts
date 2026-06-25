@@ -70,6 +70,7 @@ export async function write_logging({
     //
   } catch (error) {
     console.error('write_logging failed — does the xlg_logging table exist? Run src/schema.sql.', (error as Error).message)
+    console.log(`[${lg_severity}] ${lg_functionname} | ${lg_msg}`)
     return false
   }
 }
