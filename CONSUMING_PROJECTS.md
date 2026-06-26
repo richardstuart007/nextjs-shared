@@ -285,20 +285,20 @@ export default function CachePage() {
 
 ## 7. UI Components
 
-All are React client components. They accept an `overrideClass` prop to merge Tailwind classes.
+All are React client components. Import individually.
 
 | Import | Description |
 |---|---|
-| `nextjs-shared/MyButton` | Standard button |
+| `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
-| `nextjs-shared/MyDropdown` | Dropdown (label + select) |
-| `nextjs-shared/MySelect` | Raw select element, default `w-72` |
+| `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
+| `nextjs-shared/MySelect` | Labelled select (label + select element) |
 | `nextjs-shared/MyTextarea` | Textarea |
-| `nextjs-shared/MyCheckbox` | Checkbox with label |
+| `nextjs-shared/MyCheckbox` | Multi-select checkbox group with search, sort, min/max |
 | `nextjs-shared/MyToggle` | Toggle switch |
 | `nextjs-shared/MyConfirmDialog` | Confirmation modal |
 | `nextjs-shared/MyPagination` | Pagination controls |
-| `nextjs-shared/MyLink` | Styled anchor |
+| `nextjs-shared/MyLink` | Styled Next.js anchor |
 | `nextjs-shared/MyPopup` | Popup overlay |
 | `nextjs-shared/MyHelp` | Help button with popover — pass `items` (structured heading+body) or `text` (plain string, supports newlines) |
 | `nextjs-shared/MyHelpField` | Hover tooltip `?` icon for inline field hints — pass `text` string |
@@ -307,23 +307,151 @@ All are React client components. They accept an `overrideClass` prop to merge Ta
 | `nextjs-shared/MyLoadingMessage` | Loading text |
 | `nextjs-shared/MyBox` | Styled container box |
 
+### Project-wide defaults (`defaultClass` pattern)
+
+Every component accepts a `defaultClass` prop alongside `overrideClass`, and exports a named constant for its shared default (e.g. `MyButton_dftClass_Shared`). A consuming project creates a project-wide wrapper by importing the constant, adjusting it, and passing the result as `defaultClass` — callers can still use `overrideClass` for per-instance changes.
+
+```tsx
+// src/components/AppButton.tsx — project-wide wrapper
+import { MyButton, MyButton_dftClass_Shared } from 'nextjs-shared/MyButton'
+
+// Taller buttons project-wide; everything else inherited from shared default
+const projectDefault = MyButton_dftClass_Shared.replace('h-6 md:h-8', 'h-8 md:h-10')
+
+type Props = React.ComponentProps<typeof MyButton>
+
+export function AppButton(props: Props) {
+  return <MyButton defaultClass={projectDefault} {...props} />
+}
+```
+
+### MyButton props
+
+| Prop | Type | Default |
+|---|---|---|
+| `children` | `React.ReactNode` | — |
+| `defaultClass` | `string` | `MyButton_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| + all `<button>` HTML attributes | | |
+
+Exported constant: `MyButton_dftClass_Shared` — includes `cursor-pointer`; `aria-disabled:cursor-not-allowed` overrides it when `aria-disabled` is set.
+
+### MyInput props
+
+| Prop | Type | Default |
+|---|---|---|
+| `defaultClass` | `string` | `MyInput_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| + all `<input>` HTML attributes | | |
+
+Exported constant: `MyInput_dftClass_Shared`.
+
+### MyTextarea props
+
+| Prop | Type | Default |
+|---|---|---|
+| `defaultClass` | `string` | `MyTextarea_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| + all `<textarea>` HTML attributes | | |
+
+Exported constant: `MyTextarea_dftClass_Shared`.
+
 ### MySelect props
 
-| Prop | Type | Default | Purpose |
-|---|---|---|---|
-| `label` | `string` | — | Label text rendered to the left of the select |
-| `options` | `string[]` | `[]` | Option values (renders `<option>` elements); omit to pass `children` directly |
-| `overrideClass` | `string` | `''` | Tailwind overrides for the `<select>` element (merged via `myMergeClasses`) |
-| `labelClass` | `string` | `'font-bold text-xs whitespace-nowrap'` | Tailwind classes for the label element |
-| `id` | `string` | derived from `label` | Explicit id; if omitted, derived from label text (e.g. "Depth" → `"depth"`) |
+| Prop | Type | Default |
+|---|---|---|
+| `label` | `string` | — |
+| `options` | `string[]` | `[]` — omit to pass `children` directly as `<option>` elements |
+| `defaultClass` | `string` | `MySelect_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| `labelClass` | `string` | `MySelect_labelDftClass_Shared` (`'font-bold text-xs whitespace-nowrap'`) |
+| `containerClass` | `string` | `MySelect_containerDftClass_Shared` (`'flex items-center gap-2'`) |
+| `id` | `string` | derived from `label` (e.g. `"Sort By"` → `"sort-by"`) |
+| + all `<select>` HTML attributes | | |
+
+Exported constants: `MySelect_dftClass_Shared`, `MySelect_labelDftClass_Shared`, `MySelect_containerDftClass_Shared`.
 
 ### MyBox props
 
-| Prop | Type | Default | Purpose |
-|---|---|---|---|
-| `title` | `string` | — | Optional heading rendered inside the box |
-| `className` | `string` | `''` | Extra Tailwind classes added to the outer `<div>` |
-| `titleClass` | `string` | `'text-xs font-bold mb-2'` | Tailwind classes for the title `<h3>` |
+| Prop | Type | Default |
+|---|---|---|
+| `children` | `React.ReactNode` | — |
+| `title` | `string` | — |
+| `defaultClass` | `string` | `MyBox_dftClass_Shared` |
+| `className` | `string` | `''` — merged over `defaultClass` via `myMergeClasses` |
+| `titleClass` | `string` | `MyBox_titleDftClass_Shared` (`'text-xs font-bold mb-2'`) |
+
+Exported constants: `MyBox_dftClass_Shared`, `MyBox_titleDftClass_Shared`.
+
+### MyToggle props
+
+| Prop | Type | Default |
+|---|---|---|
+| `inputName` | `string` | — |
+| `inputValue` | `boolean` | — |
+| `onChange` | `React.ChangeEventHandler<HTMLInputElement>` | — |
+| `defaultClass` | `string` | `MyToggle_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| `labelClass` | `string` | `MyToggle_labelDftClass_Shared` (`'inline-flex items-center cursor-pointer'`) |
+| + all `<input>` HTML attributes | | |
+
+Exported constants: `MyToggle_dftClass_Shared`, `MyToggle_labelDftClass_Shared`.
+
+### MyDropdown props
+
+| Prop | Type | Default |
+|---|---|---|
+| `selectedOption` | `string \| number` | — |
+| `setSelectedOption` | `(value: string \| number) => void` | — |
+| `optionLabel` | `string` | — column name used for display text |
+| `optionValue` | `string \| number` | — column name used for the value |
+| `name` | `string` | — |
+| `label` | `string` | — |
+| `tableData` | `Array<Record<string, string \| number>>` | — pre-fetched rows; use instead of `table` |
+| `table` | `string` | — table to fetch from |
+| `tableColumn` | `string` | — WHERE column |
+| `tableColumnValue` | `string \| number` | — WHERE value |
+| `orderBy` | `string` | `''` (defaults to `optionLabel`) |
+| `searchEnabled` | `boolean` | `false` |
+| `includeBlank` | `boolean` | `false` |
+| `defaultClass` | `string` | `MyDropdown_dftClass_Shared` |
+| `defaultClass_Label` | `string` | `MyDropdown_labelDftClass_Shared` |
+| `defaultClass_Search` | `string` | `MyDropdown_searchDftClass_Shared` |
+| `overrideClass_Dropdown` | `string` | `''` |
+| `overrideClass_Label` | `string` | `''` |
+| `overrideClass_Search` | `string` | `''` |
+
+Exported constants: `MyDropdown_dftClass_Shared`, `MyDropdown_labelDftClass_Shared`, `MyDropdown_searchDftClass_Shared`.
+
+Auto-selects the single option when only one exists. Fetches from DB on mount when `table` is supplied; pass `tableData` to use pre-fetched rows instead.
+
+### MyCheckbox props
+
+| Prop | Type | Default |
+|---|---|---|
+| `selectedOptions` | `Array<string \| number>` | — |
+| `setSelectedOptions` | `(value: Array<string \| number>) => void` | — |
+| `options` | `Array<{ value: string \| number; label: string }>` | — |
+| `name` | `string` | — |
+| `label` | `string` | — |
+| `searchEnabled` | `boolean` | `false` |
+| `showSelectedCount` | `boolean` | `true` |
+| `showResortButton` | `boolean` | `true` — "Show Selected First" toggle button |
+| `sortBy` | `'value' \| 'label'` | `'label'` |
+| `minSelections` | `number` | — |
+| `maxSelections` | `number` | — |
+| `defaultClass_Label` | `string` | `MyCheckbox_labelDftClass_Shared` |
+| `defaultClass_Search` | `string` | `MyCheckbox_searchDftClass_Shared` |
+| `defaultClass_Container` | `string` | `MyCheckbox_containerDftClass_Shared` |
+| `defaultClass_CheckboxItem` | `string` | `MyCheckbox_itemDftClass_Shared` |
+| `overrideClass_Label` | `string` | `''` |
+| `overrideClass_Search` | `string` | `''` |
+| `overrideClass_Container` | `string` | `''` |
+| `overrideClass_CheckboxItem` | `string` | `''` |
+
+Exported constants: `MyCheckbox_labelDftClass_Shared`, `MyCheckbox_searchDftClass_Shared`, `MyCheckbox_containerDftClass_Shared`, `MyCheckbox_itemDftClass_Shared`.
+
+Selected options are always kept sorted. Min/max validation shows an inline error when the limit is hit.
 
 ### Tailwind v4 — custom text sizes
 

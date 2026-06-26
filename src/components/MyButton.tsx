@@ -19,6 +19,7 @@ export const MyButton_dftClass_Shared = [
   'rounded-md',
   'bg-blue-500 hover:bg-blue-600',
   'transition-colors',
+  'cursor-pointer',
   'focus-visible:outline focus-visible:outline-blue-500',
   'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
 ].join(' ')

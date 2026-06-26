@@ -1,28 +1,14 @@
 'use server'
 
 import { table_fetch } from '../tables/tableGeneric/table_fetch'
-import { table_write } from '../tables/tableGeneric/table_write'
+import { table_upsert } from '../tables/tableGeneric/table_upsert'
 import { table_delete } from '../tables/tableGeneric/table_delete'
 import { INCLUDED_TIME_CLASSES } from './constants'
 
 const GAMES_TABLE = 'tgr_gamesraw'
 
 //----------------------------------------------------------------------------------
-//  gameExists — check if a game UUID already exists in tgr_gamesraw
-//----------------------------------------------------------------------------------
-async function gameExists(chesscomUuid: string): Promise<boolean> {
-  const rows = await table_fetch({
-    caller: 'gameExists',
-    table: GAMES_TABLE,
-    whereColumnValuePairs: [{ column: 'gr_chesscom_uuid', value: chesscomUuid }],
-    limit: 1,
-    columns: ['gr_grid']
-  })
-  return rows.length > 0
-}
-
-//----------------------------------------------------------------------------------
-//  insertRawGame — insert one raw game row into tgr_gamesraw
+//  insertRawGame — upsert one raw game row; returns true if inserted, false if already existed
 //----------------------------------------------------------------------------------
 async function insertRawGame(data: {
   player_username: string
@@ -31,8 +17,8 @@ async function insertRawGame(data: {
   pgn?: string | null
   end_time: number
   time_class: string
-}): Promise<void> {
-  await table_write({
+}): Promise<boolean> {
+  const rows = await table_upsert({
     caller: 'insertRawGame',
     table: GAMES_TABLE,
     columnValuePairs: [
@@ -42,8 +28,10 @@ async function insertRawGame(data: {
       { column: 'gr_pgn', value: data.pgn ?? null },
       { column: 'gr_end_time', value: data.end_time },
       { column: 'gr_time_class', value: data.time_class }
-    ]
+    ],
+    conflictColumns: ['gr_chesscom_uuid']
   })
+  return rows.length > 0
 }
 
 //----------------------------------------------------------------------------------
@@ -75,13 +63,6 @@ export async function initSync(
       table: GAMES_TABLE,
       whereColumnValuePairs: [{ column: 'gr_player_username', value: username }],
       caller: 'initSync_fullReplace'
-    })
-    const { sql } = await import('../tables/db')
-    const db = await sql()
-    await db.query({
-      caller: 'initSync_resetSeq',
-      query: "SELECT setval(pg_get_serial_sequence('tgr_gamesraw', 'gr_grid'), 1, false)",
-      functionName: 'initSync'
     })
   }
 
@@ -139,13 +120,7 @@ export async function syncArchive(params: {
         continue
       }
 
-      const exists = await gameExists(uuid)
-      if (exists) {
-        skipped++
-        continue
-      }
-
-      await insertRawGame({
+      const wasInserted = await insertRawGame({
         player_username: username,
         chesscom_uuid: uuid,
         raw_data: game,
@@ -153,7 +128,8 @@ export async function syncArchive(params: {
         end_time: game.end_time,
         time_class: game.time_class || ''
       })
-      inserted++
+      if (wasInserted) inserted++
+      else skipped++
     }
 
     return { inserted, skipped, total: games.length }
