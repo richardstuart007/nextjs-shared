@@ -31,7 +31,7 @@ export async function table_seqReset({ tableName, caller = '' }: Props): Promise
     const columnName = returnValues.columnName
     const maxValue = returnValues.maxValue
 
-    const sqlQuery = `SELECT setval($1, $2)`
+    const sqlQuery = `SELECT setval($1, GREATEST($2::bigint, 1), $2::bigint > 0)`
     const values = [sequenceName, maxValue]
     await db.query({ caller: caller, query: sqlQuery, params: values, functionName: functionName })
     //

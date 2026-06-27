@@ -95,7 +95,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     //
     //  Get the maxValue
     //
-    const sqlQueryMax = `SELECT COALESCE((SELECT MAX(${columnName}) FROM ${tableName}), 1)`
+    const sqlQueryMax = `SELECT COALESCE((SELECT MAX(${columnName}) FROM ${tableName}), 0)`
     const maxValueResult = await db.query({
       caller: caller,
       query: sqlQueryMax,
