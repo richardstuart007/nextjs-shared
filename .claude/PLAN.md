@@ -1,4 +1,4 @@
-# Plan — nextjs-shared, "version": "2.1.6"
+# Plan — nextjs-shared, "version": "2.1.7"
 
 ## Current task
 _No active task._

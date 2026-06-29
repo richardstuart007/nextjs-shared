@@ -11,10 +11,11 @@ interface Props {
   caller: string
   table: string
   columnValuePairs: WriteColumnValuePair[]
+  conflictColumn?: string
   noLog?: boolean
 }
 
-export async function table_write({ table, columnValuePairs, caller, noLog = false }: Props): Promise<any[]> {
+export async function table_write({ table, columnValuePairs, conflictColumn, caller, noLog = false }: Props): Promise<any[]> {
   const functionName = 'table_write'
   //
   // Prepare the columns and parameterized placeholders for the INSERT statement
@@ -23,9 +24,10 @@ export async function table_write({ table, columnValuePairs, caller, noLog = fal
   const values = columnValuePairs.map(({ value }) => value)
   const placeholders = columnValuePairs.map((_, index) => `$${index + 1}`).join(', ')
   //
-  // Build the SQL query
+  // Build the SQL query — append ON CONFLICT DO NOTHING when conflictColumn is provided
   //
-  const sqlQuery = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING *`
+  const conflict = conflictColumn ? ` ON CONFLICT (${conflictColumn}) DO NOTHING` : ''
+  const sqlQuery = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})${conflict} RETURNING *`
   //
   // Run the query
   //

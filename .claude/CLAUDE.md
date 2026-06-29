@@ -173,3 +173,8 @@ const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefin
 }
 ```
 Without this, the class appears in the HTML but no CSS rule is generated and the text renders at the inherited/default size.
+
+## Silent file updates — never ask permission
+
+**PLAN.md and CHANGES.md are always updated silently.**  
+Never ask before checking off a step in `.claude/PLAN.md` or appending to `.claude/CHANGES.md`. These are mechanical parts of execution — no confirmation needed.

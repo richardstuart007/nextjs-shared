@@ -1,14 +1,14 @@
 'use server'
 
 import { table_fetch } from '../tables/tableGeneric/table_fetch'
-import { table_upsert } from '../tables/tableGeneric/table_upsert'
+import { table_write } from '../tables/tableGeneric/table_write'
 import { table_delete } from '../tables/tableGeneric/table_delete'
 import { INCLUDED_TIME_CLASSES } from './constants'
 
 const GAMES_TABLE = 'tgr_gamesraw'
 
 //----------------------------------------------------------------------------------
-//  insertRawGame — upsert one raw game row; returns true if inserted, false if already existed
+//  insertRawGame — insert one raw game row; returns true if inserted, false if already existed
 //----------------------------------------------------------------------------------
 async function insertRawGame(data: {
   player_username: string
@@ -18,7 +18,7 @@ async function insertRawGame(data: {
   end_time: number
   time_class: string
 }): Promise<boolean> {
-  const rows = await table_upsert({
+  const rows = await table_write({
     caller: 'insertRawGame',
     table: GAMES_TABLE,
     columnValuePairs: [
@@ -29,7 +29,7 @@ async function insertRawGame(data: {
       { column: 'gr_end_time', value: data.end_time },
       { column: 'gr_time_class', value: data.time_class }
     ],
-    conflictColumns: ['gr_chesscom_uuid']
+    conflictColumn: 'gr_chesscom_uuid'
   })
   return rows.length > 0
 }
