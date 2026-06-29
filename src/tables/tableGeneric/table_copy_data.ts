@@ -47,6 +47,24 @@ export async function table_copy_data({
     //
     await db.query({ caller: caller, query: sqlQuery, functionName: functionName })
     //
+    //  Reset sequences for any identity columns in the destination table
+    //
+    const identityCols = await db.query({
+      caller: caller,
+      query: `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND is_identity = 'YES'`,
+      params: [table_to],
+      functionName: functionName
+    })
+    for (const row of identityCols.rows as { column_name: string }[]) {
+      const col = row.column_name
+      await db.query({
+        caller: caller,
+        query: `SELECT setval(pg_get_serial_sequence('${table_to}', '${col}'), COALESCE((SELECT MAX(${col}) FROM ${table_to}), 1))`,
+        params: [],
+        functionName: functionName
+      })
+    }
+    //
     // All ok
     //
     return true
