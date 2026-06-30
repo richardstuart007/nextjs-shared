@@ -174,6 +174,10 @@ const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefin
 ```
 Without this, the class appears in the HTML but no CSS rule is generated and the text renders at the inherited/default size.
 
+## Schema file
+
+`scripts/schema.sql` is the single source of truth for the database structure of `nextjs-shared`-owned tables (`x`-prefixed). Every new shared table and index must be added here.
+
 ## Silent file updates — never ask permission
 
 **PLAN.md and CHANGES.md are always updated silently.**  

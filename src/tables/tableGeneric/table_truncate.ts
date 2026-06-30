@@ -2,13 +2,13 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 
-export async function table_truncate(table: string, caller = ''): Promise<boolean> {
+export async function table_truncate(table: string, caller = '', restartIdentity = true): Promise<boolean> {
   const functionName = 'table_truncate'
   try {
     //
     // Base TRUNCATE query
     //
-    const sqlQuery = `TRUNCATE Table ${table}`
+    const sqlQuery = `TRUNCATE Table ${table}${restartIdentity ? ' RESTART IDENTITY' : ''}`
     //
     // Run query
     //
