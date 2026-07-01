@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.10",
+  "version": "2.1.11",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, chess utilities, and schema tools",
   "private": true,
   "scripts": {
