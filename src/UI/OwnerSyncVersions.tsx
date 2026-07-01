@@ -35,6 +35,15 @@ function extractBaseVersion(value: string): string {
   return value.replace(/^[>=<^~\s]+/, '')
 }
 
+function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same' {
+  const pa = extractBaseVersion(a).split('.').map(Number)
+  const pb = extractBaseVersion(b).split('.').map(Number)
+  if ((pa[0] ?? 0) !== (pb[0] ?? 0)) return 'major'
+  if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
+  if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
+  return 'same'
+}
+
 const SECTION_ORDER: Record<string, number> = { d: 0, v: 1, p: 2, o: 3 }
 const SECTION_LABELS: Record<string, string> = {
   d: 'dependencies',
@@ -55,6 +64,9 @@ export default function OwnerSyncVersions() {
   const [syncing, setSyncing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [parseErrors, setParseErrors] = useState<string[]>([])
+  const [filterMajor, setFilterMajor] = useState(true)
+  const [filterMinor, setFilterMinor] = useState(true)
+  const [filterPatch, setFilterPatch] = useState(true)
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -192,7 +204,24 @@ export default function OwnerSyncVersions() {
       <div className='flex items-center gap-4 mb-4 text-xxs'>
         <span className='text-green-700'>● Up to date</span>
         <span className='text-purple-600'>● Needs npm install</span>
-        <span className='text-red-600'>● Version mismatch</span>
+        <button
+          onClick={() => setFilterMajor(f => !f)}
+          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterMajor ? 'bg-red-100 text-red-800 border-red-300' : 'text-gray-400 border-gray-300'}`}
+        >
+          ● Major
+        </button>
+        <button
+          onClick={() => setFilterMinor(f => !f)}
+          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterMinor ? 'bg-orange-100 text-orange-800 border-orange-300' : 'text-gray-400 border-gray-300'}`}
+        >
+          ● Minor
+        </button>
+        <button
+          onClick={() => setFilterPatch(f => !f)}
+          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterPatch ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'text-gray-400 border-gray-300'}`}
+        >
+          ● Patch
+        </button>
         <span className='flex items-center gap-1'>
           <span className='inline-block w-3 h-3 bg-pink-100 border border-gray-300'></span>
           Wrong section
@@ -279,6 +308,21 @@ export default function OwnerSyncVersions() {
                       if (isUrl) {
                         const upToDate = localVer != null && instVer === localVer
                         const behind = localVer != null && instVer != null && !upToDate
+                        let urlMismatchClass = ''
+                        if (behind && instVer != null && localVer != null) {
+                          const diff = versionDiff(instVer, localVer)
+                          const highlighted =
+                            (diff === 'major' && filterMajor) ||
+                            (diff === 'minor' && filterMinor) ||
+                            (diff === 'patch' && filterPatch)
+                          if (highlighted) {
+                            urlMismatchClass =
+                              diff === 'major' ? 'text-red-600 font-semibold' :
+                              diff === 'minor' ? 'text-orange-600 font-semibold' : 'text-amber-600 font-semibold'
+                          } else {
+                            urlMismatchClass = 'font-bold text-gray-400'
+                          }
+                        }
                         return (
                           <td
                             key={proj}
@@ -288,7 +332,7 @@ export default function OwnerSyncVersions() {
                                 : upToDate
                                 ? 'text-green-700'
                                 : behind
-                                ? 'text-red-600 font-semibold'
+                                ? urlMismatchClass
                                 : 'text-gray-400'
                             }`}
                           >
@@ -302,6 +346,21 @@ export default function OwnerSyncVersions() {
                       const aligned = reference != null && ver === reference
                       const refBase = reference ? extractBaseVersion(reference) : null
                       const isInstalled = aligned && instVer != null && refBase != null && semverCompare(instVer, refBase) >= 0
+                      let mismatchClass = ''
+                      if (!aligned && ver !== null) {
+                        const diff = (reference != null && ver != null) ? versionDiff(ver, reference) : 'major'
+                        const highlighted =
+                          (diff === 'major' && filterMajor) ||
+                          (diff === 'minor' && filterMinor) ||
+                          (diff === 'patch' && filterPatch)
+                        if (highlighted) {
+                          mismatchClass =
+                            diff === 'major' ? 'text-red-600 font-semibold' :
+                            diff === 'minor' ? 'text-orange-600 font-semibold' : 'text-amber-600 font-semibold'
+                        } else {
+                          mismatchClass = 'font-bold text-gray-400'
+                        }
+                      }
                       return (
                         <td
                           key={proj}
@@ -309,7 +368,7 @@ export default function OwnerSyncVersions() {
                             ver === null
                               ? 'text-gray-300'
                               : !aligned
-                              ? 'text-red-600 font-semibold'
+                              ? mismatchClass
                               : isInstalled
                               ? 'text-green-700'
                               : 'text-purple-600 font-semibold'
