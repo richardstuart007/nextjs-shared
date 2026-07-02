@@ -32,14 +32,17 @@ function normalizeTermination(raw: string | undefined): string {
 //----------------------------------------------------------------------------------
 //  getUndeconstructedCount — count raw games not yet deconstructed for a player
 //----------------------------------------------------------------------------------
-export async function getUndeconstructedCount(playerUsername: string): Promise<number> {
+export async function getUndeconstructedCount(
+  playerUsername: string,
+  timeClasses: string[] = INCLUDED_TIME_CLASSES
+): Promise<number> {
   const { sql } = await import('../tables/db')
   const db = await sql()
-  const inPlaceholders = INCLUDED_TIME_CLASSES.map((_, i) => `$${i + 2}`).join(', ')
+  const inPlaceholders = timeClasses.map((_, i) => `$${i + 2}`).join(', ')
   const result = await db.query({
     caller: 'getUndeconstructedCount',
     query: `SELECT COUNT(*) FROM ${RAW_TABLE} r WHERE r.gr_player_username = $1 AND r.gr_time_class IN (${inPlaceholders}) AND NOT EXISTS (SELECT 1 FROM ${DECON_TABLE} d WHERE d.gd_grid = r.gr_grid)`,
-    params: [playerUsername.toLowerCase(), ...INCLUDED_TIME_CLASSES],
+    params: [playerUsername.toLowerCase(), ...timeClasses],
     functionName: 'getUndeconstructedCount'
   })
   return Number(result.rows[0].count)
@@ -61,7 +64,8 @@ export async function getDeconstructedCount(playerUsername: string): Promise<num
 //----------------------------------------------------------------------------------
 export async function deconstructGames(
   playerUsername: string,
-  limit: number
+  limit: number,
+  timeClasses: string[] = INCLUDED_TIME_CLASSES
 ): Promise<{ processed: number; skipped: number; errors: number }> {
   const username = playerUsername.toLowerCase()
 
@@ -69,11 +73,11 @@ export async function deconstructGames(
   const db = await sql()
 
   const limitClause = limit > 0 ? `LIMIT ${limit}` : ''
-  const inPlaceholders = INCLUDED_TIME_CLASSES.map((_, i) => `$${i + 2}`).join(', ')
+  const inPlaceholders = timeClasses.map((_, i) => `$${i + 2}`).join(', ')
   const result = await db.query({
     caller: 'deconstructGames',
     query: `SELECT r.* FROM ${RAW_TABLE} r WHERE r.gr_player_username = $1 AND r.gr_time_class IN (${inPlaceholders}) AND NOT EXISTS (SELECT 1 FROM ${DECON_TABLE} d WHERE d.gd_grid = r.gr_grid) ORDER BY r.gr_end_time DESC ${limitClause}`,
-    params: [username, ...INCLUDED_TIME_CLASSES],
+    params: [username, ...timeClasses],
     functionName: 'deconstructGames'
   })
 
