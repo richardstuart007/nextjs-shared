@@ -133,7 +133,9 @@ export async function deconstructGames(
           { column: 'gd_eco_code', value: headers.eco },
           { column: 'gd_opening_name', value: headers.openingName },
           { column: 'gd_game_url', value: rawData.url ?? '' },
-          { column: 'gd_opening_moves', value: parsePgnOpening(pgn) }
+          { column: 'gd_opening_moves', value: parsePgnOpening(pgn) },
+          { column: 'gd_pgn', value: pgn },
+          { column: 'gd_chesscom_uuid', value: row.gr_chesscom_uuid }
         ]
       })
 
