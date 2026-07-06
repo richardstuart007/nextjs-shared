@@ -29,7 +29,7 @@ async function insertRawGame(data: {
       { column: 'gr_end_time', value: data.end_time },
       { column: 'gr_time_class', value: data.time_class }
     ],
-    conflictColumn: 'gr_chesscom_uuid'
+    conflictColumn: 'gr_chesscom_uuid, gr_player_username'
   })
   return rows.length > 0
 }
