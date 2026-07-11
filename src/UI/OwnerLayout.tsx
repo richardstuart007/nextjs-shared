@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   const [backPath, setBackPath] = useState<string | null>(null)
 
   useEffect(() => {
@@ -10,8 +12,12 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       window.location.href = '/'
       return
     }
-    setBackPath(sessionStorage.getItem('ownerFrom'))
-  }, [])
+    if (pathname === '/owner') {
+      setBackPath(sessionStorage.getItem('ownerFrom'))
+    } else {
+      setBackPath('/owner')
+    }
+  }, [pathname])
 
   if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') return null
 
