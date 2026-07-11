@@ -17,7 +17,9 @@ export async function fetchTotalPages({
   items_per_page = ITEMS_PER_PAGE,
   distinctColumns = [],
   caller = '',
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: {
   table: string
   joins?: JoinParams[]
@@ -26,6 +28,8 @@ export async function fetchTotalPages({
   distinctColumns?: string[]
   caller: string
   skipCache?: boolean
+  level?: number
+  severity?: string
 }): Promise<number> {
   const functionName = 'fetchTotalPages'
 
@@ -42,7 +46,7 @@ export async function fetchTotalPages({
   const cacheKey = buildSql_Readable(countSql, queryValues)
 
   if (!skipCache) {
-    const cachedData = cache_get<number>(cacheKey, functionName)
+    const cachedData = cache_get<number>(cacheKey, functionName, table, level, severity)
     if (cachedData !== null) return cachedData
   }
 
@@ -52,10 +56,12 @@ export async function fetchTotalPages({
     filters,
     items_per_page,
     distinctColumns,
-    caller
+    caller,
+    level,
+    severity
   })
   if (!skipCache) {
-    cache_set(cacheKey, totalPages, caller)
+    cache_set(cacheKey, totalPages, caller, table, level, severity)
   }
   return totalPages
 }

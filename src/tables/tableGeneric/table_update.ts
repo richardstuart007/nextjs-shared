@@ -14,6 +14,8 @@ interface Props {
   whereColumnValuePairs: WriteColumnValuePair[]
   noLog?: boolean
   skipCache?: boolean
+  level?: number
+  severity?: string
 }
 
 export async function table_update({
@@ -22,7 +24,9 @@ export async function table_update({
   columnValuePairs,
   whereColumnValuePairs,
   noLog = false,
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: Props): Promise<any[]> {
   const functionName = 'table_update'
   //
@@ -61,12 +65,28 @@ export async function table_update({
       query: sqlQuery,
       params: values,
       functionName: functionName,
-      noLog
+      noLog,
+      table,
+      level,
+      isupdate: true,
+      severity
     })
     //
     // Clear cache entries for this table
     //
     if (!skipCache) cache_clearTable(table, functionName)
+    //
+    // Trace log — always fires, gating lives inside write_logging
+    //
+    write_logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: `Table(${table}) UPDATE succeeded, ${data.rows.length} row(s)`,
+      lg_severity: severity,
+      lg_table: table,
+      lg_level: level,
+      lg_isupdate: true
+    })
     //
     // Return rows updated
     //
@@ -81,7 +101,9 @@ export async function table_update({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}: ${errorMessage}`)
   }

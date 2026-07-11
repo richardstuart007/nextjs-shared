@@ -18,7 +18,9 @@ export async function fetchFiltered({
   offset,
   distinctColumns = [],
   caller,
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: {
   table: string
   joins?: JoinParams[]
@@ -29,6 +31,8 @@ export async function fetchFiltered({
   distinctColumns?: string[]
   caller: string
   skipCache?: boolean
+  level?: number
+  severity?: string
 }): Promise<any[]> {
   const functionName = 'fetchFiltered'
 
@@ -46,7 +50,7 @@ export async function fetchFiltered({
   const cacheKey = buildSql_Readable(cacheKeySql, queryValues)
 
   if (!skipCache) {
-    const cachedData = cache_get<any>(cacheKey, functionName)
+    const cachedData = cache_get<any>(cacheKey, functionName, table, level, severity)
     if (cachedData) return cachedData
   }
 
@@ -58,10 +62,12 @@ export async function fetchFiltered({
     limit,
     offset,
     distinctColumns,
-    caller
+    caller,
+    level,
+    severity
   })
   if (!skipCache) {
-    cache_set(cacheKey, data, caller)
+    cache_set(cacheKey, data, caller, table, level, severity)
   }
   return data
 }

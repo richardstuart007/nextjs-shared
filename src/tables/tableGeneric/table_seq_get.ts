@@ -8,6 +8,8 @@ import { write_logging } from './write_logging'
 interface Props {
   tableName: string
   caller?: string
+  level?: number
+  severity?: string
 }
 //
 //  Return values
@@ -23,7 +25,7 @@ interface ReturnValues {
 //
 export async function table_seqGet(Props: Props): Promise<ReturnValues> {
   const functionName = 'table_seqGet'
-  const { tableName, caller = '' } = Props
+  const { tableName, caller = '', level = 1, severity = 'I' } = Props
   //
   // Initialisation
   //
@@ -61,7 +63,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       caller: caller,
       query: sqlQuery,
       params: values,
-      functionName: functionName
+      functionName: functionName,
+      table: tableName,
+      level,
+      severity
     })
     //
     // Extract the sequence name
@@ -78,7 +83,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_caller: caller,
         lg_functionname: functionName,
         lg_msg: message,
-        lg_severity: 'E'
+        lg_severity: 'E',
+        lg_table: tableName,
+        lg_level: level
       })
       return returnValues
     }
@@ -90,7 +97,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: message,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_table: tableName,
+      lg_level: level
     })
     //
     //  Get the maxValue
@@ -99,7 +108,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     const maxValueResult = await db.query({
       caller: caller,
       query: sqlQueryMax,
-      functionName: functionName
+      functionName: functionName,
+      table: tableName,
+      level,
+      severity
     })
     const maxValue = maxValueResult.rows[0].coalesce
     //
@@ -111,7 +123,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_caller: caller,
         lg_functionname: functionName,
         lg_msg: message,
-        lg_severity: 'E'
+        lg_severity: 'E',
+        lg_table: tableName,
+        lg_level: level
       })
       return returnValues
     }
@@ -123,7 +137,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: message1,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_table: tableName,
+      lg_level: level
     })
     //
     //  Return the sequence with ok set to true
@@ -143,7 +159,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: tableName,
+      lg_level: level
     })
     return returnValues
   }

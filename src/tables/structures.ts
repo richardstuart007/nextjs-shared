@@ -49,15 +49,19 @@ export type table_Logging = {
   lg_lgid: number
   lg_severity: string
   lg_level: number
+  lg_isupdate: boolean
   lg_caller: string
   lg_functionname: string
+  lg_table: string
   lg_msg: string
   lg_datetime: Date
 }
 export type WriteLoggingProps = {
   lg_functionname: string
+  lg_table?: string
   lg_msg: string
   lg_severity?: string
   lg_level?: number
+  lg_isupdate?: boolean
   lg_caller: string
 }

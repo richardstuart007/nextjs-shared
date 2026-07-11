@@ -6,15 +6,19 @@ import { TableColumnValuePairs } from '../structures'
 
 export async function table_check(
   tableColumnValuePairs: TableColumnValuePairs[],
-  caller: string = ''
+  caller: string = '',
+  level: number = 1,
+  severity: string = 'I'
 ): Promise<{ found: boolean; message: string }> {
   const functionName = 'table_check'
+  let currentTable = ''
 
   try {
     //
     // Loop through each table-column-value pair
     //
     for (const { table, whereColumnValuePairs } of tableColumnValuePairs) {
+      currentTable = table
       //
       // Create WHERE clause with parameterized queries
       //
@@ -41,7 +45,10 @@ export async function table_check(
         caller: caller,
         query: sqlQuery,
         params: values,
-        functionName: functionName
+        functionName: functionName,
+        table,
+        level,
+        severity
       })
       //
       // Check if rows exist
@@ -52,7 +59,9 @@ export async function table_check(
           lg_caller: caller,
           lg_functionname: functionName,
           lg_msg: errorMessage,
-          lg_severity: 'I'
+          lg_severity: severity,
+          lg_table: table,
+          lg_level: level
         })
         return { found: true, message: errorMessage }
       }
@@ -70,7 +79,9 @@ export async function table_check(
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: currentTable,
+      lg_level: level
     })
     console.error('Error:', errorMessage)
     throw new Error(`${functionName}: Failed`)

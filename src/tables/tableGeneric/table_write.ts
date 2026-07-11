@@ -14,6 +14,8 @@ interface Props {
   conflictColumn?: string
   noLog?: boolean
   skipCache?: boolean
+  level?: number
+  severity?: string
 }
 
 export async function table_write({
@@ -22,7 +24,9 @@ export async function table_write({
   conflictColumn,
   caller,
   noLog = false,
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: Props): Promise<any[]> {
   const functionName = 'table_write'
   //
@@ -49,12 +53,28 @@ export async function table_write({
       params: values,
       functionName: functionName,
       caller: caller,
-      noLog
+      noLog,
+      table,
+      level,
+      isupdate: true,
+      severity
     })
     //
     // Clear cache entries for this table
     //
     if (!skipCache) cache_clearTable(table, functionName)
+    //
+    // Trace log — always fires, gating lives inside write_logging
+    //
+    write_logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: `Table(${table}) INSERT succeeded, ${data.rows.length} row(s)`,
+      lg_severity: severity,
+      lg_table: table,
+      lg_level: level,
+      lg_isupdate: true
+    })
     //
     // Return the inserted rows
     //
@@ -69,7 +89,9 @@ export async function table_write({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

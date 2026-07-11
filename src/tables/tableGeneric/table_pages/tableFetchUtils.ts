@@ -18,7 +18,9 @@ export async function table_fetch_pages_filtered({
   limit,
   offset,
   distinctColumns = [],
-  caller
+  caller,
+  level = 1,
+  severity = 'I'
 }: {
   table: string
   joins?: JoinParams[]
@@ -28,6 +30,8 @@ export async function table_fetch_pages_filtered({
   offset?: number
   distinctColumns?: string[]
   caller: string
+  level?: number
+  severity?: string
 }): Promise<any[]> {
   const functionName = 'table_fetch_pages_filtered'
   const db = await sql()
@@ -65,7 +69,10 @@ export async function table_fetch_pages_filtered({
       caller: caller,
       query: finalQuery,
       params: queryValues,
-      functionName: functionName
+      functionName: functionName,
+      table,
+      level,
+      severity
     })
 
     return data.rows.length > 0 ? data.rows : []
@@ -75,7 +82,9 @@ export async function table_fetch_pages_filtered({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }
@@ -90,7 +99,9 @@ export async function table_fetch_pages_total({
   filters = [],
   items_per_page = ITEMS_PER_PAGE,
   distinctColumns = [],
-  caller = ''
+  caller = '',
+  level = 1,
+  severity = 'I'
 }: {
   table: string
   joins?: JoinParams[]
@@ -98,6 +109,8 @@ export async function table_fetch_pages_total({
   items_per_page?: number
   distinctColumns?: string[]
   caller: string
+  level?: number
+  severity?: string
 }): Promise<number> {
   const functionName = 'table_fetch_pages_total'
   const db = await sql()
@@ -126,7 +139,10 @@ export async function table_fetch_pages_total({
       query: countQuery,
       params: queryValues,
       functionName: functionName,
-      caller: caller
+      caller: caller,
+      table,
+      level,
+      severity
     })
 
     //
@@ -141,7 +157,9 @@ export async function table_fetch_pages_total({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}: Failed`)
   }

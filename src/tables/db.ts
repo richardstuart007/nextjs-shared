@@ -10,6 +10,10 @@ type QueryOptions = {
   functionName?: string
   caller: string
   noLog?: boolean
+  table?: string
+  level?: number
+  isupdate?: boolean
+  severity?: string
 }
 let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
   query: async () => Promise.resolve()
@@ -40,7 +44,11 @@ async function createDbQueryHandler(): Promise<void> {
       params = [],
       functionName = 'Neon_Unknown',
       caller = '',
-      noLog = false
+      noLog = false,
+      table = '',
+      level = 1,
+      isupdate = false,
+      severity = 'I'
     }: QueryOptions) => {
       //
       // Remove redundant spaces
@@ -49,7 +57,7 @@ async function createDbQueryHandler(): Promise<void> {
       //
       //  Logging
       //
-      if (!noLog) await log_query(functionName, query, params, caller)
+      if (!noLog) await log_query(functionName, query, params, caller, table, level, isupdate, severity)
       //
       //  Run query
       //
@@ -63,7 +71,10 @@ async function createDbQueryHandler(): Promise<void> {
             lg_caller: caller,
             lg_functionname: functionName,
             lg_msg: errorMessage,
-            lg_severity: 'E'
+            lg_severity: 'E',
+            lg_table: table,
+            lg_level: level,
+            lg_isupdate: isupdate
           })
         }
         console.error('Error executing Neon query:', error)
@@ -80,7 +91,11 @@ async function createDbQueryHandler(): Promise<void> {
       params = [],
       functionName = 'localhost_Unknown',
       caller = '',
-      noLog = false
+      noLog = false,
+      table = '',
+      level = 1,
+      isupdate = false,
+      severity = 'I'
     }: QueryOptions) => {
       const client = new Client({
         connectionString: process.env.POSTGRES_URL
@@ -94,7 +109,7 @@ async function createDbQueryHandler(): Promise<void> {
         //
         //  Logging
         //
-        if (!noLog) await log_query(functionName, query, params, caller)
+        if (!noLog) await log_query(functionName, query, params, caller, table, level, isupdate, severity)
         //
         //  Run query
         //
@@ -108,7 +123,10 @@ async function createDbQueryHandler(): Promise<void> {
             lg_caller: caller,
             lg_functionname: functionName,
             lg_msg: errorMessage,
-            lg_severity: 'E'
+            lg_severity: 'E',
+            lg_table: table,
+            lg_level: level,
+            lg_isupdate: isupdate
           })
         }
         console.error('Error:', errorMessage)
@@ -126,7 +144,11 @@ async function log_query(
   functionName: string,
   query: string,
   params: any[],
-  caller: string
+  caller: string,
+  table: string,
+  level: number,
+  isupdate: boolean,
+  severity: string
 ): Promise<void> {
   //
   //  Do not recursive for logging
@@ -142,7 +164,10 @@ async function log_query(
   write_logging({
     lg_functionname: functionName,
     lg_msg: `DB_SQL | ${query}${valuesJson}`,
-    lg_severity: 'I',
-    lg_caller: caller
+    lg_severity: severity,
+    lg_caller: caller,
+    lg_table: table,
+    lg_level: level,
+    lg_isupdate: isupdate
   })
 }

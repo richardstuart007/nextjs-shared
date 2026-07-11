@@ -23,6 +23,8 @@ export type table_fetch_Props = {
   limit?: number
   skipCache?: boolean
   noLog?: boolean
+  level?: number
+  severity?: string
 }
 
 const functionName = 'table_fetch'
@@ -36,7 +38,9 @@ export async function table_fetch({
   columns,
   limit,
   skipCache = false,
-  noLog = false
+  noLog = false,
+  level = 1,
+  severity = 'I'
 }: table_fetch_Props): Promise<any[]> {
   // Build the SQL with placeholders
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
@@ -52,7 +56,7 @@ export async function table_fetch({
   //
   const readableSql = buildSql_Readable(sqlWithPlaceholders, values)
   if (!skipCache) {
-    const cachedData = cache_get<any>(readableSql, functionName)
+    const cachedData = cache_get<any>(readableSql, functionName, table, level, severity)
     if (cachedData) return cachedData
   }
 
@@ -64,10 +68,12 @@ export async function table_fetch({
     distinct,
     columns,
     limit,
-    noLog
+    noLog,
+    level,
+    severity
   })
   if (!skipCache) {
-    cache_set(readableSql, data, caller)
+    cache_set(readableSql, data, caller, table, level, severity)
   }
   return data
 }
@@ -83,7 +89,9 @@ async function table_fetch_query({
   distinct = false,
   columns,
   limit,
-  noLog = false
+  noLog = false,
+  level = 1,
+  severity = 'I'
 }: table_fetch_Props): Promise<any[]> {
   try {
     //
@@ -106,7 +114,10 @@ async function table_fetch_query({
       params: values,
       functionName: functionName,
       caller: caller,
-      noLog
+      noLog,
+      table,
+      level,
+      severity
     })
     //
     // Return rows
@@ -121,7 +132,9 @@ async function table_fetch_query({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     return []
   }

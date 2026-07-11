@@ -14,6 +14,8 @@ interface Props {
   caller?: string
   noLog?: boolean
   skipCache?: boolean
+  level?: number
+  severity?: string
 }
 
 export async function table_delete({
@@ -22,7 +24,9 @@ export async function table_delete({
   returning = false,
   caller = '',
   noLog = false,
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: Props): Promise<any[]> {
   const functionName = 'table_delete'
   //
@@ -69,12 +73,30 @@ export async function table_delete({
       query: sqlQueryStatement,
       params: values,
       functionName: functionName,
-      noLog
+      noLog,
+      table,
+      level,
+      isupdate: true,
+      severity
     })
     //
     // Clear cache entries for this table
     //
     if (!skipCache) cache_clearTable(table, functionName)
+    //
+    // Trace log — always fires, gating lives inside write_logging
+    //
+    write_logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: returning
+        ? `Table(${table}) DELETE succeeded, ${data.rows.length} row(s)`
+        : `Table(${table}) DELETE succeeded`,
+      lg_severity: severity,
+      lg_table: table,
+      lg_level: level,
+      lg_isupdate: true
+    })
     //
     // If RETURNING * is specified, return the deleted rows
     //
@@ -88,7 +110,9 @@ export async function table_delete({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

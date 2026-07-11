@@ -11,13 +11,17 @@ interface Props {
   whereColumnValuePairs?: ColumnValuePair[]
   caller?: string
   noLog?: boolean
+  level?: number
+  severity?: string
 }
 
 export async function table_count({
   table,
   whereColumnValuePairs,
   caller = '',
-  noLog = false
+  noLog = false,
+  level = 1,
+  severity = 'I'
 }: Props): Promise<number> {
   const functionName = 'table_count'
   //
@@ -56,7 +60,10 @@ export async function table_count({
       query: sqlQuery,
       params: values,
       functionName: functionName,
-      noLog
+      noLog,
+      table,
+      level,
+      severity
     })
     //
     // Return the count
@@ -73,7 +80,9 @@ export async function table_count({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

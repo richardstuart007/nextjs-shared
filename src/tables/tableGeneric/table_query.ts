@@ -14,6 +14,10 @@ export type table_query_Props = {
   query: string
   params?: (string | number | null | boolean)[]
   noLog?: boolean
+  table?: string
+  level?: number
+  isupdate?: boolean
+  severity?: string
 }
 
 const functionName = 'table_query'
@@ -22,7 +26,11 @@ export async function table_query({
   caller,
   query,
   params = [],
-  noLog = false
+  noLog = false,
+  table = '',
+  level = 1,
+  isupdate = false,
+  severity = 'I'
 }: table_query_Props): Promise<any[]> {
   try {
     //
@@ -34,7 +42,11 @@ export async function table_query({
       params,
       functionName: functionName,
       caller: caller,
-      noLog
+      noLog,
+      table,
+      level,
+      isupdate,
+      severity
     })
     //
     // Return rows
@@ -49,7 +61,10 @@ export async function table_query({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level,
+      lg_isupdate: isupdate
     })
     return []
   }

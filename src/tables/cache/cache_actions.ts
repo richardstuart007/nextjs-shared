@@ -11,13 +11,18 @@ import { write_logging } from '../tableGeneric/write_logging'
 
 const functionName = 'cache_actions'
 
-export async function cacheAction_clearAll(caller: string = functionName) {
-  cache_clearAll(caller)
+export async function cacheAction_clearAll(
+  caller: string = functionName,
+  level: number = 1,
+  severity: string = 'I'
+) {
+  cache_clearAll(caller, level, severity)
   write_logging({
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: 'CACHE_CLR_ALL | Admin triggered',
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_level: level
   })
 }
 
@@ -31,7 +36,9 @@ export async function cacheAction_getEntryData(sql: string): Promise<any> {
 
 export async function cacheAction_deleteEntry(
   sql: string,
-  caller: string = functionName
+  caller: string = functionName,
+  level: number = 1,
+  severity: string = 'I'
 ): Promise<boolean> {
-  return cache_deleteEntry(sql, caller)
+  return cache_deleteEntry(sql, caller, level, severity)
 }

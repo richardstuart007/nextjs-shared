@@ -5,9 +5,11 @@ import { WriteLoggingProps } from '../structures'
 
 export async function write_logging({
   lg_functionname,
+  lg_table = '',
   lg_msg,
   lg_severity = 'E',
   lg_level = 1,
+  lg_isupdate = false,
   lg_caller = ''
 }: WriteLoggingProps): Promise<boolean> {
   const functionName = 'write_logging'
@@ -42,16 +44,27 @@ export async function write_logging({
     //
     const sqlQueryStatement = `
     INSERT INTO xlg_logging (
-      lg_datetime,
-      lg_msg,
-      lg_functionname,
-      lg_caller,
       lg_severity,
-      lg_level
+      lg_level,
+      lg_isupdate,
+      lg_caller,
+      lg_functionname,
+      lg_table,
+      lg_msg,
+      lg_datetime
       )
-    VALUES ($1,$2,$3,$4,$5,$6)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
   `
-    const queryValues = [lg_datetime, lg_msgTrim, lg_functionname, lg_caller, lg_severity, lg_level]
+    const queryValues = [
+      lg_severity,
+      lg_level,
+      lg_isupdate,
+      lg_caller,
+      lg_functionname,
+      lg_table,
+      lg_msgTrim,
+      lg_datetime
+    ]
     //
     // Remove redundant spaces
     //

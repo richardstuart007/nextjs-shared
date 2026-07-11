@@ -33,7 +33,13 @@ function extractTables(sql: string): string[] {
 //---------------------------------------------------------------------
 //  cache_get - Get cached data by SQL key
 //---------------------------------------------------------------------
-export function cache_get<T>(sql: string, caller: string = ''): T | null {
+export function cache_get<T>(
+  sql: string,
+  caller: string = '',
+  table: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): T | null {
   const functionName = 'cache_get'
   const normalizedSql = normalizeSql(sql)
   const entry = cache.get(normalizedSql)
@@ -45,7 +51,9 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: hitMsg,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_table: table,
+      lg_level: level
     })
     return entry.data as T
   }
@@ -55,7 +63,9 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: missMsg,
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_table: table,
+    lg_level: level
   })
   return null
 }
@@ -63,7 +73,14 @@ export function cache_get<T>(sql: string, caller: string = ''): T | null {
 //---------------------------------------------------------------------
 //  cache_set - Store data in cache with SQL key
 //---------------------------------------------------------------------
-export function cache_set<T>(sql: string, data: T, caller: string = ''): void {
+export function cache_set<T>(
+  sql: string,
+  data: T,
+  caller: string = '',
+  table: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): void {
   const functionName = 'cache_set'
   const normalizedSql = normalizeSql(sql)
 
@@ -72,7 +89,9 @@ export function cache_set<T>(sql: string, data: T, caller: string = ''): void {
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: setMsg,
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_table: table,
+    lg_level: level
   })
 
   cache.set(normalizedSql, {
@@ -89,7 +108,12 @@ export function cache_set<T>(sql: string, data: T, caller: string = ''): void {
 //  cache_clearUser - Clear all entries containing userId in SQL
 //  (userId appears in the WHERE clause, not in table names, so SQL string search is correct)
 //---------------------------------------------------------------------
-export function cache_clearUser(userId: number, caller: string = ''): number {
+export function cache_clearUser(
+  userId: number,
+  caller: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): number {
   const functionName = 'cache_clearUser'
   let cleared = 0
   const entries: string[] = []
@@ -108,7 +132,8 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: clearMsg,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_level: level
     })
   } else {
     const noEntriesMsg = `CACHE_CLR_USER | UserId: ${userId} | No entries found`
@@ -116,7 +141,8 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: noEntriesMsg,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_level: level
     })
   }
 
@@ -126,7 +152,12 @@ export function cache_clearUser(userId: number, caller: string = ''): number {
 //---------------------------------------------------------------------
 //  cache_clearTable - Clear all entries referencing a table (uses stored tables array)
 //---------------------------------------------------------------------
-export function cache_clearTable(tableName: string, caller: string = ''): number {
+export function cache_clearTable(
+  tableName: string,
+  caller: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): number {
   const functionName = 'cache_clearTable'
   let cleared = 0
   const entries: string[] = []
@@ -147,7 +178,9 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: clearMsg,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_table: tableName,
+      lg_level: level
     })
   } else {
     const noEntriesMsg = `CACHE_CLR_TABLE | Table: ${tableName} | No entries found`
@@ -155,7 +188,9 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: noEntriesMsg,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_table: tableName,
+      lg_level: level
     })
   }
 
@@ -165,7 +200,11 @@ export function cache_clearTable(tableName: string, caller: string = ''): number
 //---------------------------------------------------------------------
 //  cache_clearAll - Clear entire cache
 //---------------------------------------------------------------------
-export function cache_clearAll(caller: string = ''): void {
+export function cache_clearAll(
+  caller: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): void {
   const functionName = 'cache_clearAll'
   const count = cache.size
   cache.clear()
@@ -175,14 +214,15 @@ export function cache_clearAll(caller: string = ''): void {
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: clearAllMsg,
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_level: level
   })
 }
 
 //---------------------------------------------------------------------
 //  cache_getStats - Get cache statistics
 //---------------------------------------------------------------------
-export function cache_getStats(caller: string = '') {
+export function cache_getStats(caller: string = '', level: number = 1, severity: string = 'I') {
   const functionName = 'cache_getStats'
   const sqls: string[] = Array.from(cache.keys())
 
@@ -190,7 +230,8 @@ export function cache_getStats(caller: string = '') {
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: `CACHE_STATS | Total entries: ${cache.size}`,
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_level: level
   })
 
   sqls.forEach(function (sql) {
@@ -198,7 +239,8 @@ export function cache_getStats(caller: string = '') {
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: `  - ${sql}`,
-      lg_severity: 'I'
+      lg_severity: severity,
+      lg_level: level
     })
   })
 
@@ -245,7 +287,12 @@ export function cache_getEntryData(sql: string): any | null {
 //---------------------------------------------------------------------
 //  cache_deleteEntry - Delete a single cache entry by SQL key
 //---------------------------------------------------------------------
-export function cache_deleteEntry(sql: string, caller: string = ''): boolean {
+export function cache_deleteEntry(
+  sql: string,
+  caller: string = '',
+  level: number = 1,
+  severity: string = 'I'
+): boolean {
   const functionName = 'cache_deleteEntry'
   const normalizedSql = normalizeSql(sql)
   const deleted = cache.delete(normalizedSql)
@@ -254,7 +301,8 @@ export function cache_deleteEntry(sql: string, caller: string = ''): boolean {
     lg_caller: caller,
     lg_functionname: functionName,
     lg_msg: `CACHE_DEL | ${deleted ? 'Deleted' : 'Not found'} | ${normalizedSql}`,
-    lg_severity: 'I'
+    lg_severity: severity,
+    lg_level: level
   })
 
   return deleted

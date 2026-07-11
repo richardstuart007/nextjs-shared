@@ -15,6 +15,8 @@ interface Props {
   updateColumns?: string[]   // when set, only these non-conflict columns are updated on conflict
   noLog?: boolean
   skipCache?: boolean
+  level?: number
+  severity?: string
 }
 
 export async function table_upsert({
@@ -24,7 +26,9 @@ export async function table_upsert({
   updateColumns,
   caller,
   noLog = false,
-  skipCache = false
+  skipCache = false,
+  level = 1,
+  severity = 'I'
 }: Props): Promise<any[]> {
   const functionName = 'table_upsert'
   //
@@ -66,12 +70,28 @@ export async function table_upsert({
       params: values,
       functionName: functionName,
       caller: caller,
-      noLog
+      noLog,
+      table,
+      level,
+      isupdate: true,
+      severity
     })
     //
     // Clear cache entries for this table
     //
     if (!skipCache) cache_clearTable(table, functionName)
+    //
+    // Trace log — always fires, gating lives inside write_logging
+    //
+    write_logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: `Table(${table}) UPSERT succeeded, ${data.rows.length} row(s)`,
+      lg_severity: severity,
+      lg_table: table,
+      lg_level: level,
+      lg_isupdate: true
+    })
     //
     // Return the upserted rows
     //
@@ -86,7 +106,9 @@ export async function table_upsert({
       lg_caller: caller,
       lg_functionname: functionName,
       lg_msg: errorMessage,
-      lg_severity: 'E'
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }
