@@ -13,9 +13,17 @@ interface Props {
   columnValuePairs: WriteColumnValuePair[]
   conflictColumn?: string
   noLog?: boolean
+  skipCache?: boolean
 }
 
-export async function table_write({ table, columnValuePairs, conflictColumn, caller, noLog = false }: Props): Promise<any[]> {
+export async function table_write({
+  table,
+  columnValuePairs,
+  conflictColumn,
+  caller,
+  noLog = false,
+  skipCache = false
+}: Props): Promise<any[]> {
   const functionName = 'table_write'
   //
   // Prepare the columns and parameterized placeholders for the INSERT statement
@@ -46,7 +54,7 @@ export async function table_write({ table, columnValuePairs, conflictColumn, cal
     //
     // Clear cache entries for this table
     //
-    cache_clearTable(table, functionName)
+    if (!skipCache) cache_clearTable(table, functionName)
     //
     // Return the inserted rows
     //

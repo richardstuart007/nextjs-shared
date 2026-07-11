@@ -48,6 +48,7 @@ export type Filter = {
 export type table_Logging = {
   lg_lgid: number
   lg_severity: string
+  lg_level: number
   lg_caller: string
   lg_functionname: string
   lg_msg: string
@@ -57,5 +58,6 @@ export type WriteLoggingProps = {
   lg_functionname: string
   lg_msg: string
   lg_severity?: string
+  lg_level?: number
   lg_caller: string
 }

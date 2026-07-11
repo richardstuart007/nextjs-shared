@@ -14,6 +14,7 @@ interface Props {
   conflictColumns: string[]
   updateColumns?: string[]   // when set, only these non-conflict columns are updated on conflict
   noLog?: boolean
+  skipCache?: boolean
 }
 
 export async function table_upsert({
@@ -22,7 +23,8 @@ export async function table_upsert({
   conflictColumns,
   updateColumns,
   caller,
-  noLog = false
+  noLog = false,
+  skipCache = false
 }: Props): Promise<any[]> {
   const functionName = 'table_upsert'
   //
@@ -69,7 +71,7 @@ export async function table_upsert({
     //
     // Clear cache entries for this table
     //
-    cache_clearTable(table, functionName)
+    if (!skipCache) cache_clearTable(table, functionName)
     //
     // Return the upserted rows
     //

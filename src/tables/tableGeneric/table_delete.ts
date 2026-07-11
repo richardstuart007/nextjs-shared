@@ -13,6 +13,7 @@ interface Props {
   returning?: boolean
   caller?: string
   noLog?: boolean
+  skipCache?: boolean
 }
 
 export async function table_delete({
@@ -20,7 +21,8 @@ export async function table_delete({
   whereColumnValuePairs = [],
   returning = false,
   caller = '',
-  noLog = false
+  noLog = false,
+  skipCache = false
 }: Props): Promise<any[]> {
   const functionName = 'table_delete'
   //
@@ -72,7 +74,7 @@ export async function table_delete({
     //
     // Clear cache entries for this table
     //
-    cache_clearTable(table, functionName)
+    if (!skipCache) cache_clearTable(table, functionName)
     //
     // If RETURNING * is specified, return the deleted rows
     //

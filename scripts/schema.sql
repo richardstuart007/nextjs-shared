@@ -1,6 +1,7 @@
 CREATE TABLE public.xlg_logging (
     lg_lgid integer NOT NULL,
     lg_severity character(1),
+    lg_level integer NOT NULL DEFAULT 1,
     lg_caller character varying DEFAULT ''::character varying,
     lg_functionname character varying NOT NULL,
     lg_msg character varying NOT NULL,

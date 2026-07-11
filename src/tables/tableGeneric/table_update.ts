@@ -13,6 +13,7 @@ interface Props {
   columnValuePairs: WriteColumnValuePair[]
   whereColumnValuePairs: WriteColumnValuePair[]
   noLog?: boolean
+  skipCache?: boolean
 }
 
 export async function table_update({
@@ -20,7 +21,8 @@ export async function table_update({
   table,
   columnValuePairs,
   whereColumnValuePairs,
-  noLog = false
+  noLog = false,
+  skipCache = false
 }: Props): Promise<any[]> {
   const functionName = 'table_update'
   //
@@ -64,7 +66,7 @@ export async function table_update({
     //
     // Clear cache entries for this table
     //
-    cache_clearTable(table, functionName)
+    if (!skipCache) cache_clearTable(table, functionName)
     //
     // Return rows updated
     //
