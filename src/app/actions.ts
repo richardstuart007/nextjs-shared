@@ -4,56 +4,93 @@ import { write_logging } from '../tables/tableGeneric/write_logging'
 import { table_fetch } from '../tables/tableGeneric/table_fetch'
 
 //----------------------------------------------------------------------------------
-//  action_generateLogs — writes test log entries across E / W / I severities,
-//  including some with very long messages to test table truncation behaviour
+//  action_generateLogs — writes test log entries across D / E / W / I severities,
+//  varying level, isupdate and table, including some with very long messages to
+//  test table truncation behaviour
 //----------------------------------------------------------------------------------
 export async function action_generateLogs(): Promise<string> {
   const caller = 'test-app'
-  const entries: { severity: 'E' | 'W' | 'I'; fn: string; msg: string }[] = [
+  const entries: {
+    severity: 'D' | 'E' | 'W' | 'I'
+    fn: string
+    msg: string
+    level?: number
+    isupdate?: boolean
+    table?: string
+  }[] = [
     {
       severity: 'E',
       fn: 'testFunction_E',
-      msg: 'Short error message'
+      msg: 'Short error message',
+      level: 3
     },
     {
       severity: 'E',
       fn: 'testFunction_E',
-      msg: 'Database connection failed while attempting to fetch user records from tus_users: ECONNREFUSED 127.0.0.1:5432 — the connection was refused, which usually means PostgreSQL is not running or is not accepting connections on that port. Check that the database server is started and that POSTGRES_URL is set correctly in your environment.'
+      msg: 'Database connection failed while attempting to fetch user records from tus_users: ECONNREFUSED 127.0.0.1:5432 — the connection was refused, which usually means PostgreSQL is not running or is not accepting connections on that port. Check that the database server is started and that POSTGRES_URL is set correctly in your environment.',
+      level: 3,
+      table: 'tus_users'
     },
     {
       severity: 'E',
       fn: 'testFunction_E',
-      msg: 'Unhandled exception in table_write: duplicate key value violates unique constraint "tus_users_pkey" — DETAIL: Key (tus_tusid)=(42) already exists. This occurred during a bulk import of 3,000 user records. The import has been aborted at row 847. All rows before this point were committed. Re-run the import starting from row 848 after resolving the duplicate key conflict.'
+      msg: 'Unhandled exception in table_write: duplicate key value violates unique constraint "tus_users_pkey" — DETAIL: Key (tus_tusid)=(42) already exists. This occurred during a bulk import of 3,000 user records. The import has been aborted at row 847. All rows before this point were committed. Re-run the import starting from row 848 after resolving the duplicate key conflict.',
+      level: 3,
+      isupdate: true,
+      table: 'tus_users'
     },
     {
       severity: 'W',
       fn: 'testFunction_W',
-      msg: 'Short warning message'
+      msg: 'Short warning message',
+      level: 2
     },
     {
       severity: 'W',
       fn: 'testFunction_W',
-      msg: 'Cache miss rate for table xlg_logging has exceeded 80% over the last 100 requests — consider increasing cache TTL or pre-warming the cache on application startup to reduce database load during peak traffic periods.'
+      msg: 'Cache miss rate for table xlg_logging has exceeded 80% over the last 100 requests — consider increasing cache TTL or pre-warming the cache on application startup to reduce database load during peak traffic periods.',
+      level: 2,
+      table: 'xlg_logging'
     },
     {
       severity: 'W',
       fn: 'testFunction_W',
-      msg: 'Response time for fetchFiltered on tplr_player exceeded 2000ms (actual: 3142ms). Query returned 12,450 rows with no LIMIT applied. This is likely caused by a missing index on tplr_name. Recommended action: CREATE INDEX CONCURRENTLY idx_tplr_name ON tplr_player(tplr_name) to bring query time under 100ms.'
+      msg: 'Response time for fetchFiltered on tplr_player exceeded 2000ms (actual: 3142ms). Query returned 12,450 rows with no LIMIT applied. This is likely caused by a missing index on tplr_name. Recommended action: CREATE INDEX CONCURRENTLY idx_tplr_name ON tplr_player(tplr_name) to bring query time under 100ms.',
+      level: 2,
+      table: 'tplr_player'
     },
     {
       severity: 'I',
       fn: 'testFunction_I',
-      msg: 'Short info message'
+      msg: 'Short info message',
+      level: 1
     },
     {
       severity: 'I',
       fn: 'testFunction_I',
-      msg: 'User session started for richardstuart007@gmail.com from IP 192.168.1.23 using GitHub OAuth. Session token issued with 24-hour expiry. User has admin role.'
+      msg: 'User session started for richardstuart007@gmail.com from IP 192.168.1.23 using GitHub OAuth. Session token issued with 24-hour expiry. User has admin role.',
+      level: 1
     },
     {
       severity: 'I',
       fn: 'testFunction_I',
-      msg: 'Nightly schema snapshot completed successfully for database local_bridgeschool. Snapshot stored in xsc_schema with sc_snapid=1042. Total tables captured: 47. Total columns: 312. Comparison against previous snapshot sc_snapid=1041 shows 2 new columns added (tplr_rating_blitz, tplr_rating_rapid) and 0 columns removed. No destructive changes detected.'
+      msg: 'Nightly schema snapshot completed successfully for database local_bridgeschool. Snapshot stored in xsc_schema with sc_snapid=1042. Total tables captured: 47. Total columns: 312. Comparison against previous snapshot sc_snapid=1041 shows 2 new columns added (tplr_rating_blitz, tplr_rating_rapid) and 0 columns removed. No destructive changes detected.',
+      level: 1,
+      table: 'xsc_schema'
+    },
+    {
+      severity: 'D',
+      fn: 'testFunction_D',
+      msg: 'Short debug message',
+      level: 1
+    },
+    {
+      severity: 'D',
+      fn: 'testFunction_D',
+      msg: 'Debug trace: fetchFiltered on tplr_player took 42ms — SQL(SELECT * FROM tplr_player WHERE tplr_active = $1 ORDER BY tplr_rating_blitz DESC LIMIT 40 OFFSET 0) params([true]). Cache miss, result cached under key hash 8f3a1c. Row count: 40.',
+      level: 1,
+      isupdate: true,
+      table: 'tplr_player'
     }
   ]
   for (const entry of entries) {
@@ -61,10 +98,13 @@ export async function action_generateLogs(): Promise<string> {
       lg_caller: caller,
       lg_functionname: entry.fn,
       lg_msg: entry.msg,
-      lg_severity: entry.severity
+      lg_severity: entry.severity,
+      lg_level: entry.level ?? 1,
+      lg_isupdate: entry.isupdate ?? false,
+      lg_table: entry.table ?? ''
     })
   }
-  return '9 log entries written'
+  return `${entries.length} log entries written`
 }
 
 //----------------------------------------------------------------------------------

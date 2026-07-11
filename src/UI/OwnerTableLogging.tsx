@@ -23,10 +23,21 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [caller, setcaller] = useState('')
   const [functionname, setfunctionname] = useState('')
   const [severity, setseverity] = useState('')
+  const [level, setlevel] = useState('')
+  const [table, settable] = useState('')
+  const [isupdate, setisupdate] = useState('')
   const [currentPage, setcurrentPage] = useState(1)
   const [tabledata, settabledata] = useState<table_Logging[]>(initialRows ?? [])
   const [totalPages, setTotalPages] = useState<number>(initialTotalPages ?? 0)
-  const prevFilters = useRef({ msg: '', caller: '', functionname: '', severity: '' })
+  const prevFilters = useRef({
+    msg: '',
+    caller: '',
+    functionname: '',
+    severity: '',
+    level: '',
+    table: '',
+    isupdate: ''
+  })
   const [message, setMessage] = useState('')
   const [popup, setPopup] = useState<table_Logging | null>(null)
 
@@ -39,31 +50,37 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       msg !== prevFilters.current.msg ||
       caller !== prevFilters.current.caller ||
       functionname !== prevFilters.current.functionname ||
-      severity !== prevFilters.current.severity
+      severity !== prevFilters.current.severity ||
+      level !== prevFilters.current.level ||
+      table !== prevFilters.current.table ||
+      isupdate !== prevFilters.current.isupdate
     setMessage(filtersChanged ? 'Applying filters...' : '')
     const timeout = filtersChanged ? 2000 : 1
     const handler = setTimeout(() => {
-      prevFilters.current = { msg, caller, functionname, severity }
+      prevFilters.current = { msg, caller, functionname, severity, level, table, isupdate }
       fetchdata()
       setMessage('')
     }, timeout)
     return () => clearTimeout(handler)
-  }, [msg, caller, functionname, severity, currentPage])
+  }, [msg, caller, functionname, severity, level, table, isupdate, currentPage])
 
   async function fetchdata() {
     const filtersToUpdate: Filter[] = [
       { column: 'lg_msg', value: msg, operator: 'LIKE' },
       { column: 'lg_caller', value: caller, operator: 'LIKE' },
       { column: 'lg_functionname', value: functionname, operator: 'LIKE' },
-      { column: 'lg_severity', value: severity, operator: '=' }
+      { column: 'lg_severity', value: severity, operator: '=' },
+      { column: 'lg_level', value: level, operator: '=' },
+      { column: 'lg_table', value: table, operator: 'LIKE' },
+      { column: 'lg_isupdate', value: isupdate, operator: '=' }
     ]
     const filters = filtersToUpdate.filter(filter => filter.value)
     try {
-      const table = 'xlg_logging'
+      const tableName = 'xlg_logging'
       const offset = (currentPage - 1) * LOGGING_ROWS_PER_PAGE
       const data = await fetchFiltered({
         caller: functionName,
-        table,
+        table: tableName,
         filters,
         orderBy: 'lg_lgid DESC',
         limit: LOGGING_ROWS_PER_PAGE,
@@ -73,7 +90,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       settabledata(data)
       const fetchedTotalPages = await fetchTotalPages({
         caller: functionName,
-        table,
+        table: tableName,
         filters,
         items_per_page: LOGGING_ROWS_PER_PAGE,
         skipCache: true
@@ -107,7 +124,10 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
             <thead className='sticky top-0 z-10 bg-teal-100 text-left font-normal text-xxs'>
               <tr>
                 <th scope='col' className='font-medium px-2 w-10'>ID</th>
+                <th scope='col' className='font-medium px-2 w-14 text-center'>Level</th>
                 <th scope='col' className='font-medium px-2 w-16 text-center'>Severity</th>
+                <th scope='col' className='font-medium px-2 w-32'>Table</th>
+                <th scope='col' className='font-medium px-2 w-16 text-center'>IsUpdate</th>
                 <th scope='col' className='font-medium px-2 w-44'>Caller</th>
                 <th scope='col' className='font-medium px-2 w-44'>Function Name</th>
                 <th scope='col' className='font-medium px-2 w-96'>Message</th>
@@ -118,12 +138,46 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                 <th scope='col' className='px-2'>
                   <div className='text-center'>
                     <MyInput
+                      id='level'
+                      name='level'
+                      overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
+                      type='text'
+                      value={level}
+                      onChange={e => setlevel(e.target.value)}
+                    />
+                  </div>
+                </th>
+                <th scope='col' className='px-2'>
+                  <div className='text-center'>
+                    <MyInput
                       id='severity'
                       name='severity'
                       overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                       type='text'
                       value={severity}
-                      onChange={e => setseverity(e.target.value)}
+                      onChange={e => setseverity(e.target.value.toUpperCase())}
+                    />
+                  </div>
+                </th>
+                <th scope='col' className='px-2'>
+                  <MyInput
+                    id='table'
+                    name='table'
+                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                    type='text'
+                    value={table}
+                    onChange={e => settable(e.target.value)}
+                  />
+                </th>
+                <th scope='col' className='px-2'>
+                  <div className='text-center'>
+                    <MyInput
+                      id='isupdate'
+                      name='isupdate'
+                      overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
+                      type='text'
+                      value={isupdate}
+                      onChange={e => setisupdate(e.target.value)}
                     />
                   </div>
                 </th>
@@ -169,7 +223,10 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                     onClick={() => setPopup(row)}
                   >
                     <td className='px-2 text-xxs'>{row.lg_lgid}</td>
+                    <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
                     <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
+                    <td className='px-2 text-xxs'>{row.lg_table}</td>
+                    <td className='px-2 text-center text-xxs'>{row.lg_isupdate ? 'Y' : 'N'}</td>
                     <td className='px-2 text-xxs'>{row.lg_caller}</td>
                     <td className='px-2 text-xxs'>{row.lg_functionname}</td>
                     <td className='px-2 text-xxs'>
@@ -182,7 +239,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6}>No data available</td>
+                  <td colSpan={9}>No data available</td>
                 </tr>
               )}
             </tbody>
@@ -223,8 +280,20 @@ function LoggingDetail({ row }: { row: table_Logging }) {
           {row.lg_lgid}
         </div>
         <div>
+          <span className='font-medium text-gray-500'>Level: </span>
+          {row.lg_level}
+        </div>
+        <div>
           <span className='font-medium text-gray-500'>Severity: </span>
           {row.lg_severity}
+        </div>
+        <div>
+          <span className='font-medium text-gray-500'>Table: </span>
+          {row.lg_table || '—'}
+        </div>
+        <div>
+          <span className='font-medium text-gray-500'>IsUpdate: </span>
+          {row.lg_isupdate ? 'Y' : 'N'}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Caller: </span>

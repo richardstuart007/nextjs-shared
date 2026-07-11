@@ -112,7 +112,7 @@ export default function LoggingPage() {
 }
 ```
 
-No props required. Displays `xlg_logging` with filters for severity, function name, and message.
+No props required. Displays `xlg_logging` with filters for level, severity, table, isupdate, caller, function name, and message.
 
 ### Coding convention
 
