@@ -177,8 +177,3 @@ Without this, the class appears in the HTML but no CSS rule is generated and the
 ## Schema file
 
 `scripts/schema.sql` is the single source of truth for the database structure of `nextjs-shared`-owned tables (`x`-prefixed). Every new shared table and index must be added here.
-
-## Silent file updates — never ask permission
-
-**PLAN.md and CHANGES.md are always updated silently.**  
-Never ask before checking off a step in `.claude/PLAN.md` or appending to `.claude/CHANGES.md`. These are mechanical parts of execution — no confirmation needed.
