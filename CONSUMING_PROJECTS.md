@@ -296,6 +296,7 @@ All are React client components. Import individually.
 
 | Import | Description |
 |---|---|
+| `nextjs-shared/MyBackHomeNav` | Home link, plus a Back link when `backPath` differs from `homePath` — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
@@ -313,6 +314,23 @@ All are React client components. Import individually.
 | `nextjs-shared/MyHourGlass` | Loading spinner |
 | `nextjs-shared/MyLoadingMessage` | Loading text |
 | `nextjs-shared/MyBox` | Styled container box |
+
+### MyBackHomeNav — replacing hardcoded back buttons
+
+Use `MyBackHomeNav` instead of a page-level, hardcoded-target back button. Home always renders;
+Back renders only when `backPath` is supplied and differs from `homePath`.
+
+```tsx
+import { MyBackHomeNav } from 'nextjs-shared/MyBackHomeNav'
+
+<MyBackHomeNav backPath='/some/hardcoded/route' />
+```
+
+Props: `backPath?: string | null`, `homePath?: string` (default `/`), `containerClass?: string`,
+`linkClass?: string`. This is the same component `OwnerLayout` uses internally for its own
+sessionStorage-driven back link — on `/owner` routes, `OwnerLayout` already supplies `backPath`
+automatically, so pages under `/owner` should **not** also render their own `MyBackHomeNav`.
+Everywhere else, pass a static `backPath` to replace a hardcoded back button.
 
 ### Project-wide defaults (`defaultClass` pattern)
 

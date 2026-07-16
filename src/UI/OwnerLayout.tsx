@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { MyBackHomeNav } from '../components/MyBackHomeNav'
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -24,15 +25,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   return (
     <div className='px-6 py-4 bg-green-100'>
       {backPath && (
-        <div className='mb-2 flex gap-3'>
-          <a href='/' className='text-xs text-gray-500 hover:text-gray-700'>
-            ⌂ Home
-          </a>
-          {backPath !== '/' && (
-            <a href={backPath} className='text-xs text-gray-500 hover:text-gray-700'>
-              ← {backPath}
-            </a>
-          )}
+        <div className='mb-2'>
+          <MyBackHomeNav backPath={backPath} />
         </div>
       )}
       {children}
