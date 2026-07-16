@@ -219,7 +219,7 @@ const count = await table_count({
 })
 ```
 
-### `table_query` — raw SQL with logging (no caching)
+### `table_query` — raw SQL with logging (auto-cached reads)
 
 ```ts
 import { table_query } from 'nextjs-shared/table_query'
@@ -232,10 +232,11 @@ const rows = await table_query({
           WHERE p.pos_color = $1
           ORDER BY p.pos_reached DESC`,
   params: ['w'],   // accepts string | number | boolean | null
+  skipCache: true, // optional, defaults to false
 })
 ```
 
-Use this for any query that cannot be expressed in `table_fetch`: multi-table JOINs, LATERAL subqueries, `json_agg`, `ON CONFLICT DO UPDATE SET col = col + 1`, or `COALESCE` in SET clauses. Results are not cached — call `cache_clearTable(table, caller)` after any write that uses `table_query`.
+Use this for any query that cannot be expressed in `table_fetch`: multi-table JOINs, LATERAL subqueries, `json_agg`, `ON CONFLICT DO UPDATE SET col = col + 1`, or `COALESCE` in SET clauses. Reads are cached the same way as `table_fetch` — keyed on the value-substituted SQL string, pass `skipCache: true` to bypass. Set `isupdate: true` for any write (`ON CONFLICT DO UPDATE`, etc.) — this always bypasses the cache on both the read and write side, and the cache is not cleared automatically afterward, so call `cache_clearTable(table, caller)` after any write that uses `table_query`.
 
 ---
 
@@ -261,13 +262,13 @@ const [rows, totalPages] = await Promise.all([
 
 ## 6. Cache
 
-The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, and `fetchTotalPages`, and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
+The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, `fetchTotalPages`, and `table_query` (read calls only, i.e. `isupdate` not set), and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
 
 **Functions with no cache awareness** — the consuming project is responsible for calling `cache_clearTable` (or `cache_clearAll`) after using any of these:
 
 | Function | Why cache may be stale |
 |---|---|
-| `table_query` | Executes raw SQL — can be any DML including INSERT/UPDATE/DELETE |
+| `table_query` (with `isupdate: true`) | Executes raw SQL writes — bypasses the cache entirely rather than clearing it |
 | `table_truncate` | Removes all rows but does not clear cache entries for that table |
 | `table_copy_data` | Inserts rows into `table_to` without clearing its cache entries |
 
@@ -720,5 +721,6 @@ Use the page or component name as the top-level caller. Pass it through to every
 - Read-heavy server pages: allow caching (omit `skipCache`)
 - Admin pages: always pass `skipCache: true` — admin must see live data
 - After any write/update/delete via `table_write` / `table_update` / `table_upsert` / `table_delete`: cache is cleared automatically
-- After `table_query`, `table_truncate`, or `table_copy_data`: **cache is not cleared automatically** — call `cache_clearTable(tableName, caller)` explicitly
+- `table_query` reads (default, `isupdate` not set) are cached automatically like `table_fetch` — pass `skipCache: true` to bypass
+- After `table_query` with `isupdate: true`, `table_truncate`, or `table_copy_data`: **cache is not cleared automatically** — call `cache_clearTable(tableName, caller)` explicitly
 - High-frequency queries (e.g. polling, repeated renders): pass `noLog: true` to avoid flooding `xlg_logging` with cache hit/miss entries

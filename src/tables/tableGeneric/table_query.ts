@@ -2,6 +2,8 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
+import { cache_get, cache_set } from '../cache/userCache_store'
+import { buildSql_Readable } from './buildSql_Readable'
 
 //----------------------------------------------------------------------------------
 //  Execute a raw SQL query through the shared db connection with logging.
@@ -18,6 +20,7 @@ export type table_query_Props = {
   level?: number
   isupdate?: boolean
   severity?: string
+  skipCache?: boolean
 }
 
 const functionName = 'table_query'
@@ -30,8 +33,20 @@ export async function table_query({
   table = '',
   level = 1,
   isupdate = false,
-  severity = 'I'
+  severity = 'I',
+  skipCache = false
 }: table_query_Props): Promise<any[]> {
+  //
+  // Reads may be cached; writes (isupdate) always bypass the cache
+  //
+  const useCache = !skipCache && !isupdate
+  const readableSql = buildSql_Readable(query, params)
+
+  if (useCache) {
+    const cachedData = cache_get<any[]>(readableSql, caller, table, level, severity)
+    if (cachedData) return cachedData
+  }
+
   try {
     //
     // Execute the query
@@ -51,7 +66,11 @@ export async function table_query({
     //
     // Return rows
     //
-    return data.rows.length > 0 ? data.rows : []
+    const rows = data.rows.length > 0 ? data.rows : []
+    if (useCache) {
+      cache_set(readableSql, rows, caller, table, level, severity)
+    }
+    return rows
     //
     // Errors
     //
