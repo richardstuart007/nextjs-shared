@@ -483,7 +483,7 @@ Each consuming project builds its own `/owner` page. `nextjs-shared` provides th
 
 ### Standard layout (`src/app/owner/layout.tsx`)
 
-All consuming projects must use `OwnerLayout` from nextjs-shared. This gives the standard `px-6 py-4 bg-green-100` container and the sessionStorage back-link — matching the appearance of the nextjs-shared dev UI. Do **not** write a custom layout.
+All consuming projects must use `OwnerLayout` from nextjs-shared. This gives the standard `px-6 py-4 bg-green-100` container, the sessionStorage back-link, and a Home link (`/`) — matching the appearance of the nextjs-shared dev UI. When the back-link would already point to `/`, only the Home link is shown to avoid a duplicate. Do **not** write a custom layout.
 
 ```tsx
 import OwnerLayout from 'nextjs-shared/OwnerLayout'
@@ -548,7 +548,7 @@ Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use
 
 | Import | Requires DB | Description |
 |---|---|---|
-| `nextjs-shared/OwnerLayout` | No | Standard layout shell: `px-6 py-4 bg-green-100` + sessionStorage back-link |
+| `nextjs-shared/OwnerLayout` | No | Standard layout shell: `px-6 py-4 bg-green-100` + sessionStorage back-link + Home link (back link is suppressed when it already points to `/`) |
 | `nextjs-shared/OwnerPage` | No | Tab bar chrome — pass `tabs: { label, content }[]` |
 | `nextjs-shared/OwnerTableLogging` | Yes | Paginated, filterable view of `xlg_logging` |
 | `nextjs-shared/OwnerTableCache` | Yes | Inspector for the server-side cache |
