@@ -24,7 +24,7 @@ export function MyBackHomeNav({
       <a href={homePath} className={linkClass}>
         ⌂ Home
       </a>
-      {backPath && backPath !== homePath && (
+      {backPath && backPath.split('?')[0] !== homePath.split('?')[0] && (
         <a href={backPath} className={linkClass}>
           ← {backPath}
         </a>
