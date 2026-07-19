@@ -2,6 +2,7 @@
 
 type Props = {
   backPath?: string | null
+  backLabel?: string
   homePath?: string
   containerClass?: string
   linkClass?: string
@@ -15,6 +16,7 @@ export const MyBackHomeNav_linkDftClass_Shared = 'text-xs text-gray-500 hover:te
 //----------------------------------------------------------------------------------
 export function MyBackHomeNav({
   backPath = null,
+  backLabel,
   homePath = '/',
   containerClass = MyBackHomeNav_containerDftClass_Shared,
   linkClass = MyBackHomeNav_linkDftClass_Shared,
@@ -26,7 +28,7 @@ export function MyBackHomeNav({
       </a>
       {backPath && backPath.split('?')[0] !== homePath.split('?')[0] && (
         <a href={backPath} className={linkClass}>
-          ← {backPath}
+          ← {backLabel ?? 'Back'}
         </a>
       )}
     </div>
