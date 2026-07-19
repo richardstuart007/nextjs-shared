@@ -107,6 +107,12 @@ export function cache_set<T>(
 //---------------------------------------------------------------------
 //  cache_clearUser - Clear all entries containing userId in SQL
 //  (userId appears in the WHERE clause, not in table names, so SQL string search is correct)
+//
+//  Only matches equality filters (`= <userId>`) — a userId inside an IN (...) list
+//  (e.g. `usr_usrid IN (5, 8, 12)`) will NOT be matched, so that entry won't be cleared.
+//  Not currently a problem: the only consumer (next-bridgeschool's userCache_purge) always
+//  clears one user at a time after that user's own record changed, so every affected query
+//  filters by plain equality. Revisit if a batched per-user IN-list query is ever added.
 //---------------------------------------------------------------------
 export function cache_clearUser(
   userId: number,

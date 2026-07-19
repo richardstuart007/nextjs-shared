@@ -28,7 +28,14 @@ export async function sql() {
 //-------------------------------------------------------------------------
 // Choose between Neon's Postgres handler and local Postgres handler
 //-------------------------------------------------------------------------
+let handlerInitialized = false
+
 async function createDbQueryHandler(): Promise<void> {
+  //
+  //  Build the handler (and, on the Neon branch, the Pool) once per warm instance
+  //
+  if (handlerInitialized) return
+  handlerInitialized = true
   //.........................................................................
   // Use Neon Postgres handler (production on Vercel)
   //.........................................................................

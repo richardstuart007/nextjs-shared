@@ -60,22 +60,29 @@ export async function table_fetch({
     if (cachedData) return cachedData
   }
 
-  const data = await table_fetch_query({
-    caller,
-    table,
-    whereColumnValuePairs,
-    orderBy,
-    distinct,
-    columns,
-    limit,
-    noLog,
-    level,
-    severity
-  })
-  if (!skipCache) {
-    cache_set(readableSql, data, caller, table, level, severity)
+  try {
+    const data = await table_fetch_query({
+      caller,
+      table,
+      whereColumnValuePairs,
+      orderBy,
+      distinct,
+      columns,
+      limit,
+      noLog,
+      level,
+      severity
+    })
+    //
+    // Only cache a result that came from a successful query — never cache a fallback empty array
+    //
+    if (!skipCache) {
+      cache_set(readableSql, data, caller, table, level, severity)
+    }
+    return data
+  } catch {
+    return []
   }
-  return data
 }
 
 //----------------------------------------------------------------------------------
@@ -136,6 +143,6 @@ async function table_fetch_query({
       lg_table: table,
       lg_level: level
     })
-    return []
+    throw error
   }
 }

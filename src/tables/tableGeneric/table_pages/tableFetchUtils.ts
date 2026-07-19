@@ -4,7 +4,7 @@ import { sql } from '../../db'
 import { write_logging } from '../write_logging'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
-import { buildSqlQuery } from './buildSqlQuery'
+import { buildSqlQuery, applyFetchSuffix, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
 
 //---------------------------------------------------------------------
@@ -39,26 +39,7 @@ export async function table_fetch_pages_filtered({
 
   let readableSql = ''
   try {
-    let finalQuery = sqlQuery
-
-    //
-    // Apply DISTINCT ON if distinctColumns are provided
-    //
-    if (distinctColumns.length > 0) {
-      finalQuery = finalQuery.replace(
-        'SELECT *',
-        `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
-      )
-    }
-
-    //
-    // Add ORDER BY
-    //
-    if (orderBy) finalQuery += ` ORDER BY ${orderBy}`
-
-    // Add LIMIT and OFFSET
-    if (limit !== undefined) finalQuery += ` LIMIT ${limit}`
-    if (offset !== undefined) finalQuery += ` OFFSET ${offset}`
+    const finalQuery = applyFetchSuffix(sqlQuery, { distinctColumns, orderBy, limit, offset })
 
     readableSql = buildSql_Readable(finalQuery, queryValues)
 
@@ -118,17 +99,7 @@ export async function table_fetch_pages_total({
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
   let readableSql = ''
   try {
-    //
-    // Modify query for COUNT
-    //
-    let countQuery = sqlQuery.replace('SELECT *', 'SELECT COUNT(*)')
-
-    //
-    // If distinctColumns are provided, wrap in subquery for accurate count
-    //
-    if (distinctColumns.length > 0) {
-      countQuery = `SELECT COUNT(*) FROM (${sqlQuery.replace('SELECT *', `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`)}) AS distinct_records`
-    }
+    const countQuery = buildCountQuery(sqlQuery, distinctColumns)
 
     readableSql = buildSql_Readable(countQuery, queryValues)
 

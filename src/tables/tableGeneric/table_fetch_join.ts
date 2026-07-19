@@ -57,13 +57,7 @@ export async function table_fetch_join({
   //
   // Inject JOIN clauses after FROM ${table}
   //
-  const joinSql =
-    joins.length > 0
-      ? joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
-      : ''
-  const sqlWithJoins = joinSql
-    ? sqlWithPlaceholders.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
-    : sqlWithPlaceholders
+  const sqlWithJoins = injectJoins(sqlWithPlaceholders, table, joins)
   //
   // Build readable SQL for cache key
   //
@@ -73,23 +67,30 @@ export async function table_fetch_join({
     if (cachedData) return cachedData
   }
 
-  const data = await table_fetch_join_query({
-    caller,
-    table,
-    joins,
-    whereColumnValuePairs,
-    orderBy,
-    distinct,
-    columns,
-    limit,
-    noLog,
-    level,
-    severity
-  })
-  if (!skipCache) {
-    cache_set(readableSql, data, caller, table, level, severity)
+  try {
+    const data = await table_fetch_join_query({
+      caller,
+      table,
+      joins,
+      whereColumnValuePairs,
+      orderBy,
+      distinct,
+      columns,
+      limit,
+      noLog,
+      level,
+      severity
+    })
+    //
+    // Only cache a result that came from a successful query — never cache a fallback empty array
+    //
+    if (!skipCache) {
+      cache_set(readableSql, data, caller, table, level, severity)
+    }
+    return data
+  } catch {
+    return []
   }
-  return data
 }
 
 //----------------------------------------------------------------------------------
@@ -123,13 +124,7 @@ async function table_fetch_join_query({
     //
     // Inject JOIN clauses after FROM ${table}
     //
-    const joinSql =
-      joins.length > 0
-        ? joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
-        : ''
-    const finalQuery = joinSql
-      ? sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
-      : sqlQuery
+    const finalQuery = injectJoins(sqlQuery, table, joins)
     //
     // Execute the query
     //
@@ -161,6 +156,16 @@ async function table_fetch_join_query({
       lg_table: table,
       lg_level: level
     })
-    return []
+    throw error
   }
+}
+
+//----------------------------------------------------------------------------------
+//  Inject LEFT JOIN clauses immediately after "FROM ${table}" — shared by the cache-key
+//  build above and the actual query build in table_fetch_join_query, so the two can't diverge
+//----------------------------------------------------------------------------------
+function injectJoins(sqlQuery: string, table: string, joins: JoinParams[]): string {
+  if (joins.length === 0) return sqlQuery
+  const joinSql = joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
+  return sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
 }

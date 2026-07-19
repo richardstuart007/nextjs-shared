@@ -61,3 +61,49 @@ export function buildSqlQuery({
 
   return { sqlQuery, queryValues }
 }
+
+//---------------------------------------------------------------------
+// Apply DISTINCT ON / ORDER BY / LIMIT / OFFSET to a base SELECT * query — shared by
+// fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build
+//---------------------------------------------------------------------
+export function applyFetchSuffix(
+  sqlQuery: string,
+  {
+    distinctColumns = [],
+    orderBy,
+    limit,
+    offset
+  }: {
+    distinctColumns?: string[]
+    orderBy?: string
+    limit?: number
+    offset?: number
+  }
+): string {
+  let finalQuery = sqlQuery
+  if (distinctColumns.length > 0) {
+    finalQuery = finalQuery.replace(
+      'SELECT *',
+      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
+    )
+  }
+  if (orderBy) finalQuery += ` ORDER BY ${orderBy}`
+  if (limit !== undefined) finalQuery += ` LIMIT ${limit}`
+  if (offset !== undefined) finalQuery += ` OFFSET ${offset}`
+  return finalQuery
+}
+
+//---------------------------------------------------------------------
+// Build a COUNT(*) version of a base SELECT * query, wrapping in a subquery when
+// DISTINCT ON is needed for an accurate count — shared by fetchTotalPages's cache-key
+// build and table_fetch_pages_total's actual query build
+//---------------------------------------------------------------------
+export function buildCountQuery(sqlQuery: string, distinctColumns: string[] = []): string {
+  if (distinctColumns.length > 0) {
+    return `SELECT COUNT(*) FROM (${sqlQuery.replace(
+      'SELECT *',
+      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
+    )}) AS distinct_records`
+  }
+  return sqlQuery.replace('SELECT *', 'SELECT COUNT(*)')
+}

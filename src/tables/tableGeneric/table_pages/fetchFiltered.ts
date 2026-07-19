@@ -1,7 +1,7 @@
 'use server'
 
 import { cache_get, cache_set } from '../../cache/userCache_store'
-import { buildSqlQuery } from './buildSqlQuery'
+import { buildSqlQuery, applyFetchSuffix } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
 import { table_fetch_pages_filtered } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
@@ -37,16 +37,7 @@ export async function fetchFiltered({
   const functionName = 'fetchFiltered'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
-  let cacheKeySql = sqlQuery
-  if (distinctColumns.length > 0) {
-    cacheKeySql = cacheKeySql.replace(
-      'SELECT *',
-      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
-    )
-  }
-  if (orderBy) cacheKeySql += ` ORDER BY ${orderBy}`
-  if (limit !== undefined) cacheKeySql += ` LIMIT ${limit}`
-  if (offset !== undefined) cacheKeySql += ` OFFSET ${offset}`
+  const cacheKeySql = applyFetchSuffix(sqlQuery, { distinctColumns, orderBy, limit, offset })
   const cacheKey = buildSql_Readable(cacheKeySql, queryValues)
 
   if (!skipCache) {

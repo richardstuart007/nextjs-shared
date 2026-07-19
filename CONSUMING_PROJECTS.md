@@ -351,6 +351,17 @@ export function AppButton(props: Props) {
 }
 ```
 
+**`overrideClass` gotcha — responsive defaults need every variant repeated.** `myMergeClasses`
+only replaces a default token with an override that shares the exact same variant prefix — a bare
+override never touches a `md:`-prefixed default, only the unqualified base token. `MyButton`,
+`MyInput`, `MyDropdown`, `MySelect`, and `MyLink` all default to `'h-6 md:h-8'` (two independent
+tokens, not one). Passing `overrideClass="h-6"` replaces only the base `h-6`; `md:h-8` survives
+untouched and still applies at the `md:` breakpoint and up. To force one fixed height across all
+breakpoints, repeat both variants: `overrideClass="h-6 md:h-6"`. This is intentional
+`myMergeClasses` behavior (it's what lets a caller override just the mobile size while keeping a
+deliberate desktop bump) — not a bug to work around, just a default to check before assuming a
+bare override fully replaces it.
+
 ### MyButton props
 
 | Prop | Type | Default |

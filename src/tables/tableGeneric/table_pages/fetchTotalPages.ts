@@ -1,7 +1,7 @@
 'use server'
 
 import { cache_get, cache_set } from '../../cache/userCache_store'
-import { buildSqlQuery } from './buildSqlQuery'
+import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
 import { table_fetch_pages_total } from './tableFetchUtils'
 import { ITEMS_PER_PAGE } from './page_constants'
@@ -34,15 +34,7 @@ export async function fetchTotalPages({
   const functionName = 'fetchTotalPages'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
-  let countSql: string
-  if (distinctColumns.length > 0) {
-    countSql = `SELECT COUNT(*) FROM (${sqlQuery.replace(
-      'SELECT *',
-      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
-    )}) AS distinct_records`
-  } else {
-    countSql = sqlQuery.replace('SELECT *', 'SELECT COUNT(*)')
-  }
+  const countSql = buildCountQuery(sqlQuery, distinctColumns)
   const cacheKey = buildSql_Readable(countSql, queryValues)
 
   if (!skipCache) {
