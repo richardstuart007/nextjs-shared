@@ -302,6 +302,7 @@ All are React client components. Import individually.
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) |
+| `nextjs-shared/MyTab` | Single tab button — `underline` or `pill` variant, active state controlled by the caller |
 | `nextjs-shared/MyTextarea` | Textarea |
 | `nextjs-shared/MyCheckbox` | Multi-select checkbox group with search, sort, min/max |
 | `nextjs-shared/MyToggle` | Toggle switch |
@@ -410,6 +411,49 @@ Exported constant: `MyTextarea_dftClass_Shared`.
 | + all `<select>` HTML attributes | | |
 
 Exported constants: `MySelect_dftClass_Shared`, `MySelect_labelDftClass_Shared`, `MySelect_containerDftClass_Shared`.
+
+### MyTab props
+
+Active state and click handling are owned by the caller — same pattern as `MyButton`, not a
+self-managing tab group.
+
+| Prop | Type | Default |
+|---|---|---|
+| `children` | `React.ReactNode` | — |
+| `active` | `boolean` | `false` |
+| `variant` | `'underline' \| 'pill'` | `'underline'` |
+| `underlineActiveClass` | `string` | `MyTab_underlineActiveClass_Shared` |
+| `underlineInactiveClass` | `string` | `MyTab_underlineInactiveClass_Shared` |
+| `pillActiveClass` | `string` | `MyTab_pillActiveClass_Shared` |
+| `pillInactiveClass` | `string` | `MyTab_pillInactiveClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| + all `<button>` HTML attributes | | |
+
+Exported constants: `MyTab_underlineActiveClass_Shared`, `MyTab_underlineInactiveClass_Shared`, `MyTab_pillActiveClass_Shared`, `MyTab_pillInactiveClass_Shared`.
+
+The four `*Class` props follow the same project-wide-wrapper pattern as `MyButton`'s
+`defaultClass` — one override per variant/active combination, so a consuming project's wrapper
+can re-theme only the combo(s) it needs:
+
+```tsx
+// src/components/AppTab.tsx — project-wide wrapper
+import { MyTab, MyTab_pillActiveClass_Shared } from 'nextjs-shared/MyTab'
+
+const projectPillActive = MyTab_pillActiveClass_Shared.replace('bg-blue-600 border-blue-600', 'bg-emerald-600 border-emerald-600')
+
+type Props = React.ComponentProps<typeof MyTab>
+
+export function AppTab(props: Props) {
+  return <MyTab pillActiveClass={projectPillActive} {...props} />
+}
+```
+
+```tsx
+import { MyTab } from 'nextjs-shared/MyTab'
+
+<MyTab variant='underline' active={tab === 'a'} onClick={() => setTab('a')}>Tab A</MyTab>
+<MyTab variant='pill' active={i === selected} onClick={() => setSelected(i)}>{item.label}</MyTab>
+```
 
 ### MyBox props
 

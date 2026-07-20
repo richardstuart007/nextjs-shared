@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.25",
+  "version": "2.1.28",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, chess utilities, and schema tools",
   "private": true,
   "scripts": {
@@ -53,6 +53,7 @@
     "./MyPagination": "./src/components/MyPagination.tsx",
     "./MyPopup": "./src/components/MyPopup.tsx",
     "./MySelect": "./src/components/MySelect.tsx",
+    "./MyTab": "./src/components/MyTab.tsx",
     "./MyTextarea": "./src/components/MyTextarea.tsx",
     "./MyToggle": "./src/components/MyToggle.tsx",
     "./DevLayoutHeader": "./src/UI/DevLayoutHeader.tsx",

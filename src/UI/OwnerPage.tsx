@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, Suspense, useState } from 'react'
+import { MyTab } from '../components/MyTab'
 
 type TabConfig = { label: string; content: React.ReactNode }
 
@@ -11,17 +12,16 @@ export default function OwnerPage({ tabs }: { tabs: TabConfig[] }) {
     <>
       <nav className='flex gap-6 pt-6 pb-0 border-b border-gray-200 text-sm'>
         {tabs.map(tab => (
-          <button
+          <MyTab
             key={tab.label}
+            variant='underline'
+            active={activeTab === tab.label}
+            underlineActiveClass='pb-2 border-b-2 border-gray-900 text-gray-900 font-medium'
+            underlineInactiveClass='pb-2 text-gray-500 hover:text-gray-700'
             onClick={() => setActiveTab(tab.label)}
-            className={
-              activeTab === tab.label
-                ? 'pb-2 border-b-2 border-gray-900 text-gray-900 font-medium'
-                : 'pb-2 text-gray-500 hover:text-gray-700'
-            }
           >
             {tab.label}
-          </button>
+          </MyTab>
         ))}
       </nav>
       <Suspense>

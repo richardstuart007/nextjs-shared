@@ -20,6 +20,13 @@ import { MyHourGlass, MyHourGlass_dftClass_Shared } from '../components/MyHourGl
 import { MyHelp } from '../components/MyHelp'
 import { MyHelpField } from '../components/MyHelpField'
 import { MyHelpStep } from '../components/MyHelpStep'
+import {
+  MyTab,
+  MyTab_underlineActiveClass_Shared,
+  MyTab_underlineInactiveClass_Shared,
+  MyTab_pillActiveClass_Shared,
+  MyTab_pillInactiveClass_Shared,
+} from '../components/MyTab'
 import { MyBoxProject } from './components_wrappers/MyBox'
 import { MyBox_dftClass_Project } from './components_wrappers/defaults'
 
@@ -67,6 +74,7 @@ export default function OwnerComponentTest() {
     { label: 'MyHelp', content: <MyHelpTab /> },
     { label: 'MyHelpField', content: <MyHelpFieldTab /> },
     { label: 'MyHelpStep', content: <MyHelpStepTab /> },
+    { label: 'MyTab', content: <MyTabTab /> },
   ]
   const result = <OwnerPage tabs={tabs} />
   return result
@@ -1321,6 +1329,88 @@ function MyHelpStepTab() {
           <ReturnRow label='title' value={applied.title} />
           <ReturnRow label='input' value={parseList(applied.input).join(', ')} />
           <ReturnRow label='output' value={parseList(applied.output).join(', ')} />
+        </>
+      }
+    />
+  )
+}
+
+type TabControlProps = { label: string; variant: 'underline' | 'pill'; overrideClass: string; restProps: string }
+const tabDefaults: TabControlProps = { label: 'Tab A', variant: 'underline', overrideClass: '', restProps: '' }
+
+//----------------------------------------------------------------------------------
+//  MyTabTab
+//----------------------------------------------------------------------------------
+function MyTabTab() {
+  const [draft, setDraft] = useState<TabControlProps>(tabDefaults)
+  const [applied, setApplied] = useState<TabControlProps>(tabDefaults)
+  const [active, setActive] = useState(false)
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+
+  const dftClass = applied.variant === 'pill'
+    ? (active ? MyTab_pillActiveClass_Shared : MyTab_pillInactiveClass_Shared)
+    : (active ? MyTab_underlineActiveClass_Shared : MyTab_underlineInactiveClass_Shared)
+  const computedClass = myMergeClasses(dftClass, applied.overrideClass)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='variant'>
+            <MySelect
+              options={['underline', 'pill']}
+              value={draft.variant}
+              onChange={e => setDraft(d => ({ ...d, variant: e.target.value as 'underline' | 'pill' }))}
+            />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea
+              value={draft.overrideClass}
+              onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))}
+              overrideClass='w-full h-48'
+            />
+          </ControlRow>
+          <ControlRow label='rest props'>
+            <MyTextarea
+              value={draft.restProps}
+              onChange={e => setDraft(d => ({ ...d, restProps: e.target.value }))}
+              overrideClass='w-full h-16'
+            />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <div className='flex items-center gap-2'>
+          <MyTab
+            variant={applied.variant}
+            active={active}
+            overrideClass={applied.overrideClass}
+            {...parseRestProps(applied.restProps)}
+            onClick={() => setActive(a => !a)}
+          >
+            {applied.label}
+          </MyTab>
+          <span className='text-xs text-gray-500'>click to toggle active</span>
+        </div>
+      }
+      returns={
+        <>
+          <ReturnRow label='active' value={String(active)} />
+          <ReturnRow label='variant' value={applied.variant} />
+          <ReturnRow label='className' value={computedClass} />
+          {Object.entries(parseRestProps(applied.restProps)).map(([k, v]) => (
+            <ReturnRow key={k} label={k} value={v} />
+          ))}
         </>
       }
     />

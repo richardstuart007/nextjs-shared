@@ -75,7 +75,7 @@ Consumer projects never call the DB directly — they always go through this pac
 - `copyTables` — copy table data between databases
 
 **UI Components**
-- `MyButton`, `MyInput`, `MyDropdown`, `MyTextarea`, `MyConfirmDialog`
+- `MyButton`, `MyInput`, `MyDropdown`, `MyTextarea`, `MyConfirmDialog`, `MyTab`
 
 **Full UI panels (src/UI/)**
 - `OwnerLayout` — dev-only guard layout with sessionStorage back-link
