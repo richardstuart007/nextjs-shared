@@ -302,6 +302,7 @@ All are React client components. Import individually.
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) |
+| `nextjs-shared/MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars — collapsed trigger, opens on click |
 | `nextjs-shared/MyTab` | Single tab button — `underline` or `pill` variant, active state controlled by the caller |
 | `nextjs-shared/MyTextarea` | Textarea |
 | `nextjs-shared/MyCheckbox` | Multi-select checkbox group with search, sort, min/max |
@@ -411,6 +412,39 @@ Exported constant: `MyTextarea_dftClass_Shared`.
 | + all `<select>` HTML attributes | | |
 
 Exported constants: `MySelect_dftClass_Shared`, `MySelect_labelDftClass_Shared`, `MySelect_containerDftClass_Shared`.
+
+### MySelectMulti props
+
+Compact checkbox-dropdown multi-select — a trigger button ("All" / "N selected") that opens a
+panel of checkboxes on click, closing on outside click. Distinct from `MyCheckbox`: `MyCheckbox`
+is an always-expanded checkbox group meant for dedicated form space; `MySelectMulti` is for
+space-constrained filter bars where the option list should stay collapsed until needed.
+
+| Prop | Type | Default |
+|---|---|---|
+| `label` | `string` | — |
+| `options` | `(string \| { value: string; label: string })[]` | — |
+| `selected` | `string[]` | — |
+| `onChange` | `(values: string[]) => void` | — |
+| `id` | `string` | derived from `label` |
+| `defaultClass` | `string` | `MySelectMulti_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| `labelClass` | `string` | `MySelectMulti_labelDftClass_Shared` (`'font-bold text-xs whitespace-nowrap'`) |
+| `containerClass` | `string` | `MySelectMulti_containerDftClass_Shared` (`'flex items-center gap-2'`) |
+| `panelClass` | `string` | `MySelectMulti_panelDftClass_Shared` |
+
+Exported constants: `MySelectMulti_dftClass_Shared`, `MySelectMulti_labelDftClass_Shared`, `MySelectMulti_containerDftClass_Shared`, `MySelectMulti_panelDftClass_Shared`.
+
+```tsx
+import MySelectMulti from 'nextjs-shared/MySelectMulti'
+
+<MySelectMulti
+  label='Status'
+  options={[{ value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' }]}
+  selected={selectedStatuses}
+  onChange={setSelectedStatuses}
+/>
+```
 
 ### MyTab props
 
