@@ -427,6 +427,8 @@ space-constrained filter bars where the option list should stay collapsed until 
 | `selected` | `string[]` | — |
 | `onChange` | `(values: string[]) => void` | — |
 | `id` | `string` | derived from `label` |
+| `showReset` | `boolean` | `false` |
+| `resetLabel` | `string` | `'All'` |
 | `defaultClass` | `string` | `MySelectMulti_dftClass_Shared` |
 | `overrideClass` | `string` | `''` |
 | `labelClass` | `string` | `MySelectMulti_labelDftClass_Shared` (`'font-bold text-xs whitespace-nowrap'`) |
@@ -434,6 +436,12 @@ space-constrained filter bars where the option list should stay collapsed until 
 | `panelClass` | `string` | `MySelectMulti_panelDftClass_Shared` |
 
 Exported constants: `MySelectMulti_dftClass_Shared`, `MySelectMulti_labelDftClass_Shared`, `MySelectMulti_containerDftClass_Shared`, `MySelectMulti_panelDftClass_Shared`.
+
+`showReset` defaults to `false` — every existing caller is unaffected. When `true` and `selected.length > 0`,
+an extra row (labelled by `resetLabel`) renders first inside the open panel, visually separated from
+the checkbox options by a bottom border. Clicking it calls `onChange([])` and closes the panel —
+a one-click way back to the "All" state, which otherwise requires unchecking every option
+individually.
 
 ```tsx
 import MySelectMulti from 'nextjs-shared/MySelectMulti'

@@ -11,6 +11,8 @@ type Props = {
   selected: string[]
   onChange: (values: string[]) => void
   id?: string
+  showReset?: boolean
+  resetLabel?: string
   defaultClass?: string
   overrideClass?: string
   labelClass?: string
@@ -49,6 +51,8 @@ export default function MySelectMulti({
   selected,
   onChange,
   id,
+  showReset = false,
+  resetLabel = 'All',
   defaultClass = MySelectMulti_dftClass_Shared,
   overrideClass = '',
   labelClass = MySelectMulti_labelDftClass_Shared,
@@ -73,6 +77,11 @@ export default function MySelectMulti({
     onChange(selected.includes(value) ? selected.filter(v => v !== value) : [...selected, value])
   }
 
+  function resetSelection() {
+    onChange([])
+    setOpen(false)
+  }
+
   const display = selected.length === 0 ? 'All' : `${selected.length} selected`
 
   return (
@@ -91,6 +100,15 @@ export default function MySelectMulti({
         </button>
         {open && (
           <div role='listbox' aria-multiselectable='true' className={panelClass}>
+            {showReset && selected.length > 0 && (
+              <button
+                type='button'
+                onClick={resetSelection}
+                className='block w-full text-left px-1 py-0.5 mb-1 pb-1 border-b border-gray-200 italic font-semibold hover:bg-gray-50 text-xs whitespace-nowrap'
+              >
+                {resetLabel}
+              </button>
+            )}
             {normalized.map(opt => (
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input

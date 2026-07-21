@@ -238,9 +238,12 @@ Re-verified against actual file contents as of this entry, not just the original
   add a separate reset control, or extend the shared component) before applying the swap.
 
 ### richard-dashboard
-- `src/app/owner/page.tsx` raw buttons — still outstanding.
-- `AppCard.tsx:29-69` hand-rolled help-toggle button + overlay modal duplicating `MyHelp`/`MyPopup`
-  — still outstanding.
+- ~~`globals.css` missing the required `@source` directive~~ — **fixed**. Discovered live while
+  debugging why `AppCard.tsx`'s `MyPopup` rendered unstyled; user has since added it.
+- `src/app/owner/page.tsx:37,65` raw buttons — still outstanding, instructions already given.
+- `AppCard.tsx` — the `MyPopup` swap (with `closeOnBackdropClick`) is **done correctly**; only the
+  "?" trigger button itself is still a raw `<button>` rather than `MyButton` — instructions already
+  given.
 
 ### Cross-project, not yet handed off to any project
 - **`DevLayoutHeader` gap** — chess, infostore, next-bridge, next-bridgeschool, and
@@ -254,3 +257,11 @@ Re-verified against actual file contents as of this entry, not just the original
   other five projects — could mean they simply don't have a page needing a hardcoded back button
   outside `/owner` (which `OwnerLayout` already handles separately). Worth checking each project's
   pages for hand-rolled back-button code before assuming this is outstanding work.
+- ~~**Tailwind v4 `@source` directive audit**~~ — **done, all 6 compliant**. Checked every consuming
+  project's Tailwind entry CSS file for `@source "../../node_modules/nextjs-shared/src";`
+  (documented in `CONSUMING_PROJECTS.md`'s "Tailwind v4 — required @source directive" section).
+  chess, infostore, next-bridge, next-dbadmin: `src/app/globals.css`, already had it. next-bridgeschool:
+  no `src/app/globals.css` at all — its Tailwind entry file is `src/root/global.css` (different name
+  and location), already had it too. richard-dashboard: was missing it entirely (root cause of a
+  `MyPopup` rendering unstyled), now fixed by the user. No further action needed unless a new
+  consuming project is added later.
