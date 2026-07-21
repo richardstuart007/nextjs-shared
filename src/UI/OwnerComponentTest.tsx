@@ -1262,7 +1262,7 @@ const helpStepDefaults: HelpStepControlProps = {
   consumers: '',
   label: 'Help',
   buttonClass: 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none',
-  panelClass: 'absolute z-20 mt-1 left-0 w-[min(2000px,90vw)] p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs',
+  panelClass: 'absolute z-20 mt-1 p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs max-w-xl',
 }
 
 //----------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export type HelpItem = { heading: string; body: string }
 
@@ -11,10 +11,12 @@ type Props = {
   label?: string
   buttonClass?: string
   panelClass?: string
+  closeButtonClass?: string
 }
 
 export const MyHelp_buttonDftClass_Shared = 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none'
 export const MyHelp_panelDftClass_Shared  = 'absolute z-10 mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs space-y-2 max-w-md shadow-md'
+export const MyHelp_closeButtonDftClass_Shared = 'ml-4 text-gray-400 hover:text-gray-700 text-base leading-none font-bold'
 
 //----------------------------------------------------------------------------------------------
 //  MyHelp — toggleable help popover with optional title, plain text, or structured items
@@ -26,10 +28,21 @@ export function MyHelp({
   label = '?',
   buttonClass = MyHelp_buttonDftClass_Shared,
   panelClass = MyHelp_panelDftClass_Shared,
+  closeButtonClass = MyHelp_closeButtonDftClass_Shared,
 }: Props) {
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
   return (
-    <span className='inline-block'>
+    <span ref={ref} className='inline-block'>
       <button
         onClick={() => setOpen(o => !o)}
         className={buttonClass}
@@ -40,7 +53,12 @@ export function MyHelp({
       </button>
       {open && (
         <div className={panelClass}>
-          {title && <p className='font-semibold text-blue-800'>{title}</p>}
+          <div className='flex justify-between items-start'>
+            {title ? <p className='font-semibold text-blue-800'>{title}</p> : <span />}
+            <button onClick={() => setOpen(false)} className={closeButtonClass} type='button' aria-label='Close'>
+              ×
+            </button>
+          </div>
           {text ? (
             <p className='text-gray-600 whitespace-pre-wrap'>{text}</p>
           ) : (

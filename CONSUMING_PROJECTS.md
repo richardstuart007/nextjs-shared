@@ -592,6 +592,75 @@ backdrop does nothing unless this is explicitly passed as `true`. When `true`, c
 outside the panel calls `onClose`; clicking inside the panel itself never does (the panel stops
 click propagation).
 
+### MyHelp props
+
+| Prop | Type | Default |
+|---|---|---|
+| `items` | `HelpItem[]` (`{ heading: string; body: string }[]`) | — |
+| `text` | `string` | — |
+| `title` | `string` | — |
+| `label` | `string` | `'?'` |
+| `buttonClass` | `string` | `MyHelp_buttonDftClass_Shared` |
+| `panelClass` | `string` | `MyHelp_panelDftClass_Shared` |
+| `closeButtonClass` | `string` | `MyHelp_closeButtonDftClass_Shared` |
+
+Exported constants: `MyHelp_buttonDftClass_Shared`, `MyHelp_panelDftClass_Shared`, `MyHelp_closeButtonDftClass_Shared`.
+
+Always shows a "×" close button in the panel header (unconditional, not opt-in) and always closes
+on outside click — unlike `MyPopup`'s `closeOnBackdropClick`, this isn't configurable per caller.
+Pass either `text` (plain string, supports newlines) or `items` (structured heading+body list),
+not both — `text` takes priority if both are given.
+
+### MyHelpStep props
+
+| Prop | Type | Default |
+|---|---|---|
+| `title` | `string` | — |
+| `input` | `string[]` | — |
+| `processing` | `string` | — |
+| `output` | `string[]` | — |
+| `consumers` | `string[]` | — |
+| `label` | `string` | `'Help'` |
+| `buttonClass` | `string` | `MyHelpStep_buttonDftClass_Shared` |
+| `panelClass` | `string` | `MyHelpStep_panelDftClass_Shared` |
+| `closeButtonClass` | `string` | `MyHelpStep_closeButtonDftClass_Shared` |
+
+Exported constants: `MyHelpStep_buttonDftClass_Shared`, `MyHelpStep_panelDftClass_Shared`, `MyHelpStep_closeButtonDftClass_Shared`.
+
+Same as `MyHelp`: the "×" close button and outside-click-close are both unconditional, not
+opt-in. Renders an Input / Processing / Output / (optional) Consumers table for a single step —
+for multiple steps, render one `MyHelpStep` per step. Anchors to the nearest `position:relative`
+ancestor. Panel width shrink-to-fits its content, capped at `max-w-xl` — same strategy as `MyHelp`,
+not a fixed pixel width.
+
+Note: `MyHelpField` (hover-triggered tooltip, not a click-to-open popover) intentionally has
+neither of these — it already dismisses on mouse-leave and has no click-open state to close.
+
+### Tailwind v4 — required @source directive
+
+**Every consuming project's `globals.css` must include an `@source` directive pointing at
+`nextjs-shared`'s source, as the very first line after `@import "tailwindcss";`.** Tailwind v4
+only generates CSS for utility classes it finds by scanning files it's told to scan — it does not
+scan `node_modules` by default. Every `nextjs-shared` component's default Tailwind classes (e.g.
+`MyPopup`'s `fixed inset-0 flex justify-center items-center z-50` overlay, or any `MyButton`
+default) live as string constants inside `nextjs-shared`'s own source files. Without this
+directive, Tailwind never sees those strings, so **no CSS is ever generated for them** — the
+component still renders in the DOM, but with none of its default styling. A modal like `MyPopup`
+degrades to an unstyled block sitting in normal page flow instead of a centered fixed overlay, and
+things like the close button can end up invisible.
+
+```css
+@import "tailwindcss";
+@source "../../node_modules/nextjs-shared/src";
+```
+
+The relative path must resolve from wherever `globals.css` actually lives (typically
+`src/app/globals.css`, two directories above the project root). This is easy to miss because
+nothing errors or warns when it's absent — components simply render unstyled, which can look like
+a bug in the component itself rather than a missing project-level Tailwind config. Check for this
+directive first whenever a `nextjs-shared` component renders with no visible styling in a
+particular project.
+
 ### Tailwind v4 — custom text sizes
 
 `theme.extend.fontSize` in `tailwind.config.ts` is **silently ignored** in Tailwind v4. Any custom text-size utility (e.g. `text-xxs`) must be declared with `@utility` in the consuming project's `globals.css` — otherwise the class appears in the HTML but renders at the inherited default size:
