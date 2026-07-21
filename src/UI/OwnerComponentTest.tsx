@@ -1039,11 +1039,12 @@ function MyToggleTab() {
   )
 }
 
-type PopupControlProps = { overrideClass: string; overlayClass: string; closeButtonClass: string }
+type PopupControlProps = { overrideClass: string; overlayClass: string; closeButtonClass: string; closeOnBackdropClick: boolean }
 const popupDefaults: PopupControlProps = {
   overrideClass: '',
   overlayClass: 'fixed inset-0 flex justify-center items-center z-50',
   closeButtonClass: 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800',
+  closeOnBackdropClick: false,
 }
 
 //----------------------------------------------------------------------------------------------
@@ -1074,6 +1075,9 @@ function MyPopupTab() {
           <ControlRow label='closeButtonClass'>
             <MyTextarea value={draft.closeButtonClass} onChange={e => setDraft(d => ({ ...d, closeButtonClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='closeOnBackdropClick'>
+            <input type='checkbox' checked={draft.closeOnBackdropClick} onChange={e => setDraft(d => ({ ...d, closeOnBackdropClick: e.target.checked }))} />
+          </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
           </div>
@@ -1088,6 +1092,7 @@ function MyPopupTab() {
             overrideClass={applied.overrideClass}
             overlayClass={applied.overlayClass}
             closeButtonClass={applied.closeButtonClass}
+            closeOnBackdropClick={applied.closeOnBackdropClick}
           >
             <p className='text-sm text-gray-700'>Popup content goes here.</p>
           </MyPopup>
@@ -1097,6 +1102,7 @@ function MyPopupTab() {
         <>
           <ReturnRow label='isOpen' value={String(isOpen)} />
           <ReturnRow label='panelClass' value={computedPanelClass} />
+          <ReturnRow label='closeOnBackdropClick' value={String(applied.closeOnBackdropClick)} />
         </>
       }
     />
