@@ -177,3 +177,80 @@ Without this, the class appears in the HTML but no CSS rule is generated and the
 ## Schema file
 
 `scripts/schema.sql` is the single source of truth for the database structure of `nextjs-shared`-owned tables (`x`-prefixed). Every new shared table and index must be added here.
+
+## Outstanding items
+
+Tracked from the `shared review` audit (component adoption / raw SQL vs. `table_` functions) and
+its follow-ups. Each item lives in a different project — Claude cannot fix these from a
+nextjs-shared session (project isolation); they need a Claude Code session opened in that project.
+Re-verified against actual file contents as of this entry, not just the original audit summary.
+
+### chess
+- `src/ui/filters/FilterMultiCheckbox.tsx` — still its own local checkbox-dropdown multi-select;
+  not yet converted to a thin wrapper around `nextjs-shared/MySelectMulti`.
+- ~~`MaintenancePanel.tsx` dead `MySelect` import~~ — **moot**. That file no longer exists; the
+  maintenance UI was restructured into `src/app/owner/pipeline/page.tsx` (which already correctly
+  uses `MySelect` for its run-id picker) and `src/ui/player/PlayerProfile.tsx`. No action needed.
+- `PipelineHelp.tsx` — dismissed, not a finding (confirmed intentionally chess-specific content,
+  not a shared-component gap).
+
+### infostore
+- Raw `<input>`/`<textarea>`/`<select>`/`<button>` across the `entries` CRUD pages (list/new/edit),
+  duplicated in both the public and `[admin_secret]` route trees — still outstanding, unchanged.
+- Hand-rolled confirm modal in `[admin_secret]/dashboard/entries/page.tsx` duplicating
+  `MyConfirmDialog` — still outstanding, unchanged.
+- Category/country checkbox filters in `[admin_secret]/dashboard/entries/page.tsx:80-106` — an
+  always-visible bordered/scrollable checkbox list; this is a `MyCheckbox` gap (not
+  `MySelectMulti`, which is for collapsed dropdowns). Surfaced during the `MySelectMulti`
+  investigation; no handoff instructions written yet.
+
+### next-bridge
+- ~~`src/app/owner/page.tsx` hand-rolled tab bar~~ — **fixed**. Now uses `OwnerPage` correctly.
+  Minor polish only: `ToolsPanel` still wraps its content in `p-8`, which may double up with
+  `OwnerLayout`'s own `px-6 py-4` padding — low-priority cosmetic follow-up, not a functional bug.
+- ~~`StagingBar.tsx` missing confirmation + raw button~~ — **fixed**. Now uses `MyButton` +
+  `MyConfirmDialog` before truncating.
+- ~~`BuildDataViewer.tsx` `FMultiSelect`~~ — **fixed**. Now uses `nextjs-shared/MySelectMulti`.
+- ~~The rest of the systemic component-adoption gap~~ — **fully fixed**. Re-scanned the whole
+  project: zero raw `<select>` remain, every remaining `<input>` is a checkbox (excluded from this
+  audit), every remaining `<button>` is an MP/VP or A/B/C segmented pill filter (also excluded from
+  the start), and all four hand-rolled tab bars (`HomePageClient.tsx`, `PlayerPageClient.tsx`,
+  `RankingsPageClient.tsx`, `ScrapeTabs.tsx`) now use `MyTab`. No outstanding component-adoption
+  work left in this project.
+
+### next-bridgeschool
+- ~~7 raw-`sql()` database calls~~ (`fetch_NextSeq.ts`, `fetch_SessionInfo.ts`, `Recent_fetch_1.ts`,
+  `Recent_fetch_Averages.ts`, `Top_fetch.ts`, `User_fetch.ts`, `User_fetch_Average.ts`) — **all
+  fixed**. No `sql()` calls remain anywhere in this project's `src`.
+- `src/app/owner/page.tsx` hand-rolled tab bar — still outstanding, not yet using `OwnerPage`.
+- `NavDrawer.tsx` (raw close-button next to an existing `MyButton` usage), `login/form.tsx` (raw
+  "not Registered" button next to an existing `MyButton` usage), `answers/form.tsx:92` and
+  `detail/form.tsx:285` (raw `<textarea>`, the latter alongside an already-correct `MyTextarea` at
+  line 226) — all still outstanding.
+
+### next-dbadmin
+- `DatabaseToolsConn.tsx:49-59` hand-rolled tab bar — still outstanding, genuine `MyTab` gap.
+- `CreateSQLConn.tsx:91-109` raw-button table list — still outstanding, minor.
+- `SchemaSyncConn.tsx` and `CopyTableConn.tsx` status-filter dropdowns (`Set`-based, hand-rolled
+  `<details>/<summary>` + checkboxes) — still outstanding, not yet converted to
+  `MySelectMulti`. Unresolved design decision before converting: `MySelectMulti` has no built-in
+  one-click "reset to All" like the current UI does — needs a decision (accept the UX regression,
+  add a separate reset control, or extend the shared component) before applying the swap.
+
+### richard-dashboard
+- `src/app/owner/page.tsx` raw buttons — still outstanding.
+- `AppCard.tsx:29-69` hand-rolled help-toggle button + overlay modal duplicating `MyHelp`/`MyPopup`
+  — still outstanding.
+
+### Cross-project, not yet handed off to any project
+- **`DevLayoutHeader` gap** — chess, infostore, next-bridge, next-bridgeschool, and
+  richard-dashboard each have their own local `DevHeader.tsx` that duplicates the write-side
+  `sessionStorage.setItem('ownerFrom', pathname)` logic already sitting in
+  `nextjs-shared/DevLayoutHeader.tsx`, instead of importing it. Note: the shared version's markup
+  isn't a byte-for-byte match for every project's local header (e.g. some take a `dbLocation` prop
+  or add an extra nav link), so this wouldn't be a pure drop-in without checking each project's
+  actual header content first.
+- **`MyBackHomeNav` adoption** — only chess uses it (3 call sites). Not confirmed as a gap in the
+  other five projects — could mean they simply don't have a page needing a hardcoded back button
+  outside `/owner` (which `OwnerLayout` already handles separately). Worth checking each project's
+  pages for hand-rolled back-button code before assuming this is outstanding work.

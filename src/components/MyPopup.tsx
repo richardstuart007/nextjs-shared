@@ -9,6 +9,7 @@ type Props = {
   isOpen: boolean
   onClose: () => void
   children: ReactNode
+  closeOnBackdropClick?: boolean
   defaultClass?: string
   overrideClass?: string
   overlayClass?: string
@@ -35,6 +36,7 @@ export default function MyPopup({
   isOpen,
   onClose,
   children,
+  closeOnBackdropClick = false,
   defaultClass = MyPopup_dftClass_Shared,
   overrideClass = '',
   overlayClass = MyPopup_overlayDftClass_Shared,
@@ -45,8 +47,8 @@ export default function MyPopup({
   const className = myMergeClasses(defaultClass, overrideClass)
 
   return (
-    <div className={overlayClass}>
-      <div className={className}>
+    <div className={overlayClass} onClick={closeOnBackdropClick ? onClose : undefined}>
+      <div className={className} onClick={e => e.stopPropagation()}>
         <MyButton onClick={onClose} overrideClass={closeButtonClass}>
           <XMarkIcon className='h-6 w-6' />
         </MyButton>

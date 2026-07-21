@@ -571,6 +571,27 @@ Exported constants: `MyCheckbox_labelDftClass_Shared`, `MyCheckbox_searchDftClas
 
 Selected options are always kept sorted. Min/max validation shows an inline error when the limit is hit.
 
+### MyPopup props
+
+| Prop | Type | Default |
+|---|---|---|
+| `isOpen` | `boolean` | — |
+| `onClose` | `() => void` | — |
+| `children` | `ReactNode` | — |
+| `closeOnBackdropClick` | `boolean` | `false` |
+| `defaultClass` | `string` | `MyPopup_dftClass_Shared` |
+| `overrideClass` | `string` | `''` |
+| `overlayClass` | `string` | `MyPopup_overlayDftClass_Shared` |
+| `closeButtonClass` | `string` | `MyPopup_closeButtonDftClass_Shared` |
+
+Exported constants: `MyPopup_dftClass_Shared`, `MyPopup_overlayDftClass_Shared`, `MyPopup_closeButtonDftClass_Shared`.
+
+`closeOnBackdropClick` defaults to `false` so every existing consumer (including `MyConfirmDialog`,
+which renders `MyPopup` internally) keeps its current behavior unchanged — clicking the dark
+backdrop does nothing unless this is explicitly passed as `true`. When `true`, clicking anywhere
+outside the panel calls `onClose`; clicking inside the panel itself never does (the panel stops
+click propagation).
+
 ### Tailwind v4 — custom text sizes
 
 `theme.extend.fontSize` in `tailwind.config.ts` is **silently ignored** in Tailwind v4. Any custom text-size utility (e.g. `text-xxs`) must be declared with `@utility` in the consuming project's `globals.css` — otherwise the class appears in the HTML but renders at the inherited default size:
