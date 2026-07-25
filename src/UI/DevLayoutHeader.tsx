@@ -24,6 +24,9 @@ export function DevLayoutHeader() {
         <a href='/owner/components' onClick={handleOwnerClick} className='text-gray-600 hover:text-gray-900'>
           Components
         </a>
+        <a href='/owner/dataflow' onClick={handleOwnerClick} className='text-gray-600 hover:text-gray-900'>
+          Dataflow
+        </a>
       </div>
       {dbLocation && (
         <span className='rounded bg-yellow-200 px-2 py-0.5 text-xs font-bold text-yellow-800 opacity-70'>
