@@ -34,8 +34,6 @@ No test runner is configured. Use `npx tsc --noEmit` to verify correctness after
    ```
    Deleting `node_modules` and `package-lock.json` and running a full `npm install` is the reliable way to pull the latest GitHub commit. `npm update nextjs-shared` is avoided because with `save-exact=false` it can silently rewrite the GitHub ref in `package.json`.
 
-**Never rename an existing export, function, component, or type without explicit instruction from the user.** Every name in this package is consumed by all projects under `C:\Users\richa\github`. A rename silently breaks every consuming project. If a rename seems warranted, stop and ask first.
-
 **When nextjs-shared changes affect consuming projects** (new exports, removed exports, API changes):
 - Identify which consuming projects are affected
 - Update their import paths / usage as needed
@@ -108,8 +106,6 @@ src/
 ```
 
 ### Coding conventions
-- Server actions use `write_logging` (not `console.error`) for errors, severity `'E'`
-- Log messages include both a consequence string and `(error as Error).message`
 - All exports resolve directly to `src/` TypeScript files. There is no compiled `dist/` output — the main `tsconfig.json` has `noEmit: true`.
 
 ---
@@ -186,23 +182,22 @@ nextjs-shared session (project isolation); they need a Claude Code session opene
 Re-verified against actual file contents as of this entry, not just the original audit summary.
 
 ### chess
-- `src/ui/filters/FilterMultiCheckbox.tsx` — still its own local checkbox-dropdown multi-select;
-  not yet converted to a thin wrapper around `nextjs-shared/MySelectMulti`.
+- ~~`src/ui/filters/FilterMultiCheckbox.tsx`~~ — **fixed**, via `#audit`. Now a thin wrapper around
+  `nextjs-shared/MySelectMulti`, preserving the existing call-site API.
 - ~~`MaintenancePanel.tsx` dead `MySelect` import~~ — **moot**. That file no longer exists; the
   maintenance UI was restructured into `src/app/owner/pipeline/page.tsx` (which already correctly
   uses `MySelect` for its run-id picker) and `src/ui/player/PlayerProfile.tsx`. No action needed.
 - `PipelineHelp.tsx` — dismissed, not a finding (confirmed intentionally chess-specific content,
   not a shared-component gap).
+- No outstanding items remain in this project.
 
 ### infostore
-- Raw `<input>`/`<textarea>`/`<select>`/`<button>` across the `entries` CRUD pages (list/new/edit),
-  duplicated in both the public and `[admin_secret]` route trees — still outstanding, unchanged.
-- Hand-rolled confirm modal in `[admin_secret]/dashboard/entries/page.tsx` duplicating
-  `MyConfirmDialog` — still outstanding, unchanged.
-- Category/country checkbox filters in `[admin_secret]/dashboard/entries/page.tsx:80-106` — an
-  always-visible bordered/scrollable checkbox list; this is a `MyCheckbox` gap (not
-  `MySelectMulti`, which is for collapsed dropdowns). Surfaced during the `MySelectMulti`
-  investigation; no handoff instructions written yet.
+- ~~Everything~~ — **fully done**, via `#audit`. Raw `<input>`/`<textarea>`/`<select>`/`<button>`
+  across all `entries` CRUD pages (list/new/edit, both public and `[admin_secret]` route trees) now
+  use `MyInput`/`MyTextarea`/`MySelect`/`MyButton`; the hand-rolled confirm modal now uses
+  `MyConfirmDialog`; the category/country checkbox filters now use `MyCheckbox`. One noted behavior
+  change: the delete confirm button no longer shows a disabled "Deleting..." state mid-request
+  (`MyConfirmDialog` has no built-in loading state). No outstanding items remain in this project.
 
 ### next-bridge
 - ~~`src/app/owner/page.tsx` hand-rolled tab bar~~ — **fixed**. Now uses `OwnerPage` correctly.
@@ -219,31 +214,22 @@ Re-verified against actual file contents as of this entry, not just the original
   work left in this project.
 
 ### next-bridgeschool
-- ~~7 raw-`sql()` database calls~~ (`fetch_NextSeq.ts`, `fetch_SessionInfo.ts`, `Recent_fetch_1.ts`,
-  `Recent_fetch_Averages.ts`, `Top_fetch.ts`, `User_fetch.ts`, `User_fetch_Average.ts`) — **all
-  fixed**. No `sql()` calls remain anywhere in this project's `src`.
-- `src/app/owner/page.tsx` hand-rolled tab bar — still outstanding, not yet using `OwnerPage`.
-- `NavDrawer.tsx` (raw close-button next to an existing `MyButton` usage), `login/form.tsx` (raw
-  "not Registered" button next to an existing `MyButton` usage), `answers/form.tsx:92` and
-  `detail/form.tsx:285` (raw `<textarea>`, the latter alongside an already-correct `MyTextarea` at
-  line 226) — all still outstanding.
+- ~~Everything~~ — **fully done**, via `#audit`. 7 raw-`sql()` calls, `NavDrawer.tsx`,
+  `login/form.tsx`, both textareas, and the `/owner` page tab bar (now `OwnerPage`, with an
+  accepted active-tab color change from black/gray to `MyTab`'s default blue) are all fixed. No
+  outstanding items remain in this project.
 
 ### next-dbadmin
-- `DatabaseToolsConn.tsx:49-59` hand-rolled tab bar — still outstanding, genuine `MyTab` gap.
-- `CreateSQLConn.tsx:91-109` raw-button table list — still outstanding, minor.
-- `SchemaSyncConn.tsx` and `CopyTableConn.tsx` status-filter dropdowns (`Set`-based, hand-rolled
-  `<details>/<summary>` + checkboxes) — still outstanding, not yet converted to
-  `MySelectMulti`. Unresolved design decision before converting: `MySelectMulti` has no built-in
-  one-click "reset to All" like the current UI does — needs a decision (accept the UX regression,
-  add a separate reset control, or extend the shared component) before applying the swap.
+- ~~`DatabaseToolsConn.tsx:49-59` hand-rolled tab bar~~ — **fixed**, via `#audit`. Now uses `MyTab`.
+- ~~`SchemaSyncConn.tsx` and `CopyTableConn.tsx` status-filter dropdowns~~ — **fixed**, via
+  `#audit`. Both now use `MySelectMulti` with `showReset`.
+- `CreateSQLConn.tsx:91-109` raw-button table list — **decided against, not a finding**. User
+  confirmed `MyButton` doesn't fit this flush list-item shape well; leaving as raw HTML
+  intentionally. No outstanding items remain in this project.
 
 ### richard-dashboard
-- ~~`globals.css` missing the required `@source` directive~~ — **fixed**. Discovered live while
-  debugging why `AppCard.tsx`'s `MyPopup` rendered unstyled; user has since added it.
-- `src/app/owner/page.tsx:37,65` raw buttons — still outstanding, instructions already given.
-- `AppCard.tsx` — the `MyPopup` swap (with `closeOnBackdropClick`) is **done correctly**; only the
-  "?" trigger button itself is still a raw `<button>` rather than `MyButton` — instructions already
-  given.
+- ~~Everything~~ — **fully done**. `globals.css` `@source` directive, `owner/page.tsx` buttons, and
+  `AppCard.tsx`'s "?" trigger button are all fixed. No outstanding work in this project.
 
 ### Cross-project, not yet handed off to any project
 - **`DevLayoutHeader` gap** — chess, infostore, next-bridge, next-bridgeschool, and

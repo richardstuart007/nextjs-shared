@@ -810,6 +810,37 @@ Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use
 | `nextjs-shared/OwnerPage` | No | Tab bar chrome — pass `tabs: { label, content }[]` |
 | `nextjs-shared/OwnerTableLogging` | Yes | Paginated, filterable view of `xlg_logging` |
 | `nextjs-shared/OwnerTableCache` | Yes | Inspector for the server-side cache |
+| `nextjs-shared/DevLayoutHeader` | No | Dev-only top nav bar (Owner link + optional extra links + optional DB-location badge) — see below |
+
+### DevLayoutHeader props
+
+Renders `null` unless `NEXT_PUBLIC_APPENV_ISDEV === 'true'`. Sets the same `ownerFrom` sessionStorage
+key `OwnerLayout` reads, so its back-link works regardless of which page linked into `/owner`.
+
+| Prop | Type | Default |
+|---|---|---|
+| `dbLocation` | `string` | falls back to reading `process.env.POSTGRES_DATABASE_LOCATION` internally if omitted |
+| `extraLinks` | `{ href: string; label: string }[]` | `[]` |
+
+**`dbLocation`**: pass this explicitly from your own root `layout.tsx` (a server component can read
+`process.env.POSTGRES_DATABASE_LOCATION` directly, no client-bundle exposure needed) rather than
+relying on the internal fallback — that fallback only works in a project whose `next.config`
+re-exposes the var via an `env` block the way nextjs-shared's own does, which most consuming
+projects' configs don't.
+
+**`extraLinks`**: defaults to none, so a consuming project gets just the bare "Owner" link. Pass
+your own project-specific `/owner/*` sub-routes here (nextjs-shared's own `layout.tsx` passes
+`[{ href: '/owner/components', label: 'Components' }, { href: '/owner/dataflow', label: 'Dataflow' }]`
+as an example) rather than hardcoding pages that don't exist in every project.
+
+```tsx
+import { DevLayoutHeader } from 'nextjs-shared/DevLayoutHeader'
+
+<DevLayoutHeader
+  dbLocation={process.env.POSTGRES_DATABASE_LOCATION}
+  extraLinks={[{ href: '/owner/dataflow', label: 'Dataflow' }]}
+/>
+```
 
 ---
 

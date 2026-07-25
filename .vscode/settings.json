@@ -1,0 +1,16 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.inlineSuggest.enabled": false,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#b91c1c",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#b91c1c",
+    "titleBar.inactiveForeground": "#e5e7eb",
+    "activityBar.background": "#b91c1c",
+    "activityBar.foreground": "#ffffff"
+  }
+}
