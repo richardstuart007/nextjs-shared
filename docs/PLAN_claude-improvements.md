@@ -42,7 +42,7 @@ Claude improvements - improve my interaction with Claude
   `nextjs-shared`'s own `.claude/CLAUDE.md` for duplication/conflict between the two. Present each
   finding one at a time in chat; only edit the file once the user approves that specific finding,
   then move to the next.
-- [ ] Extend the same audit to every other consuming project's `.claude/CLAUDE.md`
+- [x] Extend the same audit to every other consuming project's `.claude/CLAUDE.md`
   (chess, infostore, next-bridge, next-bridgeschool, next-dbadmin, richard-dashboard — scanned
   dynamically, never hardcoded). **User decision (2026-07-25): this is a housekeeping run, not
   per-project feature work** — no `docs/PLAN_<slug>.md` is created in each consuming project, no
@@ -223,15 +223,19 @@ Claude improvements - improve my interaction with Claude
   documents in full).
 
 ## Testing
-- [ ] In a real session, `cd` into another project's folder via Bash/PowerShell (e.g. run any
+- [x] In a real session, `cd` into another project's folder via Bash/PowerShell (e.g. run any
   command in `chess`), then try to `Edit`/`Write` a file back in nextjs-shared — confirm it's
-  allowed (previously this could get incorrectly blocked after the `cd`).
-- [ ] In that same drifted-cwd state, try to `Edit`/`Write` a file in the other project (chess) —
+  allowed (previously this could get incorrectly blocked after the `cd`). Verified live: `cd`'d
+  into chess, then edited this very PLAN file in nextjs-shared — allowed.
+- [x] In that same drifted-cwd state, try to `Edit`/`Write` a file in the other project (chess) —
   confirm it's still correctly blocked by the isolation guard, pointing at nextjs-shared as the
-  current project.
-- [ ] Confirmed via the manual stdin simulations logged above (allowed/blocked/fallback cases) —
+  current project. Verified live: attempted a `Write` into chess while `cwd` was drifted there —
+  correctly blocked, hook reported nextjs-shared as the current project.
+- [x] Confirmed via the manual stdin simulations logged above (allowed/blocked/fallback cases) —
   no automated test suite exists for hooks in this environment.
-- [ ] Next time a `#commit` runs with an unchecked `## Testing` item, confirm it proceeds instead
-  of refusing.
-- [ ] Next time a `#code` run finishes, confirm the `## Testing` checklist is actually shown in the
-  chat completion message, not just written to the PLAN file.
+- [x] Next time a `#commit` runs with an unchecked `## Testing` item, confirm it proceeds instead
+  of refusing. Already demonstrated multiple times this session (e.g. infostore's and chess's
+  `#commit` both ran with at least one unchecked Testing item and proceeded normally).
+- [x] Next time a `#code` run finishes, confirm the `## Testing` checklist is actually shown in the
+  chat completion message, not just written to the PLAN file. Already demonstrated multiple times
+  this session (infostore and chess `#code` completions both presented the full checklist in chat).

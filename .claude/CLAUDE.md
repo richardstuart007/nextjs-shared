@@ -232,17 +232,19 @@ Re-verified against actual file contents as of this entry, not just the original
   `AppCard.tsx`'s "?" trigger button are all fixed. No outstanding work in this project.
 
 ### Cross-project, not yet handed off to any project
-- **`DevLayoutHeader` gap** — chess, infostore, next-bridge, next-bridgeschool, and
-  richard-dashboard each have their own local `DevHeader.tsx` that duplicates the write-side
-  `sessionStorage.setItem('ownerFrom', pathname)` logic already sitting in
-  `nextjs-shared/DevLayoutHeader.tsx`, instead of importing it. Note: the shared version's markup
-  isn't a byte-for-byte match for every project's local header (e.g. some take a `dbLocation` prop
-  or add an extra nav link), so this wouldn't be a pure drop-in without checking each project's
-  actual header content first.
-- **`MyBackHomeNav` adoption** — only chess uses it (3 call sites). Not confirmed as a gap in the
-  other five projects — could mean they simply don't have a page needing a hardcoded back button
-  outside `/owner` (which `OwnerLayout` already handles separately). Worth checking each project's
-  pages for hand-rolled back-button code before assuming this is outstanding work.
+- ~~**`DevLayoutHeader` gap**~~ — **fully fixed**. Amended `nextjs-shared/DevLayoutHeader.tsx` with
+  optional `dbLocation`/`extraLinks` props (backward-compatible defaults), then rolled the swap out
+  to all 5 consuming projects (chess, infostore, next-bridge, next-bridgeschool, richard-dashboard)
+  — each now imports the shared component and has deleted its local `DevHeader.tsx`. No outstanding
+  work left.
+- ~~**`MyBackHomeNav` adoption**~~ — **resolved, all six projects**. chess and next-bridge already
+  used it. infostore had 6 real hardcoded back-links with no gap — fixed via `#audit` (added a new
+  "⌂ Home" link alongside each, an explicitly agreed design change; see infostore's own git history).
+  next-dbadmin and richard-dashboard confirmed not a gap (no hardcoded back-link pattern found).
+  next-bridgeschool's 2 candidates (`register/form.tsx:209`, `reference/table.tsx:757`) turned out
+  to be styled CTA buttons embedded in specific layouts (a form's secondary action, a pagination
+  row), not the plain-text back-nav `MyBackHomeNav` is designed for — decided not a real fit, left
+  as-is. No outstanding work left.
 - ~~**Tailwind v4 `@source` directive audit**~~ — **done, all 6 compliant**. Checked every consuming
   project's Tailwind entry CSS file for `@source "../../node_modules/nextjs-shared/src";`
   (documented in `CONSUMING_PROJECTS.md`'s "Tailwind v4 — required @source directive" section).
