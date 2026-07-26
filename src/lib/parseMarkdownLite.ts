@@ -10,6 +10,7 @@ export type FlowStep =
   | { type: 'arrow'; label: InlineNode[]; direction: 'down' | 'up'; to?: string }
   | { type: 'side-node'; content: InlineNode[]; id?: string; top?: boolean; pair?: boolean; table?: boolean }
   | { type: 'edge'; from: string; to: string; style: 'single' | 'double' }
+  | { type: 'grid-node'; row: number; col: number; content: InlineNode[]; id?: string; table?: boolean; process?: boolean }
 
 export type BlockNode =
   | { kind: 'heading'; level: number; children: InlineNode[]; id: string }
@@ -171,7 +172,52 @@ function stripNodeTags(line: string): { text: string; id?: string; loopTo?: stri
 }
 
 //----------------------------------------------------------------------------------
-//  parseFlowLines — each non-blank line in a ```flow fence is one of:
+//  parseEdgeLine — `edge <fromId> <-> <toId>` (bidirectional) or `edge <fromId> ->
+//  <toId>` (single direction), shared by both legacy and grid flow parsing
+//----------------------------------------------------------------------------------
+function parseEdgeLine(line: string): Extract<FlowStep, { type: 'edge' }> | undefined {
+  const edgeMatch = /^edge\s+([a-zA-Z0-9_-]+)\s*(<->|->)\s*([a-zA-Z0-9_-]+)\s*$/.exec(line)
+  if (!edgeMatch) return undefined
+  return { type: 'edge', from: edgeMatch[1], to: edgeMatch[3], style: edgeMatch[2] === '<->' ? 'double' : 'single' }
+}
+
+//----------------------------------------------------------------------------------
+//  parseGridFlowLines — grid mode, opted into by a leading bare `grid` line. Only
+//  two line kinds are recognized after that: `node (row,col) <text> {tags}` (1-indexed
+//  coordinates, tags reuse stripNodeTags — `{#id}`, `{table}`, `{process}`) and the
+//  same `edge` lines legacy mode uses. Grid dimensions are inferred from the max
+//  row/col seen, never declared. Anything else (an arrow line, stray text) is simply
+//  not part of grid grammar and is skipped, not an error — there is no implied
+//  sequence in grid mode, only explicit coordinates and explicit edges.
+//----------------------------------------------------------------------------------
+function parseGridFlowLines(lines: string[]): FlowStep[] {
+  const steps: FlowStep[] = []
+  let seenGridMarker = false
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (line === '') continue
+    if (!seenGridMarker) {
+      seenGridMarker = true
+      continue
+    }
+    const nodeMatch = /^node\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*(.*)$/.exec(line)
+    if (nodeMatch) {
+      const row = parseInt(nodeMatch[1], 10)
+      const col = parseInt(nodeMatch[2], 10)
+      const { text, id, table, process } = stripNodeTags(nodeMatch[3].trim())
+      steps.push({ type: 'grid-node', row, col, content: parseInline(text), id, table, process })
+      continue
+    }
+    const edgeStep = parseEdgeLine(line)
+    if (edgeStep) steps.push(edgeStep)
+  }
+  return steps
+}
+
+//----------------------------------------------------------------------------------
+//  parseFlowLines — a ```flow fence is either legacy or grid mode, never both. Grid
+//  mode is opted into by a leading bare `grid` line (see parseGridFlowLines);
+//  otherwise, each non-blank line is one of:
 //  - an arrow: starts with ↓ (forward) or ↑ (loops back to an earlier node), rest is
 //    its label, optionally suffixed `{to:some-id}` naming its curve target
 //  - a side node: `side <text>`, placed in a left column outside the main vertical
@@ -183,6 +229,12 @@ function stripNodeTags(line: string): { text: string; id?: string; loopTo?: stri
 //    and/or `{loop:some-id}` so a curve is drawn from this node back to that target
 //----------------------------------------------------------------------------------
 function parseFlowLines(lines: string[]): FlowStep[] {
+  const firstContentLine = lines.map(l => l.trim()).find(l => l !== '')
+  if (firstContentLine === 'grid') {
+    const gridSteps = parseGridFlowLines(lines)
+    return gridSteps
+  }
+
   const steps: FlowStep[] = []
   for (const rawLine of lines) {
     const line = rawLine.trim()
@@ -198,10 +250,8 @@ function parseFlowLines(lines: string[]): FlowStep[] {
       const { text, id, top, pair, table } = stripNodeTags(line.slice(5).trim())
       steps.push({ type: 'side-node', content: parseInline(text), id, top, pair, table })
     } else if (line.startsWith('edge ')) {
-      const edgeMatch = /^edge\s+([a-zA-Z0-9_-]+)\s*(<->|->)\s*([a-zA-Z0-9_-]+)\s*$/.exec(line)
-      if (edgeMatch) {
-        steps.push({ type: 'edge', from: edgeMatch[1], to: edgeMatch[3], style: edgeMatch[2] === '<->' ? 'double' : 'single' })
-      }
+      const edgeStep = parseEdgeLine(line)
+      if (edgeStep) steps.push(edgeStep)
     } else {
       const { text, id, loopTo, bottom, process } = stripNodeTags(line)
       steps.push({ type: 'node', content: parseInline(text), id, loopTo, bottom, process })

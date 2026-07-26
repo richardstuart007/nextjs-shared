@@ -66,11 +66,75 @@ type FlowCurve = {
 }
 
 //------------------------------------------------------------------------------------------------
-//  FlowDiagram — renders a ```flow block as a bordered diagram panel. Main-chain nodes/arrows run
-//  in a vertical column; `side-node` steps render in a left column instead; `edge` steps (plus the
-//  existing per-node `loopTo` and per-arrow `to`) each draw a curved SVG line between two named
-//  boxes, measured from actual rendered positions. `double`-style edges get an arrowhead at both
-//  ends.
+//  buildCurve — straight SVG path between two rendered boxes, measured from actual DOM positions
+//  (not layout assumptions), shared by both the legacy FlowDiagram and GridFlowDiagram. Default:
+//  whichever pair of edges face each other on whichever axis separates the boxes more (left/right
+//  if mostly side-by-side, top/bottom if mostly stacked) — used for the tpl_players/chess.com API
+//  loop-back, every grid-mode edge, and any other unclassified edge. `forceVertical` always
+//  connects top/bottom — a top-row data source's edge down into the process below it.
+//  `forceHorizontal` always connects via each box's vertical-middle side edge — a process's own
+//  output edge to its paired table, which sits directly beside it. `forceTopEnd` always ends at
+//  the target's top-center (source's bottom-center) — a table's edge into the next process,
+//  "dropping into" its top. These three force flags are legacy-only (side-node relationships);
+//  grid mode always uses the default branch.
+//
+//  `endXFraction` (default 0.5, i.e. center) lets multiple forceVertical edges into the same
+//  target land at different points along its top edge instead of converging on one spot — e.g.
+//  two inputs at 1/3 and 2/3.
+//------------------------------------------------------------------------------------------------
+function buildCurve(
+  sourceEl: HTMLDivElement,
+  targetEl: HTMLDivElement,
+  containerRect: DOMRect,
+  forceVertical = false,
+  forceHorizontal = false,
+  forceTopEnd = false,
+  endXFraction = 0.5
+): string {
+  const s = sourceEl.getBoundingClientRect()
+  const t = targetEl.getBoundingClientRect()
+  const dx = (t.left + t.width / 2) - (s.left + s.width / 2)
+  const dy = (t.top + t.height / 2) - (s.top + s.height / 2)
+
+  if (forceTopEnd) {
+    const startX = s.left + s.width / 2 - containerRect.left
+    const startY = s.bottom - containerRect.top
+    const endX = t.left + t.width / 2 - containerRect.left
+    const endY = t.top - containerRect.top
+    return `M ${startX} ${startY} L ${endX} ${endY}`
+  }
+
+  if (forceHorizontal || (!forceVertical && Math.abs(dx) > Math.abs(dy))) {
+    const targetIsRight = dx > 0
+    const startX = (targetIsRight ? s.right : s.left) - containerRect.left
+    const startY = s.top + s.height / 2 - containerRect.top
+    const endX = (targetIsRight ? t.left : t.right) - containerRect.left
+    const endY = t.top + t.height / 2 - containerRect.top
+    return `M ${startX} ${startY} L ${endX} ${endY}`
+  }
+
+  if (forceVertical) {
+    const startX = s.left + s.width / 2 - containerRect.left
+    const startY = s.bottom - containerRect.top
+    const endX = t.left + t.width * endXFraction - containerRect.left
+    const endY = t.top - containerRect.top
+    return `M ${startX} ${startY} L ${endX} ${endY}`
+  }
+
+  const sourceBelow = s.top > t.top
+  const startX = s.left + s.width / 2 - containerRect.left
+  const startY = (sourceBelow ? s.top : s.bottom) - containerRect.top
+  const endX = t.left + t.width / 2 - containerRect.left
+  const endY = (sourceBelow ? t.bottom : t.top) - containerRect.top
+  return `M ${startX} ${startY} L ${endX} ${endY}`
+}
+
+//------------------------------------------------------------------------------------------------
+//  FlowDiagram — renders a legacy (non-grid) ```flow block as a bordered diagram panel. Main-chain
+//  nodes/arrows run in a vertical column; `side-node` steps render in a left column instead;
+//  `edge` steps (plus the existing per-node `loopTo` and per-arrow `to`) each draw a curved SVG
+//  line between two named boxes, measured from actual rendered positions. `double`-style edges
+//  get an arrowhead at both ends.
 //------------------------------------------------------------------------------------------------
 function FlowDiagram({ steps }: { steps: FlowStep[] }) {
   const markerId = useId()
@@ -85,70 +149,6 @@ function FlowDiagram({ steps }: { steps: FlowStep[] }) {
   const edges = steps.filter((s): s is Extract<FlowStep, { type: 'edge' }> => s.type === 'edge')
 
   useEffect(() => {
-    //
-    //  Straight line between two boxes. Default: whichever pair of edges face
-    //  each other on whichever axis separates the boxes more (left/right if
-    //  mostly side-by-side, top/bottom if mostly stacked) — used for the
-    //  tpl_players/chess.com API loop-back and any other unclassified edge.
-    //  `forceVertical` always connects top/bottom — a top-row data source's
-    //  edge down into the process below it. `forceHorizontal` always connects
-    //  via each box's vertical-middle side edge — a process's own output edge
-    //  to its paired table, which sits directly beside it. `forceTopEnd`
-    //  always ends at the target's top-center (source's bottom-center) — a
-    //  table's edge into the next process, "dropping into" its top.
-    //
-    //
-    //  `endXFraction` (default 0.5, i.e. center) lets multiple forceVertical
-    //  edges into the same target land at different points along its top edge
-    //  instead of converging on one spot — e.g. two inputs at 1/3 and 2/3.
-    //
-    function buildCurve(
-      sourceEl: HTMLDivElement,
-      targetEl: HTMLDivElement,
-      containerRect: DOMRect,
-      forceVertical = false,
-      forceHorizontal = false,
-      forceTopEnd = false,
-      endXFraction = 0.5
-    ): string {
-      const s = sourceEl.getBoundingClientRect()
-      const t = targetEl.getBoundingClientRect()
-      const dx = (t.left + t.width / 2) - (s.left + s.width / 2)
-      const dy = (t.top + t.height / 2) - (s.top + s.height / 2)
-
-      if (forceTopEnd) {
-        const startX = s.left + s.width / 2 - containerRect.left
-        const startY = s.bottom - containerRect.top
-        const endX = t.left + t.width / 2 - containerRect.left
-        const endY = t.top - containerRect.top
-        return `M ${startX} ${startY} L ${endX} ${endY}`
-      }
-
-      if (forceHorizontal || (!forceVertical && Math.abs(dx) > Math.abs(dy))) {
-        const targetIsRight = dx > 0
-        const startX = (targetIsRight ? s.right : s.left) - containerRect.left
-        const startY = s.top + s.height / 2 - containerRect.top
-        const endX = (targetIsRight ? t.left : t.right) - containerRect.left
-        const endY = t.top + t.height / 2 - containerRect.top
-        return `M ${startX} ${startY} L ${endX} ${endY}`
-      }
-
-      if (forceVertical) {
-        const startX = s.left + s.width / 2 - containerRect.left
-        const startY = s.bottom - containerRect.top
-        const endX = t.left + t.width * endXFraction - containerRect.left
-        const endY = t.top - containerRect.top
-        return `M ${startX} ${startY} L ${endX} ${endY}`
-      }
-
-      const sourceBelow = s.top > t.top
-      const startX = s.left + s.width / 2 - containerRect.left
-      const startY = (sourceBelow ? s.top : s.bottom) - containerRect.top
-      const endX = t.left + t.width / 2 - containerRect.left
-      const endY = (sourceBelow ? t.bottom : t.top) - containerRect.top
-      return `M ${startX} ${startY} L ${endX} ${endY}`
-    }
-
     function computeCurves(): void {
       const container = containerRef.current
       if (!container) return
@@ -380,6 +380,118 @@ function FlowDiagram({ steps }: { steps: FlowStep[] }) {
 }
 
 //------------------------------------------------------------------------------------------------
+//  GridFlowDiagram — renders a grid-mode ```flow block (a leading bare `grid` line) as a bordered
+//  diagram panel using real CSS Grid: `gridTemplateColumns` fixed to the same width as a legacy
+//  box (`BOX_WIDTH`/11rem) per column, `gridRow`/`gridColumn` set 1-indexed directly from the
+//  parsed node coordinates. Grid dimensions are inferred from the max row/col seen. `edge` steps
+//  draw a curved SVG line between two named boxes via the shared `buildCurve`, using its default
+//  (unforced) branch only — grid mode has no side-node/process relationships to force a
+//  particular edge side.
+//------------------------------------------------------------------------------------------------
+function GridFlowDiagram({
+  gridNodes,
+  edges
+}: {
+  gridNodes: Extract<FlowStep, { type: 'grid-node' }>[]
+  edges: Extract<FlowStep, { type: 'edge' }>[]
+}) {
+  const markerId = useId()
+  const markerStartId = useId()
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [curves, setCurves] = useState<FlowCurve[]>([])
+
+  const rows = gridNodes.reduce((max, n) => Math.max(max, n.row), 0)
+  const cols = gridNodes.reduce((max, n) => Math.max(max, n.col), 0)
+
+  useEffect(() => {
+    function computeCurves(): void {
+      const container = containerRef.current
+      if (!container) return
+      const containerRect = container.getBoundingClientRect()
+      const nextCurves: FlowCurve[] = []
+
+      edges.forEach((edge, i) => {
+        const sourceEl = nodeRefs.current[edge.from]
+        const targetEl = nodeRefs.current[edge.to]
+        if (!sourceEl || !targetEl) return
+        nextCurves.push({
+          key: `grid-edge-${i}`,
+          d: buildCurve(sourceEl, targetEl, containerRect),
+          double: edge.style === 'double'
+        })
+      })
+
+      setCurves(nextCurves)
+    }
+
+    computeCurves()
+    window.addEventListener('resize', computeCurves)
+    return () => window.removeEventListener('resize', computeCurves)
+  }, [gridNodes, edges])
+
+  const cells = gridNodes.map((step, i) => {
+    const stepKey = `gn${i}`
+    const boxStyle = step.process ? PROCESS_BOX_STYLE : TABLE_BOX_STYLE
+    return (
+      <div
+        key={stepKey}
+        ref={el => { if (step.id) nodeRefs.current[step.id] = el }}
+        style={{ gridRow: step.row, gridColumn: step.col }}
+        className={`rounded-md border px-4 py-2 text-sm font-medium shadow-sm text-center ${boxStyle}`}
+      >
+        {renderInline(step.content, stepKey, true)}
+      </div>
+    )
+  })
+
+  return (
+    <div
+      ref={containerRef}
+      className='relative flex flex-col gap-4 my-6 py-5 px-4 border border-gray-200 rounded-lg bg-gray-50'
+    >
+      <svg className='absolute inset-0 w-full h-full pointer-events-none overflow-visible'>
+        <defs>
+          <marker id={markerId} markerWidth='8' markerHeight='8' refX='6' refY='4' orient='auto'>
+            <path d='M0,0 L8,4 L0,8 Z' fill='#000000' />
+          </marker>
+          <marker id={markerStartId} markerWidth='8' markerHeight='8' refX='6' refY='4' orient='auto-start-reverse'>
+            <path d='M0,0 L8,4 L0,8 Z' fill='#000000' />
+          </marker>
+        </defs>
+        {curves.map(curve => (
+          <path
+            key={curve.key}
+            d={curve.d}
+            fill='none'
+            stroke='#000000'
+            strokeWidth='1.5'
+            markerEnd={`url(#${markerId})`}
+            markerStart={curve.double ? `url(#${markerStartId})` : undefined}
+          />
+        ))}
+      </svg>
+      <div className='flex flex-row items-center gap-4 text-xs text-gray-600'>
+        <span className='flex items-center gap-1.5'>
+          <span className={`inline-block w-3 h-3 rounded-sm border ${TABLE_BOX_STYLE}`} />
+          Table
+        </span>
+        <span className='flex items-center gap-1.5'>
+          <span className={`inline-block w-3 h-3 rounded-sm border ${PROCESS_BOX_STYLE}`} />
+          Process
+        </span>
+      </div>
+      <div
+        className='grid gap-6'
+        style={{ gridTemplateColumns: `repeat(${cols}, 11rem)`, gridTemplateRows: `repeat(${rows}, auto)` }}
+      >
+        {cells}
+      </div>
+    </div>
+  )
+}
+
+//------------------------------------------------------------------------------------------------
 //  renderBlock — renders one leaf markdown-lite block (paragraph/list/hr/codeblock/flow);
 //  headings are handled separately by SectionContent, not passed through here
 //------------------------------------------------------------------------------------------------
@@ -403,6 +515,12 @@ function renderBlock(block: LeafBlockNode, key: string) {
   }
 
   if (block.kind === 'flow') {
+    const isGrid = block.steps.some(s => s.type === 'grid-node')
+    if (isGrid) {
+      const gridNodes = block.steps.filter((s): s is Extract<FlowStep, { type: 'grid-node' }> => s.type === 'grid-node')
+      const edges = block.steps.filter((s): s is Extract<FlowStep, { type: 'edge' }> => s.type === 'edge')
+      return <GridFlowDiagram key={key} gridNodes={gridNodes} edges={edges} />
+    }
     return <FlowDiagram key={key} steps={block.steps} />
   }
 
