@@ -10,11 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang='en' suppressHydrationWarning>
       <body>
-        <DevLayoutHeader
-          extraLinks={[
-            { href: '/owner/components', label: 'Components' }
-          ]}
-        />
+        <DevLayoutHeader />
         {children}
       </body>
     </html>
