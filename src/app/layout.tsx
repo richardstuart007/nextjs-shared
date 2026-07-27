@@ -12,8 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <DevLayoutHeader
           extraLinks={[
-            { href: '/owner/components', label: 'Components' },
-            { href: '/owner/dataflow', label: 'Dataflow' }
+            { href: '/owner/components', label: 'Components' }
           ]}
         />
         {children}

@@ -644,55 +644,6 @@ not a fixed pixel width.
 Note: `MyHelpField` (hover-triggered tooltip, not a click-to-open popover) intentionally has
 neither of these — it already dismisses on mouse-leave and has no click-open state to close.
 
-### MarkdownLiteView / parseMarkdownLite
-
-A pair for rendering a hand-written architecture/dataflow doc as a tabbed page with data-flow
-diagrams — originally built for chess's `/owner/dataflow`, extracted here since the parser and
-renderer are fully generic (no project-specific logic; only the markdown *content* is
-project-specific). Not a general CommonMark parser — covers exactly headings, paragraphs,
-ordered/unordered lists, horizontal rules, fenced code blocks, inline bold/italic/code/links, and
-a bespoke `` ```flow `` fenced-block syntax for diagrams.
-
-**Usage** (typically a project's own `src/app/owner/dataflow/page.tsx`):
-```tsx
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
-import { parseMarkdownLite, buildSectionTree } from 'nextjs-shared/parseMarkdownLite'
-import MarkdownLiteView from 'nextjs-shared/MarkdownLiteView'
-
-export default async function DataflowPage() {
-  const filePath = path.join(process.cwd(), 'docs', 'Dataflow.md')
-  const markdown = await readFile(filePath, 'utf-8')
-  const tree = buildSectionTree(parseMarkdownLite(markdown))
-  return <MarkdownLiteView tree={tree} />
-}
-```
-`MarkdownLiteView` takes one prop, `tree: SectionTree`. Every subsection of the doc's root heading
-becomes a tab (rendered with `MyTab`); an internal `#id` link switches to whichever tab holds that
-id and scrolls to it.
-
-**The `` ```flow `` diagram syntax** — each non-blank line inside a fenced `` ```flow `` block is one of:
-- **An arrow**: starts with `↓` (forward) or `↑` (loops back up); the rest of the line is its label.
-  Suffix `{to:some-id}` to draw a curve from this arrow back to an earlier node.
-- **A side node**: `side <text>` — placed in a left column outside the main vertical chain.
-  Optional suffixes: `{#some-id}` (so edges/loops can target it), `{top}` (top row instead of the
-  stacked column), `{pair}` (joins the row of the side node immediately before it instead of
-  starting a new row), `{table}` (styles it like a main-chain table/blue instead of process/amber).
-- **An edge**: `edge <fromId> <-> <toId>` (double-arrowhead) or `edge <fromId> -> <toId>`
-  (single) — a declared connection between any two node ids, drawn as its own curve.
-- **A node** (anything else, i.e. the main vertical chain): optional `{#some-id}`, `{loop:some-id}`
-  (draws a curve from this node back to that target), `{bottom}` (pulled out into its own row at
-  the bottom instead of the vertical chain), `{process}` (styled like a process/amber instead of
-  the main chain's default table/blue).
-
-Inline markdown works inside any node/label text: `**bold**`, `*italic*`, `` `code` ``,
-`[text](href)`. A heading can also carry `{#some-id}` to set its anchor id explicitly instead of
-the auto-slugified default.
-
-Exported from `nextjs-shared/parseMarkdownLite`: types `InlineNode`, `FlowStep`, `BlockNode`,
-`LeafBlockNode`, `Section`, `SectionTree`; functions `plainText`, `parseMarkdownLite`,
-`buildSectionTree`.
-
 ### Tailwind v4 — required @source directive
 
 **Every consuming project's `globals.css` must include an `@source` directive pointing at
@@ -830,15 +781,15 @@ projects' configs don't.
 
 **`extraLinks`**: defaults to none, so a consuming project gets just the bare "Owner" link. Pass
 your own project-specific `/owner/*` sub-routes here (nextjs-shared's own `layout.tsx` passes
-`[{ href: '/owner/components', label: 'Components' }, { href: '/owner/dataflow', label: 'Dataflow' }]`
-as an example) rather than hardcoding pages that don't exist in every project.
+`[{ href: '/owner/components', label: 'Components' }]` as an example) rather than hardcoding pages
+that don't exist in every project.
 
 ```tsx
 import { DevLayoutHeader } from 'nextjs-shared/DevLayoutHeader'
 
 <DevLayoutHeader
   dbLocation={process.env.POSTGRES_DATABASE_LOCATION}
-  extraLinks={[{ href: '/owner/dataflow', label: 'Dataflow' }]}
+  extraLinks={[{ href: '/owner/components', label: 'Components' }]}
 />
 ```
 
