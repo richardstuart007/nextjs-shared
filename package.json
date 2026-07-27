@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.45",
+  "version": "2.1.47",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, chess utilities, and schema tools",
   "private": true,
   "scripts": {
@@ -13,6 +13,7 @@
     "@neondatabase/serverless": "1.1.0",
     "clsx": "2.1.1",
     "csv-parser": "3.2.1",
+    "nuqs": "2.9.2",
     "pg": "8.21.0"
   },
   "devDependencies": {
@@ -39,6 +40,7 @@
     "./MyBox": "./src/components/MyBox.tsx",
     "./MyBackHomeNav": "./src/components/MyBackHomeNav.tsx",
     "./useBackNav": "./src/components/useBackNav.ts",
+    "./useTabQueryState": "./src/components/useTabQueryState.ts",
     "./MyButton": "./src/components/MyButton.tsx",
     "./MyCheckbox": "./src/components/MyCheckbox.tsx",
     "./MyConfirmDialog": "./src/components/MyConfirmDialog.tsx",

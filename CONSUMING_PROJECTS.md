@@ -299,6 +299,7 @@ All are React client components. Import individually.
 |---|---|
 | `nextjs-shared/MyBackHomeNav` | Home link, plus a Back link when `backPath` differs from `homePath` — see usage below |
 | `nextjs-shared/useBackNav` | `saveBackNav`/`useBackNav` pair for remembering the exact path (incl. query string) to return to after navigating into a detail page — see usage below |
+| `nextjs-shared/useTabQueryState` | Syncs a tabbed component's active tab to a URL query param (built on `nuqs`) — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
@@ -334,7 +335,10 @@ Props: `backPath?: string | null`, `backLabel?: string`, `homePath?: string` (de
 `containerClass?: string`, `linkClass?: string`. The Back link's text is `backLabel` if supplied,
 otherwise the generic `Back` — the raw `backPath` is never shown as text, since it can contain
 query strings that shouldn't be exposed in the UI. Pass `backLabel` to show something more
-specific (e.g. `backLabel='Position'`). This is the same component `OwnerLayout` uses internally
+specific (e.g. `backLabel='Position'`). The Back link renders whenever `backPath` differs from
+`homePath` at all — including when only the query string differs (e.g. `backPath='/?tab=rankings'`
+vs. `homePath='/'`), which is what makes it possible to show a distinct "Back to [tab]" link for a
+tabbed page living at a single route (see `useTabQueryState` below). This is the same component `OwnerLayout` uses internally
 for its own sessionStorage-driven back link — on `/owner` routes, `OwnerLayout` already supplies
 `backPath` automatically, so pages under `/owner` should **not** also render their own
 `MyBackHomeNav`. Everywhere else, pass a static `backPath` to replace a hardcoded back button.
@@ -374,6 +378,68 @@ project's own state, restored however suits that page's own shape (see `PlayerPa
 next-bridge for an existing hand-rolled example of that pattern). Note: pages under `/owner`
 should **not** use this — `OwnerLayout` already supplies its own back link automatically for that
 tree (see the `MyBackHomeNav` note above).
+
+### useTabQueryState — syncing a tabbed component's active tab to the URL
+
+For a page whose in-page tabs are switched via local component state (so the URL never changes,
+e.g. always `/`), `useBackNav` alone can't restore the right tab — there's no query string for it
+to capture. `useTabQueryState` puts the active tab into the URL (e.g. `?tab=rankings`) so it
+round-trips through reload, back/forward, and `saveBackNav`/`useBackNav` with no extra bookkeeping.
+Built on [`nuqs`](https://nuqs.dev), which handles the shallow update (no full navigation or scroll
+jump), history mode, and encoding.
+
+**One-time setup required per project** — wrap the root layout in `NuqsAdapter` (from `nuqs`
+itself, not `nextjs-shared` — this is nuqs's own required App Router adapter):
+
+```tsx
+// src/app/layout.tsx
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang='en'>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}
+```
+
+Usage — replace a local `useState` for the active tab with the hook, same shape, driving `MyTab`:
+
+```tsx
+import { useTabQueryState } from 'nextjs-shared/useTabQueryState'
+import { MyTab } from 'nextjs-shared/MyTab'
+
+export default function HomePageClient() {
+  const [tab, setTab] = useTabQueryState('tab', 'players')
+
+  return (
+    <>
+      <div className='flex gap-2'>
+        <MyTab active={tab === 'players'} onClick={() => setTab('players')}>Players</MyTab>
+        <MyTab active={tab === 'sessions'} onClick={() => setTab('sessions')}>Sessions</MyTab>
+        <MyTab active={tab === 'rankings'} onClick={() => setTab('rankings')}>Rankings</MyTab>
+      </div>
+      {tab === 'players' && <PlayersTab />}
+      {tab === 'sessions' && <SessionsTab />}
+      {tab === 'rankings' && <RankingsTab />}
+    </>
+  )
+}
+```
+
+With the URL now carrying `?tab=rankings`, a row click that calls `saveBackNav(key)` before
+navigating to a detail page captures the active tab automatically (`saveBackNav` stores
+`window.location.pathname + window.location.search`), and `MyBackHomeNav` shows a distinct
+"← Back" link back to that exact tab — see the `MyBackHomeNav` note above on why a same-pathname,
+different-query `backPath` now renders the Back link instead of being suppressed.
+
+`useTabQueryState(paramName, defaultValue)` returns nuqs's own `[value, setValue]` tuple —
+`paramName` is the query key (e.g. `'tab'`), `defaultValue` is used when the param is absent and is
+omitted from the URL when the tab is set back to it (`nuqs`'s `clearOnDefault`, on by default,
+keeps URLs clean). `setValue` accepts a new string or an updater function, same as `useState`.
 
 ### Project-wide defaults (`defaultClass` pattern)
 
