@@ -1,12 +1,39 @@
 'use client'
 
-import { Fragment, Suspense, useState } from 'react'
+import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
 import { MyTab } from '../components/MyTab'
 
 type TabConfig = { label: string; content: React.ReactNode }
 
-export default function OwnerPage({ tabs }: { tabs: TabConfig[] }) {
+export default function OwnerPage({ tabs, persistKey }: { tabs: TabConfig[]; persistKey?: string }) {
   const [activeTab, setActiveTab] = useState(tabs[0].label)
+  const restoredRef = useRef(false)
+
+  //
+  //  Restore persisted active tab on mount, if persistKey provided
+  //
+  useEffect(() => {
+    if (!persistKey) return
+    const stored = sessionStorage.getItem(persistKey)
+    if (stored && tabs.some(t => t.label === stored)) setActiveTab(stored)
+  }, [persistKey])
+
+  //
+  //  Persist active tab on change (guarded until after restore, so the initial
+  //  render's default tab doesn't clobber a previously-saved value)
+  //
+  useEffect(() => {
+    if (!persistKey || !restoredRef.current) return
+    sessionStorage.setItem(persistKey, activeTab)
+  }, [persistKey, activeTab])
+
+  //
+  //  Mark restoration complete (declared after the save effect so the save
+  //  is blocked on first render)
+  //
+  useEffect(() => {
+    restoredRef.current = true
+  }, [persistKey])
 
   return (
     <>

@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.43",
+  "version": "2.1.45",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, chess utilities, and schema tools",
   "private": true,
   "scripts": {
@@ -38,6 +38,7 @@
   "exports": {
     "./MyBox": "./src/components/MyBox.tsx",
     "./MyBackHomeNav": "./src/components/MyBackHomeNav.tsx",
+    "./useBackNav": "./src/components/useBackNav.ts",
     "./MyButton": "./src/components/MyButton.tsx",
     "./MyCheckbox": "./src/components/MyCheckbox.tsx",
     "./MyConfirmDialog": "./src/components/MyConfirmDialog.tsx",

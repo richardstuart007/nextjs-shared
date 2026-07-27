@@ -298,6 +298,7 @@ All are React client components. Import individually.
 | Import | Description |
 |---|---|
 | `nextjs-shared/MyBackHomeNav` | Home link, plus a Back link when `backPath` differs from `homePath` — see usage below |
+| `nextjs-shared/useBackNav` | `saveBackNav`/`useBackNav` pair for remembering the exact path (incl. query string) to return to after navigating into a detail page — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
@@ -337,6 +338,42 @@ specific (e.g. `backLabel='Position'`). This is the same component `OwnerLayout`
 for its own sessionStorage-driven back link — on `/owner` routes, `OwnerLayout` already supplies
 `backPath` automatically, so pages under `/owner` should **not** also render their own
 `MyBackHomeNav`. Everywhere else, pass a static `backPath` to replace a hardcoded back button.
+
+### useBackNav — remembering the exact path to return to
+
+For a list page that navigates into a detail page (e.g. clicking a table row) and needs its Back
+link to return to the exact originating path — including query string, not just a fixed route —
+call `saveBackNav(key)` at the click site before navigating, then `useBackNav(key)` on mount of
+the detail page to read (and clear) it:
+
+```tsx
+// List page — before navigating away
+import { saveBackNav } from 'nextjs-shared/useBackNav'
+
+function openRow(id: number) {
+  saveBackNav('my-list-backnav')
+  router.push(`/detail/${id}`)
+}
+```
+
+```tsx
+// Detail page
+import { useBackNav } from 'nextjs-shared/useBackNav'
+import { MyBackHomeNav } from 'nextjs-shared/MyBackHomeNav'
+
+export default function DetailPage() {
+  const backPath = useBackNav('my-list-backnav')
+  return <MyBackHomeNav backPath={backPath} />
+}
+```
+
+`key` must be unique per call site — e.g. include the source page's identity if more than one
+list page can navigate into the same detail route. This only tracks the return *path*; it does not
+persist page content (filters, pagination, selected/highlighted row) — that remains the consuming
+project's own state, restored however suits that page's own shape (see `PlayerPageClient` in
+next-bridge for an existing hand-rolled example of that pattern). Note: pages under `/owner`
+should **not** use this — `OwnerLayout` already supplies its own back link automatically for that
+tree (see the `MyBackHomeNav` note above).
 
 ### Project-wide defaults (`defaultClass` pattern)
 
@@ -722,6 +759,22 @@ export default function Page() {
   )
 }
 ```
+
+### Persisting the active tab across navigation (`persistKey`)
+
+By default `OwnerPage`'s active tab is plain component state — it resets to the first tab if the
+user navigates away (e.g. clicking into a detail page) and comes back. Pass `persistKey` (any
+string, unique per `OwnerPage` instance) to have `OwnerPage` remember the active tab in
+`sessionStorage` and restore it on the next mount:
+
+```tsx
+<OwnerPage persistKey='owner-main' tabs={[...]} />
+```
+
+This only covers `OwnerPage`'s own tab state. Filters, pagination, and which row was last
+selected/highlighted are not covered — that's page content, owned by the consuming project's own
+state, the same as it always has been (see `useBackNav` below for the one piece — the return
+path — that nextjs-shared does provide for that scenario).
 
 ### Projects with additional tabs (e.g. Tools)
 

@@ -253,3 +253,12 @@ Re-verified against actual file contents as of this entry, not just the original
   and location), already had it too. richard-dashboard: was missing it entirely (root cause of a
   `MyPopup` rendering unstyled), now fixed by the user. No further action needed unless a new
   consuming project is added later.
+- **`useBackNav` adoption** — not started. `nextjs-shared` now exports `saveBackNav`/`useBackNav`
+  (`src/components/useBackNav.ts`) for remembering the exact path+query to return to after
+  navigating into a detail page, and `OwnerPage` now accepts an optional `persistKey` prop to
+  persist its own active tab across navigation (see `CONSUMING_PROJECTS.md`). Verified working via
+  a live demo in this project's own `/owner` dev app (the "Back Nav Demo" tab + `/backnav-test/[id]`
+  route). Not yet rolled out anywhere else — next-bridge's `PlayerPageClient.tsx` has a hand-rolled
+  equivalent (`NB_BACK_FROM_KEY`) that's the obvious first candidate to refactor onto the shared
+  hook, and any other project's list/detail pages wanting back-path restoration are candidates too.
+  This needs a Claude Code session opened in each consuming project — project isolation.
