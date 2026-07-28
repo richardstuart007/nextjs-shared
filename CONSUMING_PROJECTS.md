@@ -379,6 +379,19 @@ next-bridge for an existing hand-rolled example of that pattern). Note: pages un
 should **not** use this — `OwnerLayout` already supplies its own back link automatically for that
 tree (see the `MyBackHomeNav` note above).
 
+`saveBackNav(key, path?)` accepts an optional second argument. Omitted, it snapshots the current
+`window.location.pathname + window.location.search`, as above. Pass `path` explicitly when a
+caller already holds the exact back-target as a value rather than reading it from the current URL
+— e.g. a detail page that itself received a `backPath` prop and needs to forward that same
+original target through a further chained navigation, instead of accidentally capturing its own
+current URL:
+
+```tsx
+// Chained navigation — forward the original backPath instead of the current URL
+saveBackNav('my-list-backnav', backPath)
+router.push(`/detail/${nextId}`)
+```
+
 ### useTabQueryState — syncing a tabbed component's active tab to the URL
 
 For a page whose in-page tabs are switched via local component state (so the URL never changes,
@@ -405,6 +418,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   )
 }
 ```
+
+**Suspense boundary required** — since the hook calls Next.js's `useSearchParams()` internally
+(via `nuqs`), any component using it must be wrapped in `<Suspense>` at the page level, or the
+build fails on any route that isn't already dynamic:
+
+```
+useSearchParams() should be wrapped in a suspense boundary at page "/"
+Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+```
+
+Fix — wrap the calling component in `<Suspense>` in the page file:
+
+```tsx
+// src/app/page.tsx
+import { Suspense } from 'react'
+import HomePageClient from '@/src/ui/home/HomePageClient'
+
+export default function HomePage() {
+  return (
+    <Suspense>
+      <HomePageClient />
+    </Suspense>
+  )
+}
+```
+
+This isn't specific to `useTabQueryState` — it applies to any component using
+`useSearchParams()` (directly or via a hook built on it) on a route that isn't already dynamic.
 
 Usage — replace a local `useState` for the active tab with the hook, same shape, driving `MyTab`:
 
