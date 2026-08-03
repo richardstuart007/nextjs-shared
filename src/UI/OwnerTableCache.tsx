@@ -11,6 +11,7 @@ import type { CacheEntryInfo } from '../tables/cache/userCache_store'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
 import MyPopup from '../components/MyPopup'
+import { OwnerTableCache_tablesBadgeVisibleCount } from '../constants'
 
 type PopupState = { entry: CacheEntryInfo; data: any } | null
 
@@ -200,7 +201,7 @@ export default function OwnerTableCache() {
 
 function TablesBadge({ tables }: { tables: string[] }) {
   if (tables.length === 0) return <span className='text-gray-400'>—</span>
-  const visible = tables.slice(0, 3)
+  const visible = tables.slice(0, OwnerTableCache_tablesBadgeVisibleCount)
   const extra = tables.length - visible.length
   return (
     <>

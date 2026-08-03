@@ -2,8 +2,18 @@
 
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { myMergeClasses } from './MyMergeClasses'
-
-export const MyPagination_dftClass_Shared = 'inline-flex'
+import {
+  MyPagination_dftClass,
+  MyPagination_numbersContainerClass,
+  MyPagination_ellipsisClass,
+  MyPagination_numberClass,
+  MyPagination_numberActiveClass,
+  MyPagination_numberInactiveClass,
+  MyPagination_arrowClass,
+  MyPagination_arrowDisabledClass,
+  MyPagination_arrowEnabledClass,
+  MyPagination_arrowIconClass
+} from '../constants'
 
 type PaginationProps = {
   totalPages: number
@@ -11,14 +21,32 @@ type PaginationProps = {
   setStateCurrentPage: (value: number) => void
   defaultClass?: string
   overrideClass?: string
+  numbersContainerClass?: string
+  ellipsisClass?: string
+  numberClass?: string
+  numberActiveClass?: string
+  numberInactiveClass?: string
+  arrowClass?: string
+  arrowDisabledClass?: string
+  arrowEnabledClass?: string
+  arrowIconClass?: string
 }
 
 export default function MyPagination({
   totalPages,
   statecurrentPage,
   setStateCurrentPage,
-  defaultClass = MyPagination_dftClass_Shared,
-  overrideClass = ''
+  defaultClass = MyPagination_dftClass,
+  overrideClass = '',
+  numbersContainerClass = MyPagination_numbersContainerClass,
+  ellipsisClass = MyPagination_ellipsisClass,
+  numberClass = MyPagination_numberClass,
+  numberActiveClass = MyPagination_numberActiveClass,
+  numberInactiveClass = MyPagination_numberInactiveClass,
+  arrowClass = MyPagination_arrowClass,
+  arrowDisabledClass = MyPagination_arrowDisabledClass,
+  arrowEnabledClass = MyPagination_arrowEnabledClass,
+  arrowIconClass = MyPagination_arrowIconClass
 }: PaginationProps) {
   const allPages = generatePagination(statecurrentPage, totalPages)
   const className = myMergeClasses(defaultClass, overrideClass)
@@ -35,11 +63,15 @@ export default function MyPagination({
         direction='left'
         isDisabled={statecurrentPage <= 1}
         onClick={() => setStateCurrentPage(statecurrentPage - 1)}
+        arrowClass={arrowClass}
+        arrowDisabledClass={arrowDisabledClass}
+        arrowEnabledClass={arrowEnabledClass}
+        arrowIconClass={arrowIconClass}
       />
       {/* --------------------------------------------------------------------- */}
       {/* Page Numbers                                                         */}
       {/* --------------------------------------------------------------------- */}
-      <div className='flex -space-x-px'>
+      <div className={numbersContainerClass}>
         {allPages.map((pageItem, index) => {
           const position =
             index === 0 ? 'first' : index === allPages.length - 1 ? 'last' : undefined
@@ -47,10 +79,7 @@ export default function MyPagination({
           // Handle '...' separately to render non-clickable placeholders
           if (pageItem === '...') {
             return (
-              <div
-                key={`ellipsis-${index}`}
-                className='flex h-5 md:h-6 w-5 md:w-6 items-center justify-center text-xxs md:text-xs text-gray-300'
-              >
+              <div key={`ellipsis-${index}`} className={ellipsisClass}>
                 ...
               </div>
             )
@@ -63,6 +92,9 @@ export default function MyPagination({
               position={position}
               isActive={statecurrentPage === pageItem}
               setStateCurrentPage={setStateCurrentPage}
+              numberClass={numberClass}
+              numberActiveClass={numberActiveClass}
+              numberInactiveClass={numberInactiveClass}
             />
           )
         })}
@@ -74,6 +106,10 @@ export default function MyPagination({
         direction='right'
         isDisabled={statecurrentPage >= totalPages}
         onClick={() => setStateCurrentPage(statecurrentPage + 1)}
+        arrowClass={arrowClass}
+        arrowDisabledClass={arrowDisabledClass}
+        arrowEnabledClass={arrowEnabledClass}
+        arrowIconClass={arrowIconClass}
       />
     </div>
   )
@@ -86,21 +122,25 @@ function PaginationNumber({
   page,
   isActive,
   position,
-  setStateCurrentPage
+  setStateCurrentPage,
+  numberClass,
+  numberActiveClass,
+  numberInactiveClass
 }: {
   page: number | string
   position?: 'first' | 'last' | 'single'
   isActive: boolean
   setStateCurrentPage: (value: number) => void
+  numberClass: string
+  numberActiveClass: string
+  numberInactiveClass: string
 }) {
   const className = [
-    'flex items-center justify-center border',
-    'text-xxs md:text-xs',
-    'h-5 md:h-6 w-5 md:w-6',
+    numberClass,
     position === 'first' || position === 'single' ? 'rounded-l-md' : '',
     position === 'last' || position === 'single' ? 'rounded-r-md' : '',
-    isActive ? 'z-10 bg-blue-600 border-blue-600 text-white' : '',
-    !isActive ? 'hover:bg-gray-100 cursor-pointer' : ''
+    isActive ? numberActiveClass : '',
+    !isActive ? numberInactiveClass : ''
   ].join(' ')
 
   const handleClick = () => {
@@ -122,23 +162,30 @@ function PaginationNumber({
 function PaginationArrow({
   direction,
   isDisabled,
-  onClick
+  onClick,
+  arrowClass,
+  arrowDisabledClass,
+  arrowEnabledClass,
+  arrowIconClass
 }: {
   direction: 'left' | 'right'
   isDisabled?: boolean
   onClick: () => void
+  arrowClass: string
+  arrowDisabledClass: string
+  arrowEnabledClass: string
+  arrowIconClass: string
 }) {
   const className = [
-    'flex items-center justify-center rounded-md border',
-    isDisabled ? 'pointer-events-none text-gray-300' : '',
-    !isDisabled ? 'hover:bg-gray-100 cursor-pointer' : '',
+    arrowClass,
+    isDisabled ? arrowDisabledClass : '',
+    !isDisabled ? arrowEnabledClass : '',
     direction === 'left' ? 'mr-2 md:mr-4' : '',
-    direction === 'right' ? 'ml-2 md:ml-4' : '',
-    'w-4 h-4 md:w-6 md:h-6'
+    direction === 'right' ? 'ml-2 md:ml-4' : ''
   ].join(' ')
 
   const icon =
-    direction === 'left' ? <ArrowLeftIcon className='w-4' /> : <ArrowRightIcon className='w-4' />
+    direction === 'left' ? <ArrowLeftIcon className={arrowIconClass} /> : <ArrowRightIcon className={arrowIconClass} />
 
   return (
     <div className={className} onClick={onClick}>

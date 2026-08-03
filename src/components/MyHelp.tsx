@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { MyHelp_buttonDftClass, MyHelp_panelDftClass, MyHelp_closeButtonDftClass } from '../constants'
 
 export type HelpItem = { heading: string; body: string }
 
@@ -14,10 +15,6 @@ type Props = {
   closeButtonClass?: string
 }
 
-export const MyHelp_buttonDftClass_Shared = 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none'
-export const MyHelp_panelDftClass_Shared  = 'absolute z-10 mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs space-y-2 max-w-md shadow-md'
-export const MyHelp_closeButtonDftClass_Shared = 'ml-4 text-gray-400 hover:text-gray-700 text-base leading-none font-bold'
-
 //----------------------------------------------------------------------------------------------
 //  MyHelp — toggleable help popover with optional title, plain text, or structured items
 //----------------------------------------------------------------------------------------------
@@ -26,9 +23,9 @@ export function MyHelp({
   text,
   title,
   label = '?',
-  buttonClass = MyHelp_buttonDftClass_Shared,
-  panelClass = MyHelp_panelDftClass_Shared,
-  closeButtonClass = MyHelp_closeButtonDftClass_Shared,
+  buttonClass = MyHelp_buttonDftClass,
+  panelClass = MyHelp_panelDftClass,
+  closeButtonClass = MyHelp_closeButtonDftClass,
 }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)

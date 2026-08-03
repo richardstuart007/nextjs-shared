@@ -4,6 +4,12 @@ import { useState, useMemo } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
 import { MyButton } from './MyButton'
+import {
+  MyCheckbox_labelDftClass,
+  MyCheckbox_searchDftClass,
+  MyCheckbox_containerDftClass,
+  MyCheckbox_itemDftClass
+} from '../constants'
 
 //
 //  Define the options
@@ -30,11 +36,6 @@ type CheckBoxProps = {
   sortBy?: 'value' | 'label'
 }
 
-export const MyCheckbox_labelDftClass_Shared     = 'block text-gray-900 mb-1 text-xs w-72'
-export const MyCheckbox_searchDftClass_Shared    = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
-export const MyCheckbox_containerDftClass_Shared = 'border border-blue-500 rounded-md p-2 overflow-y-auto w-72'
-export const MyCheckbox_itemDftClass_Shared      = 'flex items-center space-x-2 py-1'
-
 export default function MyCheckBox({
   selectedOptions = [],
   setSelectedOptions,
@@ -42,10 +43,10 @@ export default function MyCheckBox({
   searchEnabled = false,
   name,
   label,
-  defaultClass_Label = MyCheckbox_labelDftClass_Shared,
-  defaultClass_Search = MyCheckbox_searchDftClass_Shared,
-  defaultClass_Container = MyCheckbox_containerDftClass_Shared,
-  defaultClass_CheckboxItem = MyCheckbox_itemDftClass_Shared,
+  defaultClass_Label = MyCheckbox_labelDftClass,
+  defaultClass_Search = MyCheckbox_searchDftClass,
+  defaultClass_Container = MyCheckbox_containerDftClass,
+  defaultClass_CheckboxItem = MyCheckbox_itemDftClass,
   overrideClass_Label = '',
   overrideClass_Search = '',
   overrideClass_Container = '',

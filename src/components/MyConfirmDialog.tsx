@@ -3,6 +3,14 @@
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid'
 import MyPopup from './MyPopup'
 import { MyButton } from './MyButton'
+import {
+  MyConfirmDialog_iconContainerDftClass,
+  MyConfirmDialog_titleDftClass,
+  MyConfirmDialog_subTitleDftClass,
+  MyConfirmDialog_lineDftClass,
+  MyConfirmDialog_noButtonDftClass,
+  MyConfirmDialog_yesButtonDftClass
+} from '../constants'
 
 export type ConfirmDialogInt = {
   isOpen: boolean
@@ -28,25 +36,18 @@ type Props = {
   yesButtonClass?: string
 }
 
-export const MyConfirmDialog_iconContainerDftClass_Shared = 'bg-red-100 text-red-600 rounded-full p-4 inline-block'
-export const MyConfirmDialog_titleDftClass_Shared         = 'text-lg font-semibold mt-2'
-export const MyConfirmDialog_subTitleDftClass_Shared      = 'text-sm text-red-600'
-export const MyConfirmDialog_lineDftClass_Shared          = 'text-sm text-green-600'
-export const MyConfirmDialog_noButtonDftClass_Shared      = 'bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none'
-export const MyConfirmDialog_yesButtonDftClass_Shared     = 'bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 focus:outline-none'
-
 //----------------------------------------------------------------------------------
 //  MyConfirmDialog — modal confirmation dialog with optional detail lines
 //----------------------------------------------------------------------------------
 export function MyConfirmDialog({
   confirmDialog,
   setConfirmDialog,
-  iconContainerClass = MyConfirmDialog_iconContainerDftClass_Shared,
-  titleClass = MyConfirmDialog_titleDftClass_Shared,
-  subTitleClass = MyConfirmDialog_subTitleDftClass_Shared,
-  lineClass = MyConfirmDialog_lineDftClass_Shared,
-  noButtonClass = MyConfirmDialog_noButtonDftClass_Shared,
-  yesButtonClass = MyConfirmDialog_yesButtonDftClass_Shared,
+  iconContainerClass = MyConfirmDialog_iconContainerDftClass,
+  titleClass = MyConfirmDialog_titleDftClass,
+  subTitleClass = MyConfirmDialog_subTitleDftClass,
+  lineClass = MyConfirmDialog_lineDftClass,
+  noButtonClass = MyConfirmDialog_noButtonDftClass,
+  yesButtonClass = MyConfirmDialog_yesButtonDftClass,
 }: Props) {
   //
   //  Ignore the dialog if not open

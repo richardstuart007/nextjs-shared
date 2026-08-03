@@ -1,5 +1,7 @@
 'use client'
 
+import { MyBackHomeNav_containerDftClass, MyBackHomeNav_linkDftClass } from '../constants'
+
 type Props = {
   backPath?: string | null
   backLabel?: string
@@ -8,9 +10,6 @@ type Props = {
   linkClass?: string
 }
 
-export const MyBackHomeNav_containerDftClass_Shared = 'flex gap-3'
-export const MyBackHomeNav_linkDftClass_Shared = 'text-xs text-gray-500 hover:text-gray-700'
-
 //----------------------------------------------------------------------------------
 //  MyBackHomeNav — Home link, plus a Back link when backPath differs from homePath
 //----------------------------------------------------------------------------------
@@ -18,8 +17,8 @@ export function MyBackHomeNav({
   backPath = null,
   backLabel,
   homePath = '/',
-  containerClass = MyBackHomeNav_containerDftClass_Shared,
-  linkClass = MyBackHomeNav_linkDftClass_Shared,
+  containerClass = MyBackHomeNav_containerDftClass,
+  linkClass = MyBackHomeNav_linkDftClass,
 }: Props) {
   return (
     <div className={containerClass}>

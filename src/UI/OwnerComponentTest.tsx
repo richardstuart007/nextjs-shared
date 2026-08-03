@@ -2,33 +2,41 @@
 
 import { useState, useEffect, useRef } from 'react'
 import OwnerPage from './OwnerPage'
-import { MyButton, MyButton_dftClass_Shared } from '../components/MyButton'
+import { MyButton } from '../components/MyButton'
 import { MyInputProject as MyInput } from './components_wrappers/MyInput'
 import { MyInput_dftClass_Project } from './components_wrappers/defaults'
-import { MyTextarea, MyTextarea_dftClass_Shared } from '../components/MyTextarea'
-import MyDropdown, { MyDropdown_dftClass_Shared } from '../components/MyDropdown'
+import { MyTextarea } from '../components/MyTextarea'
+import MyDropdown from '../components/MyDropdown'
 import { myMergeClasses } from '../components/MyMergeClasses'
 import MyCheckBox from '../components/MyCheckbox'
 import { MyConfirmDialog, ConfirmDialogInt } from '../components/MyConfirmDialog'
 import MyPagination from '../components/MyPagination'
-import { MyLink, MyLink_dftClass_Shared } from '../components/MyLink'
-import MySelect, { MySelect_dftClass_Shared } from '../components/MySelect'
-import { MyToggle, MyToggle_dftClass_Shared } from '../components/MyToggle'
+import { MyLink } from '../components/MyLink'
+import MySelect from '../components/MySelect'
+import { MyToggle } from '../components/MyToggle'
 import { MyLoadingMessage } from '../components/MyLoadingMessage'
-import MyPopup, { MyPopup_dftClass_Shared } from '../components/MyPopup'
-import { MyHourGlass, MyHourGlass_dftClass_Shared } from '../components/MyHourGlass'
+import MyPopup from '../components/MyPopup'
+import { MyHourGlass } from '../components/MyHourGlass'
 import { MyHelp } from '../components/MyHelp'
 import { MyHelpField } from '../components/MyHelpField'
 import { MyHelpStep } from '../components/MyHelpStep'
-import {
-  MyTab,
-  MyTab_underlineActiveClass_Shared,
-  MyTab_underlineInactiveClass_Shared,
-  MyTab_pillActiveClass_Shared,
-  MyTab_pillInactiveClass_Shared,
-} from '../components/MyTab'
+import { MyTab } from '../components/MyTab'
 import { MyBoxProject } from './components_wrappers/MyBox'
 import { MyBox_dftClass_Project } from './components_wrappers/defaults'
+import {
+  MyButton_dftClass,
+  MyTextarea_dftClass,
+  MyDropdown_dftClass,
+  MyLink_dftClass,
+  MySelect_dftClass,
+  MyToggle_dftClass,
+  MyPopup_dftClass,
+  MyHourGlass_dftClass,
+  MyTab_underlineActiveClass,
+  MyTab_underlineInactiveClass,
+  MyTab_pillActiveClass,
+  MyTab_pillInactiveClass,
+} from '../constants'
 
 //
 //  Static data for MyDropdown
@@ -217,7 +225,7 @@ function MyButtonTab() {
         <>
           <ReturnRow label='click count' value={String(clickCount)} />
           <ReturnRow label='last clicked' value={lastClicked} />
-          <ReturnRow label='className' value={myMergeClasses(MyButton_dftClass_Shared, applied.overrideClass)} />
+          <ReturnRow label='className' value={myMergeClasses(MyButton_dftClass, applied.overrideClass)} />
           {Object.entries(parseRestProps(applied.restProps)).map(([k, v]) => (
             <ReturnRow key={k} label={k} value={v} />
           ))}
@@ -369,7 +377,7 @@ function MyTextareaTab() {
           <ReturnRow label='value' value={value || '(empty)'} />
           <ReturnRow label='characters' value={String(value.length)} />
           <ReturnRow label='lines' value={String(value.split('\n').length)} />
-          <ReturnRow label='className' value={myMergeClasses(MyTextarea_dftClass_Shared, applied.overrideClass)} />
+          <ReturnRow label='className' value={myMergeClasses(MyTextarea_dftClass, applied.overrideClass)} />
           {Object.entries(parseRestProps(applied.restProps)).map(([k, v]) => (
             <ReturnRow key={k} label={k} value={v} />
           ))}
@@ -502,7 +510,7 @@ function MyDropdownTab() {
         <>
           <ReturnRow label='selectedOption' value={selectedOption !== '' ? String(selectedOption) : '(none)'} />
           <ReturnRow label='type' value={selectedOption !== '' ? typeof selectedOption : '—'} />
-          <ReturnRow label='className' value={myMergeClasses(MyDropdown_dftClass_Shared, applied.overrideClass_Dropdown)} />
+          <ReturnRow label='className' value={myMergeClasses(MyDropdown_dftClass, applied.overrideClass_Dropdown)} />
         </>
       }
     />
@@ -799,7 +807,7 @@ function MyLinkTab() {
     setApplied({ ...draft })
   }
 
-  const computedClass = myMergeClasses(MyLink_dftClass_Shared, applied.overrideClass)
+  const computedClass = myMergeClasses(MyLink_dftClass, applied.overrideClass)
 
   return (
     <ThreeSection
@@ -867,7 +875,7 @@ function MySelectTab() {
   }
 
   const parsedOptions = applied.options.split(',').map(o => o.trim()).filter(Boolean)
-  const computedClass = myMergeClasses(MySelect_dftClass_Shared, applied.overrideClass)
+  const computedClass = myMergeClasses(MySelect_dftClass, applied.overrideClass)
 
   return (
     <ThreeSection
@@ -997,7 +1005,7 @@ function MyToggleTab() {
     setValue(draft.inputValue)
   }
 
-  const computedClass = myMergeClasses(MyToggle_dftClass_Shared, applied.overrideClass)
+  const computedClass = myMergeClasses(MyToggle_dftClass, applied.overrideClass)
 
   return (
     <ThreeSection
@@ -1060,7 +1068,7 @@ function MyPopupTab() {
     setApplied({ ...draft })
   }
 
-  const computedPanelClass = myMergeClasses(MyPopup_dftClass_Shared, applied.overrideClass)
+  const computedPanelClass = myMergeClasses(MyPopup_dftClass, applied.overrideClass)
 
   return (
     <ThreeSection
@@ -1124,7 +1132,7 @@ function MyHourGlassTab() {
     setApplied({ ...draft })
   }
 
-  const computedHourClass = myMergeClasses(MyHourGlass_dftClass_Shared, applied.overrideClass)
+  const computedHourClass = myMergeClasses(MyHourGlass_dftClass, applied.overrideClass)
 
   return (
     <ThreeSection
@@ -1358,8 +1366,8 @@ function MyTabTab() {
   }
 
   const dftClass = applied.variant === 'pill'
-    ? (active ? MyTab_pillActiveClass_Shared : MyTab_pillInactiveClass_Shared)
-    : (active ? MyTab_underlineActiveClass_Shared : MyTab_underlineInactiveClass_Shared)
+    ? (active ? MyTab_pillActiveClass : MyTab_pillInactiveClass)
+    : (active ? MyTab_underlineActiveClass : MyTab_underlineInactiveClass)
   const computedClass = myMergeClasses(dftClass, applied.overrideClass)
 
   return (

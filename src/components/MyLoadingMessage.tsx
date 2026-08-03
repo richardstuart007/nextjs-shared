@@ -1,6 +1,7 @@
 'use client'
 
 import { MyHourGlass } from './MyHourGlass'
+import { MyLoadingMessage_containerDftClass, MyLoadingMessage_messageDftClass } from '../constants'
 
 type Props = {
   message1?: string
@@ -9,17 +10,14 @@ type Props = {
   messageClass?: string
 }
 
-export const MyLoadingMessage_containerDftClass_Shared = 'py-4 md:py-8 text-center'
-export const MyLoadingMessage_messageDftClass_Shared   = 'text-xl font-bold text-red-600'
-
 //----------------------------------------------------------------------------------------------
 //  MyLoadingMessage — hourglass spinner with two optional message lines
 //----------------------------------------------------------------------------------------------
 export function MyLoadingMessage({
   message1 = 'Please wait...',
   message2 = '',
-  containerClass = MyLoadingMessage_containerDftClass_Shared,
-  messageClass = MyLoadingMessage_messageDftClass_Shared,
+  containerClass = MyLoadingMessage_containerDftClass,
+  messageClass = MyLoadingMessage_messageDftClass,
 }: Props) {
   return (
     <div className={containerClass}>

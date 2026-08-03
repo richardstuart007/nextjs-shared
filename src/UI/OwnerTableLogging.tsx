@@ -5,10 +5,15 @@ import { table_Logging } from '../tables/structures'
 import { fetchFiltered } from '../tables/tableGeneric/table_pages/fetchFiltered'
 import { fetchTotalPages } from '../tables/tableGeneric/table_pages/fetchTotalPages'
 import type { Filter } from '../tables/structures'
-import MyPagination from '../components/MyPagination'
+import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
 import { action_truncateLogging } from './OwnerTableLogging_actions'
+import {
+  OwnerTableLogging_filterDebounceMs,
+  OwnerTableLogging_msgTruncateLen,
+  OwnerTableLogging_rowsOptions
+} from '../constants'
 
 const LOGGING_ROWS_PER_PAGE = 40
 
@@ -27,6 +32,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [table, settable] = useState('')
   const [isupdate, setisupdate] = useState('')
   const [currentPage, setcurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(LOGGING_ROWS_PER_PAGE)
   const [tabledata, settabledata] = useState<table_Logging[]>(initialRows ?? [])
   const [totalPages, setTotalPages] = useState<number>(initialTotalPages ?? 0)
   const prevFilters = useRef({
@@ -55,14 +61,14 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       table !== prevFilters.current.table ||
       isupdate !== prevFilters.current.isupdate
     setMessage(filtersChanged ? 'Applying filters...' : '')
-    const timeout = filtersChanged ? 2000 : 1
+    const timeout = filtersChanged ? OwnerTableLogging_filterDebounceMs : 1
     const handler = setTimeout(() => {
       prevFilters.current = { msg, caller, functionname, severity, level, table, isupdate }
       fetchdata()
       setMessage('')
     }, timeout)
     return () => clearTimeout(handler)
-  }, [msg, caller, functionname, severity, level, table, isupdate, currentPage])
+  }, [msg, caller, functionname, severity, level, table, isupdate, currentPage, rowsPerPage])
 
   async function fetchdata() {
     const filtersToUpdate: Filter[] = [
@@ -77,13 +83,13 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     const filters = filtersToUpdate.filter(filter => filter.value)
     try {
       const tableName = 'xlg_logging'
-      const offset = (currentPage - 1) * LOGGING_ROWS_PER_PAGE
+      const offset = (currentPage - 1) * rowsPerPage
       const data = await fetchFiltered({
         caller: functionName,
         table: tableName,
         filters,
         orderBy: 'lg_lgid DESC',
-        limit: LOGGING_ROWS_PER_PAGE,
+        limit: rowsPerPage,
         offset,
         skipCache: true
       })
@@ -92,7 +98,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
         caller: functionName,
         table: tableName,
         filters,
-        items_per_page: LOGGING_ROWS_PER_PAGE,
+        items_per_page: rowsPerPage,
         skipCache: true
       })
       setTotalPages(fetchedTotalPages)
@@ -231,7 +237,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                     <td className='px-2 text-xxs'>{row.lg_functionname}</td>
                     <td className='px-2 text-xxs'>
                       <div className='truncate'>
-                        {row.lg_msg.length > 200 ? row.lg_msg.slice(0, 200) + '…' : row.lg_msg}
+                        {row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg}
                       </div>
                     </td>
                     <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
@@ -245,11 +251,14 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
             </tbody>
           </table>
           <p className='text-red-600'>{message}</p>
-          <div className='mt-2 flex justify-center'>
-            <MyPagination
+          <div className='mt-2'>
+            <MyPaginationFooter
               totalPages={totalPages}
               statecurrentPage={currentPage}
               setStateCurrentPage={setcurrentPage}
+              rowsPerPage={rowsPerPage}
+              setRowsPerPage={v => { setRowsPerPage(v); setcurrentPage(1) }}
+              rowsOptions={OwnerTableLogging_rowsOptions}
             />
           </div>
         </div>

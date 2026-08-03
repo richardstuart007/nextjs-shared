@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
+import {
+  MySelectMulti_dftClass,
+  MySelectMulti_labelDftClass,
+  MySelectMulti_containerDftClass,
+  MySelectMulti_panelDftClass
+} from '../constants'
 
 type Option = string | { value: string; label: string }
 
@@ -19,21 +25,6 @@ type Props = {
   containerClass?: string
   panelClass?: string
 }
-
-export const MySelectMulti_dftClass_Shared = [
-  'h-6 md:h-8 w-72',
-  'py-1 px-1 md:px-2',
-  'text-xs text-left',
-  'rounded-md',
-  'border border-blue-500',
-  'hover:border-blue-600',
-  'bg-white',
-  'transition-colors',
-].join(' ')
-
-export const MySelectMulti_labelDftClass_Shared     = 'font-bold text-xs whitespace-nowrap'
-export const MySelectMulti_containerDftClass_Shared = 'flex items-center gap-2'
-export const MySelectMulti_panelDftClass_Shared     = 'absolute z-10 mt-1 top-full left-0 min-w-max bg-white border border-gray-200 rounded shadow-md p-1'
 
 //----------------------------------------------------------------------------------
 //  normalize — string | {value,label} -> {value,label}
@@ -53,11 +44,11 @@ export default function MySelectMulti({
   id,
   showReset = false,
   resetLabel = 'All',
-  defaultClass = MySelectMulti_dftClass_Shared,
+  defaultClass = MySelectMulti_dftClass,
   overrideClass = '',
-  labelClass = MySelectMulti_labelDftClass_Shared,
-  containerClass = MySelectMulti_containerDftClass_Shared,
-  panelClass = MySelectMulti_panelDftClass_Shared,
+  labelClass = MySelectMulti_labelDftClass,
+  containerClass = MySelectMulti_containerDftClass,
+  panelClass = MySelectMulti_panelDftClass,
 }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)

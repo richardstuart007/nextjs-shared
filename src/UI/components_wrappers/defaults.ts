@@ -1,6 +1,6 @@
 //
 //  Project-level default classes for the dev-app — simulates a consuming project's defaults.ts
-//  To find the shared default to copy from: import { My{X}_dftClass_Shared } from '../../components/My{X}'
+//  To find the shared default to copy from: import { My{X}_dftClass } from '../../constants'
 //
 
 export const MyBox_dftClass_Project = 'rounded-lg border-4 border-yellow-400 p-2 md:p-3 mb-3'

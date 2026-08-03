@@ -1,6 +1,7 @@
 'use client'
 
 import { myMergeClasses } from './MyMergeClasses'
+import { MySelect_dftClass, MySelect_labelDftClass, MySelect_containerDftClass } from '../constants'
 
 type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string
@@ -11,31 +12,16 @@ type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
   containerClass?: string
 }
 
-export const MySelect_dftClass_Shared = [
-  'h-6 md:h-8 w-72',
-  'py-1 px-1 md:px-2',
-  'text-xs',
-  'rounded-md',
-  'border border-blue-500',
-  'focus:border-1 focus:border-blue-500',
-  'hover:border-blue-500',
-  'transition-colors',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
-].join(' ')
-
-export const MySelect_labelDftClass_Shared     = 'font-bold text-xs whitespace-nowrap'
-export const MySelect_containerDftClass_Shared = 'flex items-center gap-2'
-
 //----------------------------------------------------------------------------------
 //  MySelect — labelled select with optional string options or children
 //----------------------------------------------------------------------------------
 export default function MySelect({
   label,
   options = [],
-  defaultClass = MySelect_dftClass_Shared,
+  defaultClass = MySelect_dftClass,
   overrideClass = '',
-  labelClass = MySelect_labelDftClass_Shared,
-  containerClass = MySelect_containerDftClass_Shared,
+  labelClass = MySelect_labelDftClass,
+  containerClass = MySelect_containerDftClass,
   children,
   id,
   ...rest

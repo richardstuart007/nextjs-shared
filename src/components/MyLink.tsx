@@ -1,6 +1,7 @@
 'use client'
 import { myMergeClasses } from './MyMergeClasses'
 import Link from 'next/link'
+import { MyLink_dftClass } from '../constants'
 
 type LinkHref = {
   reference: string
@@ -18,24 +19,12 @@ type Props = {
   [rest: string]: any
 }
 
-export const MyLink_dftClass_Shared = [
-  'flex items-center justify-center',
-  'h-6 md:h-8',
-  'px-1 md:px-2',
-  'font-normal text-xs text-white',
-  'rounded-md',
-  'bg-blue-500 hover:bg-blue-600',
-  'transition-colors',
-  'focus-visible:outline focus-visible:outline-blue-500',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
-].join(' ')
-
 //----------------------------------------------------------------------------------------------
 //  MyLink — styled Next.js Link with Tailwind class merging
 //----------------------------------------------------------------------------------------------
 export function MyLink({
   children,
-  defaultClass = MyLink_dftClass_Shared,
+  defaultClass = MyLink_dftClass,
   overrideClass = '',
   href,
   caller: _caller = '',

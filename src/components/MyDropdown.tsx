@@ -5,6 +5,7 @@ import { myMergeClasses } from './MyMergeClasses'
 import { table_fetch, table_fetch_Props } from '../tables/tableGeneric/table_fetch'
 import { write_logging } from '../tables/tableGeneric/write_logging'
 import { MyInput } from './MyInput'
+import { MyDropdown_dftClass, MyDropdown_labelDftClass, MyDropdown_searchDftClass } from '../constants'
 
 //
 //  Define the options
@@ -34,20 +35,6 @@ type DropdownProps<T extends string, U extends string> = {
 }
 
 const functionName = 'MyDropdown'
-export const MyDropdown_dftClass_Shared = [
-  'h-6 md:h-8',
-  'py-[2px] px-1 md:px-2',
-  'text-xs',
-  'rounded-md',
-  'border border-blue-500',
-  'focus:border-1 focus:border-blue-500',
-  'hover:border-blue-500',
-  'transition-colors',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
-  'w-72',
-].join(' ')
-export const MyDropdown_labelDftClass_Shared = 'block text-gray-900 mb-1 text-xs w-72'
-export const MyDropdown_searchDftClass_Shared = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
 
 //----------------------------------------------------------------------------------
 //  MyDropdown — searchable dropdown with optional database fetch
@@ -65,9 +52,9 @@ export default function MyDropdown<T extends string, U extends string>({
   orderBy = '',
   optionLabel,
   optionValue,
-  defaultClass = MyDropdown_dftClass_Shared,
-  defaultClass_Label = MyDropdown_labelDftClass_Shared,
-  defaultClass_Search = MyDropdown_searchDftClass_Shared,
+  defaultClass = MyDropdown_dftClass,
+  defaultClass_Label = MyDropdown_labelDftClass,
+  defaultClass_Search = MyDropdown_searchDftClass,
   overrideClass_Label = '',
   overrideClass_Search = '',
   overrideClass_Dropdown = '',

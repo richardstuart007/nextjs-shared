@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.48",
+  "version": "2.1.49",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, chess utilities, and schema tools",
   "private": true,
   "scripts": {
@@ -37,6 +37,7 @@
     "postcss": "8.5.10"
   },
   "exports": {
+    "./constants": "./src/constants.ts",
     "./MyBox": "./src/components/MyBox.tsx",
     "./MyBackHomeNav": "./src/components/MyBackHomeNav.tsx",
     "./useBackNav": "./src/components/useBackNav.ts",
@@ -54,9 +55,11 @@
     "./MyHelpStep": "./src/components/MyHelpStep.tsx",
     "./MyMergeClasses": "./src/components/MyMergeClasses.ts",
     "./MyPagination": "./src/components/MyPagination.tsx",
+    "./MyPaginationFooter": "./src/components/MyPaginationFooter.tsx",
     "./MyPopup": "./src/components/MyPopup.tsx",
     "./MySelect": "./src/components/MySelect.tsx",
     "./MySelectMulti": "./src/components/MySelectMulti.tsx",
+    "./MySelectRows": "./src/components/MySelectRows.tsx",
     "./MyTab": "./src/components/MyTab.tsx",
     "./MyTextarea": "./src/components/MyTextarea.tsx",
     "./MyToggle": "./src/components/MyToggle.tsx",

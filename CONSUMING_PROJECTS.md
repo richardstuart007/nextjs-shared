@@ -258,6 +258,18 @@ const [rows, totalPages] = await Promise.all([
 ])
 ```
 
+**Always use this — never fetch a whole table and paginate/filter it client-side.** A pagination
+UI (page numbers, rows-per-page dropdown) can look complete while the underlying query still loads
+every row — the UI looking right doesn't mean the query is right. Only `fetchFiltered`/
+`fetchTotalPages` with `limit`/`offset` actually bound what's queried and sent to the client.
+
+*Real incident:* next-bridge's Home page had a fully-wired pagination UI (`MyPagination` +
+rows-per-page selector) sitting on top of an unbounded `table_query`/`table_fetch` call, silently
+loading 11,000+ and 14,000+ row tables into the browser on every page view — confirmed via git
+history to have been that way since the page was first built. For a complete, currently-working
+reference to model a new paginated list on, see chess's `src/lib/actions/games.ts`
+(`fetchFilteredGames`/`getGamesPageCount`) and `src/ui/games/GameList.tsx`.
+
 ---
 
 ## 6. Cache
@@ -305,12 +317,14 @@ All are React client components. Import individually.
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) |
 | `nextjs-shared/MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars — collapsed trigger, opens on click |
+| `nextjs-shared/MySelectRows` | Rows-per-page dropdown, for use alongside `MyPagination` |
 | `nextjs-shared/MyTab` | Single tab button — `underline` or `pill` variant, active state controlled by the caller |
 | `nextjs-shared/MyTextarea` | Textarea |
 | `nextjs-shared/MyCheckbox` | Multi-select checkbox group with search, sort, min/max |
 | `nextjs-shared/MyToggle` | Toggle switch |
 | `nextjs-shared/MyConfirmDialog` | Confirmation modal |
 | `nextjs-shared/MyPagination` | Pagination controls |
+| `nextjs-shared/MyPaginationFooter` | `MySelectRows` + `MyPagination` combined in one row — preferred over placing them separately |
 | `nextjs-shared/MyLink` | Styled Next.js anchor |
 | `nextjs-shared/MyPopup` | Popup overlay |
 | `nextjs-shared/MyHelp` | Help button with popover — pass `items` (structured heading+body) or `text` (plain string, supports newlines) |
@@ -484,14 +498,15 @@ keeps URLs clean). `setValue` accepts a new string or an updater function, same 
 
 ### Project-wide defaults (`defaultClass` pattern)
 
-Every component accepts a `defaultClass` prop alongside `overrideClass`, and exports a named constant for its shared default (e.g. `MyButton_dftClass_Shared`). A consuming project creates a project-wide wrapper by importing the constant, adjusting it, and passing the result as `defaultClass` — callers can still use `overrideClass` for per-instance changes.
+Every component accepts a `defaultClass` prop alongside `overrideClass`. Every component's default Tailwind classes live centrally in `nextjs-shared/constants` (named `ComponentName_constantName`, e.g. `MyButton_dftClass`) rather than in the component's own module. A consuming project creates a project-wide wrapper by importing the constant, adjusting it, and passing the result as `defaultClass` — callers can still use `overrideClass` for per-instance changes.
 
 ```tsx
 // src/components/AppButton.tsx — project-wide wrapper
-import { MyButton, MyButton_dftClass_Shared } from 'nextjs-shared/MyButton'
+import { MyButton } from 'nextjs-shared/MyButton'
+import { MyButton_dftClass } from 'nextjs-shared/constants'
 
 // Taller buttons project-wide; everything else inherited from shared default
-const projectDefault = MyButton_dftClass_Shared.replace('h-6 md:h-8', 'h-8 md:h-10')
+const projectDefault = MyButton_dftClass.replace('h-6 md:h-8', 'h-8 md:h-10')
 
 type Props = React.ComponentProps<typeof MyButton>
 
@@ -516,31 +531,31 @@ bare override fully replaces it.
 | Prop | Type | Default |
 |---|---|---|
 | `children` | `React.ReactNode` | — |
-| `defaultClass` | `string` | `MyButton_dftClass_Shared` |
+| `defaultClass` | `string` | `MyButton_dftClass` |
 | `overrideClass` | `string` | `''` |
 | + all `<button>` HTML attributes | | |
 
-Exported constant: `MyButton_dftClass_Shared` — includes `cursor-pointer`; `aria-disabled:cursor-not-allowed` overrides it when `aria-disabled` is set.
+Exported constant: `MyButton_dftClass` — includes `cursor-pointer`; `aria-disabled:cursor-not-allowed` overrides it when `aria-disabled` is set (from `nextjs-shared/constants`).
 
 ### MyInput props
 
 | Prop | Type | Default |
 |---|---|---|
-| `defaultClass` | `string` | `MyInput_dftClass_Shared` |
+| `defaultClass` | `string` | `MyInput_dftClass` |
 | `overrideClass` | `string` | `''` |
 | + all `<input>` HTML attributes | | |
 
-Exported constant: `MyInput_dftClass_Shared`.
+Exported constant: `MyInput_dftClass` (from `nextjs-shared/constants`).
 
 ### MyTextarea props
 
 | Prop | Type | Default |
 |---|---|---|
-| `defaultClass` | `string` | `MyTextarea_dftClass_Shared` |
+| `defaultClass` | `string` | `MyTextarea_dftClass` |
 | `overrideClass` | `string` | `''` |
 | + all `<textarea>` HTML attributes | | |
 
-Exported constant: `MyTextarea_dftClass_Shared`.
+Exported constant: `MyTextarea_dftClass` (from `nextjs-shared/constants`).
 
 ### MySelect props
 
@@ -548,14 +563,14 @@ Exported constant: `MyTextarea_dftClass_Shared`.
 |---|---|---|
 | `label` | `string` | — |
 | `options` | `string[]` | `[]` — omit to pass `children` directly as `<option>` elements |
-| `defaultClass` | `string` | `MySelect_dftClass_Shared` |
+| `defaultClass` | `string` | `MySelect_dftClass` |
 | `overrideClass` | `string` | `''` |
-| `labelClass` | `string` | `MySelect_labelDftClass_Shared` (`'font-bold text-xs whitespace-nowrap'`) |
-| `containerClass` | `string` | `MySelect_containerDftClass_Shared` (`'flex items-center gap-2'`) |
+| `labelClass` | `string` | `MySelect_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |
+| `containerClass` | `string` | `MySelect_containerDftClass` (`'flex items-center gap-2'`) |
 | `id` | `string` | derived from `label` (e.g. `"Sort By"` → `"sort-by"`) |
 | + all `<select>` HTML attributes | | |
 
-Exported constants: `MySelect_dftClass_Shared`, `MySelect_labelDftClass_Shared`, `MySelect_containerDftClass_Shared`.
+Exported constants: `MySelect_dftClass`, `MySelect_labelDftClass`, `MySelect_containerDftClass` (from `nextjs-shared/constants`).
 
 ### MySelectMulti props
 
@@ -573,13 +588,13 @@ space-constrained filter bars where the option list should stay collapsed until 
 | `id` | `string` | derived from `label` |
 | `showReset` | `boolean` | `false` |
 | `resetLabel` | `string` | `'All'` |
-| `defaultClass` | `string` | `MySelectMulti_dftClass_Shared` |
+| `defaultClass` | `string` | `MySelectMulti_dftClass` |
 | `overrideClass` | `string` | `''` |
-| `labelClass` | `string` | `MySelectMulti_labelDftClass_Shared` (`'font-bold text-xs whitespace-nowrap'`) |
-| `containerClass` | `string` | `MySelectMulti_containerDftClass_Shared` (`'flex items-center gap-2'`) |
-| `panelClass` | `string` | `MySelectMulti_panelDftClass_Shared` |
+| `labelClass` | `string` | `MySelectMulti_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |
+| `containerClass` | `string` | `MySelectMulti_containerDftClass` (`'flex items-center gap-2'`) |
+| `panelClass` | `string` | `MySelectMulti_panelDftClass` |
 
-Exported constants: `MySelectMulti_dftClass_Shared`, `MySelectMulti_labelDftClass_Shared`, `MySelectMulti_containerDftClass_Shared`, `MySelectMulti_panelDftClass_Shared`.
+Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass` (from `nextjs-shared/constants`).
 
 `showReset` defaults to `false` — every existing caller is unaffected. When `true` and `selected.length > 0`,
 an extra row (labelled by `resetLabel`) renders first inside the open panel, visually separated from
@@ -598,6 +613,96 @@ import MySelectMulti from 'nextjs-shared/MySelectMulti'
 />
 ```
 
+### MySelectRows props
+
+A thin wrapper around `MySelect` for the common "rows per page" dropdown, meant to sit alongside
+`MyPagination`. Ships with a default option list and default selected value that a consuming
+project can override per call site — the defaults themselves are internal to nextjs-shared (not
+exported), so overriding is done by passing `options`/`value`, not by importing the shared default.
+
+| Prop | Type | Default |
+|---|---|---|
+| `value` | `number` | — |
+| `onChange` | `(value: number) => void` | — |
+| `options` | `readonly number[]` | `[10, 20, 50, 100]` |
+| `label` | `string` | — |
+| `id` | `string` | derived from `label` |
+| `defaultClass` | `string` | `MySelectRows_dftClass` — `MySelect_dftClass` with `w-72` narrowed to `w-24`, since a rows-per-page dropdown is inherently compact |
+| `overrideClass` | `string` | `''` (via `MySelect`) |
+| `labelClass` | `string` | `MySelect_labelDftClass` (via `MySelect`) |
+| `containerClass` | `string` | `MySelect_containerDftClass` (via `MySelect`) |
+
+```tsx
+import MySelectRows from 'nextjs-shared/MySelectRows'
+
+<MySelectRows
+  value={rowsPerPage}
+  onChange={v => { setRowsPerPage(v); setCurrentPage(1) }}
+/>
+```
+
+To use a different option list for one call site, pass `options` directly:
+
+```tsx
+<MySelectRows value={rowsPerPage} onChange={setRowsPerPage} options={[5, 10, 25]} />
+```
+
+### MyPagination props
+
+| Prop | Type | Default |
+|---|---|---|
+| `totalPages` | `number` | — |
+| `statecurrentPage` | `number` | — |
+| `setStateCurrentPage` | `(value: number) => void` | — |
+| `defaultClass` | `string` | `MyPagination_dftClass` (`'inline-flex'`) |
+| `overrideClass` | `string` | `''` |
+| `numbersContainerClass` | `string` | `MyPagination_numbersContainerClass` |
+| `ellipsisClass` | `string` | `MyPagination_ellipsisClass` |
+| `numberClass` | `string` | `MyPagination_numberClass` — shared structural class for every page-number cell |
+| `numberActiveClass` | `string` | `MyPagination_numberActiveClass` |
+| `numberInactiveClass` | `string` | `MyPagination_numberInactiveClass` |
+| `arrowClass` | `string` | `MyPagination_arrowClass` — shared structural class for both arrow buttons |
+| `arrowDisabledClass` | `string` | `MyPagination_arrowDisabledClass` |
+| `arrowEnabledClass` | `string` | `MyPagination_arrowEnabledClass` |
+| `arrowIconClass` | `string` | `MyPagination_arrowIconClass` |
+
+All defaults are exported from `nextjs-shared/constants`. Not exposed as props (structural
+positioning logic, not a style choice): the first/last `rounded-l-md`/`rounded-r-md` corner
+rounding on page-number cells, and the direction-based `mr-2 md:mr-4`/`ml-2 md:ml-4` margin on the
+arrow buttons.
+
+### MyPaginationFooter props
+
+Combines `MySelectRows` (left) and `MyPagination` (right, centered in the row) in one row — use
+this instead of placing the two components separately unless the layout genuinely needs them
+apart. Default container background is yellow; layout is a 3-column grid so the page controls sit
+centered relative to the whole row, not just the leftover space after the rows dropdown.
+
+| Prop | Type | Default |
+|---|---|---|
+| `totalPages` | `number` | — |
+| `statecurrentPage` | `number` | — |
+| `setStateCurrentPage` | `(value: number) => void` | — |
+| `rowsPerPage` | `number` | — |
+| `setRowsPerPage` | `(value: number) => void` | — |
+| `rowsOptions` | `readonly number[]` | `MySelectRows_optionsDftShared` (`[10, 20, 50, 100]`) |
+| `defaultClass` | `string` | `MyPaginationFooter_dftClass` (yellow background, `grid grid-cols-3 items-center`) |
+| `overrideClass` | `string` | `''` |
+| `paginationOverrideClass` | `string` | — (passed to the nested `MyPagination`'s own `overrideClass`) |
+| `selectRowsOverrideClass` | `string` | — (passed to the nested `MySelectRows`'s own `overrideClass`; `MySelectRows`'s own `MySelectRows_dftClass` default, `w-24`, applies unless overridden here) |
+
+```tsx
+import MyPaginationFooter from 'nextjs-shared/MyPaginationFooter'
+
+<MyPaginationFooter
+  totalPages={totalPages}
+  statecurrentPage={currentPage}
+  setStateCurrentPage={setCurrentPage}
+  rowsPerPage={rowsPerPage}
+  setRowsPerPage={v => { setRowsPerPage(v); setCurrentPage(1) }}
+/>
+```
+
 ### MyTab props
 
 Active state and click handling are owned by the caller — same pattern as `MyButton`, not a
@@ -608,14 +713,14 @@ self-managing tab group.
 | `children` | `React.ReactNode` | — |
 | `active` | `boolean` | `false` |
 | `variant` | `'underline' \| 'pill'` | `'underline'` |
-| `underlineActiveClass` | `string` | `MyTab_underlineActiveClass_Shared` |
-| `underlineInactiveClass` | `string` | `MyTab_underlineInactiveClass_Shared` |
-| `pillActiveClass` | `string` | `MyTab_pillActiveClass_Shared` |
-| `pillInactiveClass` | `string` | `MyTab_pillInactiveClass_Shared` |
+| `underlineActiveClass` | `string` | `MyTab_underlineActiveClass` |
+| `underlineInactiveClass` | `string` | `MyTab_underlineInactiveClass` |
+| `pillActiveClass` | `string` | `MyTab_pillActiveClass` |
+| `pillInactiveClass` | `string` | `MyTab_pillInactiveClass` |
 | `overrideClass` | `string` | `''` |
 | + all `<button>` HTML attributes | | |
 
-Exported constants: `MyTab_underlineActiveClass_Shared`, `MyTab_underlineInactiveClass_Shared`, `MyTab_pillActiveClass_Shared`, `MyTab_pillInactiveClass_Shared`.
+Exported constants: `MyTab_underlineActiveClass`, `MyTab_underlineInactiveClass`, `MyTab_pillActiveClass`, `MyTab_pillInactiveClass` (from `nextjs-shared/constants`).
 
 The four `*Class` props follow the same project-wide-wrapper pattern as `MyButton`'s
 `defaultClass` — one override per variant/active combination, so a consuming project's wrapper
@@ -623,9 +728,10 @@ can re-theme only the combo(s) it needs:
 
 ```tsx
 // src/components/AppTab.tsx — project-wide wrapper
-import { MyTab, MyTab_pillActiveClass_Shared } from 'nextjs-shared/MyTab'
+import { MyTab } from 'nextjs-shared/MyTab'
+import { MyTab_pillActiveClass } from 'nextjs-shared/constants'
 
-const projectPillActive = MyTab_pillActiveClass_Shared.replace('bg-blue-600 border-blue-600', 'bg-emerald-600 border-emerald-600')
+const projectPillActive = MyTab_pillActiveClass.replace('bg-blue-600 border-blue-600', 'bg-emerald-600 border-emerald-600')
 
 type Props = React.ComponentProps<typeof MyTab>
 
@@ -647,11 +753,11 @@ import { MyTab } from 'nextjs-shared/MyTab'
 |---|---|---|
 | `children` | `React.ReactNode` | — |
 | `title` | `string` | — |
-| `defaultClass` | `string` | `MyBox_dftClass_Shared` |
+| `defaultClass` | `string` | `MyBox_dftClass` |
 | `className` | `string` | `''` — merged over `defaultClass` via `myMergeClasses` |
-| `titleClass` | `string` | `MyBox_titleDftClass_Shared` (`'text-xs font-bold mb-2'`) |
+| `titleClass` | `string` | `MyBox_titleDftClass` (`'text-xs font-bold mb-2'`) |
 
-Exported constants: `MyBox_dftClass_Shared`, `MyBox_titleDftClass_Shared`.
+Exported constants: `MyBox_dftClass`, `MyBox_titleDftClass` (from `nextjs-shared/constants`).
 
 ### MyToggle props
 
@@ -660,12 +766,12 @@ Exported constants: `MyBox_dftClass_Shared`, `MyBox_titleDftClass_Shared`.
 | `inputName` | `string` | — |
 | `inputValue` | `boolean` | — |
 | `onChange` | `React.ChangeEventHandler<HTMLInputElement>` | — |
-| `defaultClass` | `string` | `MyToggle_dftClass_Shared` |
+| `defaultClass` | `string` | `MyToggle_dftClass` |
 | `overrideClass` | `string` | `''` |
-| `labelClass` | `string` | `MyToggle_labelDftClass_Shared` (`'inline-flex items-center cursor-pointer'`) |
+| `labelClass` | `string` | `MyToggle_labelDftClass` (`'inline-flex items-center cursor-pointer'`) |
 | + all `<input>` HTML attributes | | |
 
-Exported constants: `MyToggle_dftClass_Shared`, `MyToggle_labelDftClass_Shared`.
+Exported constants: `MyToggle_dftClass`, `MyToggle_labelDftClass` (from `nextjs-shared/constants`).
 
 ### MyDropdown props
 
@@ -684,14 +790,14 @@ Exported constants: `MyToggle_dftClass_Shared`, `MyToggle_labelDftClass_Shared`.
 | `orderBy` | `string` | `''` (defaults to `optionLabel`) |
 | `searchEnabled` | `boolean` | `false` |
 | `includeBlank` | `boolean` | `false` |
-| `defaultClass` | `string` | `MyDropdown_dftClass_Shared` |
-| `defaultClass_Label` | `string` | `MyDropdown_labelDftClass_Shared` |
-| `defaultClass_Search` | `string` | `MyDropdown_searchDftClass_Shared` |
+| `defaultClass` | `string` | `MyDropdown_dftClass` |
+| `defaultClass_Label` | `string` | `MyDropdown_labelDftClass` |
+| `defaultClass_Search` | `string` | `MyDropdown_searchDftClass` |
 | `overrideClass_Dropdown` | `string` | `''` |
 | `overrideClass_Label` | `string` | `''` |
 | `overrideClass_Search` | `string` | `''` |
 
-Exported constants: `MyDropdown_dftClass_Shared`, `MyDropdown_labelDftClass_Shared`, `MyDropdown_searchDftClass_Shared`.
+Exported constants: `MyDropdown_dftClass`, `MyDropdown_labelDftClass`, `MyDropdown_searchDftClass` (from `nextjs-shared/constants`).
 
 Auto-selects the single option when only one exists. Fetches from DB on mount when `table` is supplied; pass `tableData` to use pre-fetched rows instead.
 
@@ -710,16 +816,16 @@ Auto-selects the single option when only one exists. Fetches from DB on mount wh
 | `sortBy` | `'value' \| 'label'` | `'label'` |
 | `minSelections` | `number` | — |
 | `maxSelections` | `number` | — |
-| `defaultClass_Label` | `string` | `MyCheckbox_labelDftClass_Shared` |
-| `defaultClass_Search` | `string` | `MyCheckbox_searchDftClass_Shared` |
-| `defaultClass_Container` | `string` | `MyCheckbox_containerDftClass_Shared` |
-| `defaultClass_CheckboxItem` | `string` | `MyCheckbox_itemDftClass_Shared` |
+| `defaultClass_Label` | `string` | `MyCheckbox_labelDftClass` |
+| `defaultClass_Search` | `string` | `MyCheckbox_searchDftClass` |
+| `defaultClass_Container` | `string` | `MyCheckbox_containerDftClass` |
+| `defaultClass_CheckboxItem` | `string` | `MyCheckbox_itemDftClass` |
 | `overrideClass_Label` | `string` | `''` |
 | `overrideClass_Search` | `string` | `''` |
 | `overrideClass_Container` | `string` | `''` |
 | `overrideClass_CheckboxItem` | `string` | `''` |
 
-Exported constants: `MyCheckbox_labelDftClass_Shared`, `MyCheckbox_searchDftClass_Shared`, `MyCheckbox_containerDftClass_Shared`, `MyCheckbox_itemDftClass_Shared`.
+Exported constants: `MyCheckbox_labelDftClass`, `MyCheckbox_searchDftClass`, `MyCheckbox_containerDftClass`, `MyCheckbox_itemDftClass` (from `nextjs-shared/constants`).
 
 Selected options are always kept sorted. Min/max validation shows an inline error when the limit is hit.
 
@@ -731,12 +837,12 @@ Selected options are always kept sorted. Min/max validation shows an inline erro
 | `onClose` | `() => void` | — |
 | `children` | `ReactNode` | — |
 | `closeOnBackdropClick` | `boolean` | `false` |
-| `defaultClass` | `string` | `MyPopup_dftClass_Shared` |
+| `defaultClass` | `string` | `MyPopup_dftClass` |
 | `overrideClass` | `string` | `''` |
-| `overlayClass` | `string` | `MyPopup_overlayDftClass_Shared` |
-| `closeButtonClass` | `string` | `MyPopup_closeButtonDftClass_Shared` |
+| `overlayClass` | `string` | `MyPopup_overlayDftClass` |
+| `closeButtonClass` | `string` | `MyPopup_closeButtonDftClass` |
 
-Exported constants: `MyPopup_dftClass_Shared`, `MyPopup_overlayDftClass_Shared`, `MyPopup_closeButtonDftClass_Shared`.
+Exported constants: `MyPopup_dftClass`, `MyPopup_overlayDftClass`, `MyPopup_closeButtonDftClass` (from `nextjs-shared/constants`).
 
 `closeOnBackdropClick` defaults to `false` so every existing consumer (including `MyConfirmDialog`,
 which renders `MyPopup` internally) keeps its current behavior unchanged — clicking the dark
@@ -752,11 +858,11 @@ click propagation).
 | `text` | `string` | — |
 | `title` | `string` | — |
 | `label` | `string` | `'?'` |
-| `buttonClass` | `string` | `MyHelp_buttonDftClass_Shared` |
-| `panelClass` | `string` | `MyHelp_panelDftClass_Shared` |
-| `closeButtonClass` | `string` | `MyHelp_closeButtonDftClass_Shared` |
+| `buttonClass` | `string` | `MyHelp_buttonDftClass` |
+| `panelClass` | `string` | `MyHelp_panelDftClass` |
+| `closeButtonClass` | `string` | `MyHelp_closeButtonDftClass` |
 
-Exported constants: `MyHelp_buttonDftClass_Shared`, `MyHelp_panelDftClass_Shared`, `MyHelp_closeButtonDftClass_Shared`.
+Exported constants: `MyHelp_buttonDftClass`, `MyHelp_panelDftClass`, `MyHelp_closeButtonDftClass` (from `nextjs-shared/constants`).
 
 Always shows a "×" close button in the panel header (unconditional, not opt-in) and always closes
 on outside click — unlike `MyPopup`'s `closeOnBackdropClick`, this isn't configurable per caller.
@@ -773,11 +879,11 @@ not both — `text` takes priority if both are given.
 | `output` | `string[]` | — |
 | `consumers` | `string[]` | — |
 | `label` | `string` | `'Help'` |
-| `buttonClass` | `string` | `MyHelpStep_buttonDftClass_Shared` |
-| `panelClass` | `string` | `MyHelpStep_panelDftClass_Shared` |
-| `closeButtonClass` | `string` | `MyHelpStep_closeButtonDftClass_Shared` |
+| `buttonClass` | `string` | `MyHelpStep_buttonDftClass` |
+| `panelClass` | `string` | `MyHelpStep_panelDftClass` |
+| `closeButtonClass` | `string` | `MyHelpStep_closeButtonDftClass` |
 
-Exported constants: `MyHelpStep_buttonDftClass_Shared`, `MyHelpStep_panelDftClass_Shared`, `MyHelpStep_closeButtonDftClass_Shared`.
+Exported constants: `MyHelpStep_buttonDftClass`, `MyHelpStep_panelDftClass`, `MyHelpStep_closeButtonDftClass` (from `nextjs-shared/constants`).
 
 Same as `MyHelp`: the "×" close button and outside-click-close are both unconditional, not
 opt-in. Renders an Input / Processing / Output / (optional) Consumers table for a single step —

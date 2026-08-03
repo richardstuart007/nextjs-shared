@@ -1,6 +1,7 @@
 'use client'
 
 import { myMergeClasses } from './MyMergeClasses'
+import { MyToggle_dftClass, MyToggle_labelDftClass } from '../constants'
 
 type Props = React.InputHTMLAttributes<HTMLInputElement> & {
   defaultClass?: string
@@ -11,30 +12,16 @@ type Props = React.InputHTMLAttributes<HTMLInputElement> & {
   labelClass?: string
 }
 
-export const MyToggle_dftClass_Shared = [
-  'relative',
-  'w-11 h-6',
-  'rounded-full',
-  'bg-gray-400 dark:bg-gray-700',
-  'peer peer-checked:after:translate-x-[1.25rem] peer-checked:after:border-white',
-  'after:content-[""] after:absolute after:top-0.5 after:left-[2px]',
-  'after:bg-white after:border-gray-300 after:border after:rounded-full',
-  'after:h-5 after:w-5',
-  'after:transition-transform dark:border-gray-600 peer-checked:bg-blue-600',
-].join(' ')
-
-export const MyToggle_labelDftClass_Shared = 'inline-flex items-center cursor-pointer'
-
 //----------------------------------------------------------------------------------------------
 //  MyToggle — checkbox toggle switch with hidden form input
 //----------------------------------------------------------------------------------------------
 export function MyToggle({
-  defaultClass = MyToggle_dftClass_Shared,
+  defaultClass = MyToggle_dftClass,
   overrideClass = '',
   inputName,
   inputValue,
   onChange,
-  labelClass = MyToggle_labelDftClass_Shared,
+  labelClass = MyToggle_labelDftClass,
   ...rest
 }: Props) {
   const className = myMergeClasses(defaultClass, overrideClass)

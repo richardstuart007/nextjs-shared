@@ -4,6 +4,7 @@ import { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { MyButton } from './MyButton'
 import { myMergeClasses } from './MyMergeClasses'
+import { MyPopup_dftClass, MyPopup_overlayDftClass, MyPopup_closeButtonDftClass } from '../constants'
 
 type Props = {
   isOpen: boolean
@@ -16,19 +17,6 @@ type Props = {
   closeButtonClass?: string
 }
 
-export const MyPopup_dftClass_Shared = [
-  'relative',
-  'w-full max-w-md max-h-[90vh]',
-  'p-4 md:p-6',
-  'rounded-lg',
-  'bg-white',
-  'shadow-lg',
-  'overflow-y-auto',
-].join(' ')
-
-export const MyPopup_overlayDftClass_Shared      = 'fixed inset-0 flex justify-center items-center z-50'
-export const MyPopup_closeButtonDftClass_Shared  = 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800'
-
 //----------------------------------------------------------------------------------
 //  MyPopup — modal overlay panel with close button
 //----------------------------------------------------------------------------------
@@ -37,10 +25,10 @@ export default function MyPopup({
   onClose,
   children,
   closeOnBackdropClick = false,
-  defaultClass = MyPopup_dftClass_Shared,
+  defaultClass = MyPopup_dftClass,
   overrideClass = '',
-  overlayClass = MyPopup_overlayDftClass_Shared,
-  closeButtonClass = MyPopup_closeButtonDftClass_Shared,
+  overlayClass = MyPopup_overlayDftClass,
+  closeButtonClass = MyPopup_closeButtonDftClass,
 }: Props) {
   if (!isOpen) return null
 
