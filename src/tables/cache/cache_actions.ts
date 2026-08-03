@@ -5,7 +5,7 @@ import {
   cache_deleteEntry,
   cache_getEntriesInfo,
   cache_getEntryData,
-  CacheEntryInfo
+  CacheEntriesPage
 } from './userCache_store'
 import { write_logging } from '../tableGeneric/write_logging'
 
@@ -26,8 +26,20 @@ export async function cacheAction_clearAll(
   })
 }
 
-export async function cacheAction_getEntries(): Promise<CacheEntryInfo[]> {
-  return cache_getEntriesInfo()
+export async function cacheAction_getEntries({
+  limit,
+  offset,
+  keyFilter,
+  tableFilter,
+  callerFilter
+}: {
+  limit: number
+  offset: number
+  keyFilter?: string
+  tableFilter?: string
+  callerFilter?: string
+}): Promise<CacheEntriesPage> {
+  return cache_getEntriesInfo({ limit, offset, keyFilter, tableFilter, callerFilter })
 }
 
 export async function cacheAction_getEntryData(sql: string): Promise<any> {

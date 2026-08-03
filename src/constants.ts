@@ -255,9 +255,10 @@ export const MyToggle_dftClass = [
 export const MyToggle_labelDftClass = 'inline-flex items-center cursor-pointer'
 
 //
-//  OwnerTableCache — badge showing the first N table names before "+N more"
+//  OwnerTableCache
 //
 export const OwnerTableCache_tablesBadgeVisibleCount = 3
+export const OwnerTableCache_filterDebounceMs = 2000
 
 //
 //  OwnerTableLogging

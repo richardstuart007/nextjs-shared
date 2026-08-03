@@ -257,7 +257,8 @@ export function cache_getStats(caller: string = '', level: number = 1, severity:
 }
 
 //---------------------------------------------------------------------
-//  cache_getEntriesInfo - Return all cache entries with data info for display
+//  cache_getEntriesInfo - Return a page of cache entries matching the given filters, simulating
+//  SQL LIMIT/OFFSET over the in-memory cache (there is no table behind this data)
 //---------------------------------------------------------------------
 export type CacheEntryInfo = {
   sql: string
@@ -268,8 +269,26 @@ export type CacheEntryInfo = {
   hitCount: number
 }
 
-export function cache_getEntriesInfo(): CacheEntryInfo[] {
-  return Array.from(cache.entries()).map(([key, entry]) => {
+export type CacheEntriesPage = {
+  entries: CacheEntryInfo[]
+  totalCount: number
+  overallSize: number
+}
+
+export function cache_getEntriesInfo({
+  limit,
+  offset,
+  keyFilter = '',
+  tableFilter = '',
+  callerFilter = ''
+}: {
+  limit: number
+  offset: number
+  keyFilter?: string
+  tableFilter?: string
+  callerFilter?: string
+}): CacheEntriesPage {
+  const allEntries: CacheEntryInfo[] = Array.from(cache.entries()).map(([key, entry]) => {
     return {
       sql: key,
       tables: entry.tables ?? [],
@@ -279,6 +298,22 @@ export function cache_getEntriesInfo(): CacheEntryInfo[] {
       hitCount: entry.hitCount ?? 0
     }
   })
+
+  const matchedEntries = allEntries.filter(entry => {
+    const matchKey = keyFilter === '' || entry.sql.toLowerCase().includes(keyFilter.toLowerCase())
+    const matchTable =
+      tableFilter === '' ||
+      entry.tables.some(t => t.toLowerCase().includes(tableFilter.toLowerCase()))
+    const matchCaller =
+      callerFilter === '' || entry.caller.toLowerCase().includes(callerFilter.toLowerCase())
+    return matchKey && matchTable && matchCaller
+  })
+
+  return {
+    entries: matchedEntries.slice(offset, offset + limit),
+    totalCount: matchedEntries.length,
+    overallSize: allEntries.length
+  }
 }
 
 //---------------------------------------------------------------------

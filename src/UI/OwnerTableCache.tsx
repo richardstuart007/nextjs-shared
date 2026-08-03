@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   cacheAction_getEntries,
   cacheAction_clearAll,
@@ -11,29 +11,63 @@ import type { CacheEntryInfo } from '../tables/cache/userCache_store'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
 import MyPopup from '../components/MyPopup'
-import { OwnerTableCache_tablesBadgeVisibleCount } from '../constants'
+import MyPaginationFooter from '../components/MyPaginationFooter'
+import {
+  OwnerTableCache_tablesBadgeVisibleCount,
+  OwnerTableCache_filterDebounceMs,
+  MySelectRows_valueDftShared
+} from '../constants'
 
 type PopupState = { entry: CacheEntryInfo; data: any } | null
 
 export default function OwnerTableCache() {
   const functionName = 'OwnerTableCache'
   const [entries, setEntries] = useState<CacheEntryInfo[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [overallSize, setOverallSize] = useState(0)
   const [keyFilter, setKeyFilter] = useState('')
   const [tableFilter, setTableFilter] = useState('')
   const [callerFilter, setCallerFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(MySelectRows_valueDftShared)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [popup, setPopup] = useState<PopupState>(null)
+  const prevFilters = useRef({ keyFilter: '', tableFilter: '', callerFilter: '' })
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage))
 
   useEffect(() => {
-    fetchdata()
-  }, [])
+    if (currentPage > totalPages) setCurrentPage(totalPages)
+  }, [currentPage, totalPages])
+
+  useEffect(() => {
+    const filtersChanged =
+      keyFilter !== prevFilters.current.keyFilter ||
+      tableFilter !== prevFilters.current.tableFilter ||
+      callerFilter !== prevFilters.current.callerFilter
+    if (filtersChanged) setCurrentPage(1)
+    const timeout = filtersChanged ? OwnerTableCache_filterDebounceMs : 1
+    const handler = setTimeout(() => {
+      prevFilters.current = { keyFilter, tableFilter, callerFilter }
+      fetchdata()
+    }, timeout)
+    return () => clearTimeout(handler)
+  }, [keyFilter, tableFilter, callerFilter, currentPage, rowsPerPage])
 
   async function fetchdata() {
     setLoading(true)
     try {
-      const data = await cacheAction_getEntries()
-      setEntries(data)
+      const data = await cacheAction_getEntries({
+        limit: rowsPerPage,
+        offset: (currentPage - 1) * rowsPerPage,
+        keyFilter,
+        tableFilter,
+        callerFilter
+      })
+      setEntries(data.entries)
+      setTotalCount(data.totalCount)
+      setOverallSize(data.overallSize)
     } catch (error) {
       console.error('Error fetching cache entries:', error)
     } finally {
@@ -67,23 +101,11 @@ export default function OwnerTableCache() {
     setPopup({ entry, data })
   }
 
-  const filteredEntries = useMemo(() => {
-    return entries.filter(entry => {
-      const matchKey = keyFilter === '' || entry.sql.toLowerCase().includes(keyFilter.toLowerCase())
-      const matchTable =
-        tableFilter === '' ||
-        entry.tables.some(t => t.toLowerCase().includes(tableFilter.toLowerCase()))
-      const matchCaller =
-        callerFilter === '' || entry.caller.toLowerCase().includes(callerFilter.toLowerCase())
-      return matchKey && matchTable && matchCaller
-    })
-  }, [entries, keyFilter, tableFilter, callerFilter])
-
   return (
     <>
       <div className='flex items-center gap-2 mb-2'>
         <span className='text-xs font-medium text-gray-600'>
-          {filteredEntries.length} / {entries.length} entries
+          {totalCount} / {overallSize} entries
         </span>
         <MyButton onClick={fetchdata} disabled={loading}>
           Refresh
@@ -91,7 +113,7 @@ export default function OwnerTableCache() {
         <MyButton
           overrideClass='bg-red-500 hover:bg-red-600'
           onClick={handleClearAll}
-          disabled={loading || entries.length === 0}
+          disabled={loading || overallSize === 0}
         >
           Clear All
         </MyButton>
@@ -150,14 +172,14 @@ export default function OwnerTableCache() {
               </tr>
             </thead>
             <tbody className='bg-white text-xxs'>
-              {filteredEntries.length > 0 ? (
-                filteredEntries.map((entry, idx) => (
+              {entries.length > 0 ? (
+                entries.map((entry, idx) => (
                   <tr
                     key={entry.sql}
                     className='w-full border-b border-gray-100 cursor-pointer hover:bg-blue-50'
                     onClick={() => handleRowClick(entry)}
                   >
-                    <td className='px-2'>{idx + 1}</td>
+                    <td className='px-2'>{(currentPage - 1) * rowsPerPage + idx + 1}</td>
                     <td className='px-2'>
                       <TablesBadge tables={entry.tables} />
                     </td>
@@ -189,6 +211,15 @@ export default function OwnerTableCache() {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className='mt-2'>
+        <MyPaginationFooter
+          totalPages={totalPages}
+          statecurrentPage={currentPage}
+          setStateCurrentPage={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={v => { setRowsPerPage(v); setCurrentPage(1) }}
+        />
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
