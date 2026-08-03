@@ -579,6 +579,13 @@ panel of checkboxes on click, closing on outside click. Distinct from `MyCheckbo
 is an always-expanded checkbox group meant for dedicated form space; `MySelectMulti` is for
 space-constrained filter bars where the option list should stay collapsed until needed.
 
+**Floating selections:** whenever an item is checked, it floats to the top of the open panel
+(above a thin divider, `MySelectMulti_selectedDividerClass`); unchecking it sinks it back down to
+its original position among the unselected options. Both groups preserve their original relative
+`options` order (a stable partition, not sorted by selection recency) — no animation, items snap
+to their new position instantly. This is the panel's default ordering behavior for every
+`MySelectMulti`, not opt-in.
+
 | Prop | Type | Default |
 |---|---|---|
 | `label` | `string` | — |
@@ -594,7 +601,7 @@ space-constrained filter bars where the option list should stay collapsed until 
 | `containerClass` | `string` | `MySelectMulti_containerDftClass` (`'flex items-center gap-2'`) |
 | `panelClass` | `string` | `MySelectMulti_panelDftClass` |
 
-Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass` (from `nextjs-shared/constants`).
+Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass`, `MySelectMulti_selectedDividerClass` (from `nextjs-shared/constants`).
 
 `showReset` defaults to `false` — every existing caller is unaffected. When `true` and `selected.length > 0`,
 an extra row (labelled by `resetLabel`) renders first inside the open panel, visually separated from

@@ -6,7 +6,8 @@ import {
   MySelectMulti_dftClass,
   MySelectMulti_labelDftClass,
   MySelectMulti_containerDftClass,
-  MySelectMulti_panelDftClass
+  MySelectMulti_panelDftClass,
+  MySelectMulti_selectedDividerClass
 } from '../constants'
 
 type Option = string | { value: string; label: string }
@@ -74,6 +75,8 @@ export default function MySelectMulti({
   }
 
   const display = selected.length === 0 ? 'All' : `${selected.length} selected`
+  const selectedItems = normalized.filter(opt => selected.includes(opt.value))
+  const unselectedItems = normalized.filter(opt => !selected.includes(opt.value))
 
   return (
     <div className={containerClass}>
@@ -100,7 +103,21 @@ export default function MySelectMulti({
                 {resetLabel}
               </button>
             )}
-            {normalized.map(opt => (
+            {selectedItems.map(opt => (
+              <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
+                <input
+                  type='checkbox'
+                  checked={selected.includes(opt.value)}
+                  onChange={() => toggle(opt.value)}
+                  className='h-3 w-3'
+                />
+                {opt.label}
+              </label>
+            ))}
+            {selectedItems.length > 0 && unselectedItems.length > 0 && (
+              <div className={MySelectMulti_selectedDividerClass} />
+            )}
+            {unselectedItems.map(opt => (
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input
                   type='checkbox'

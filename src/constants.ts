@@ -206,6 +206,7 @@ export const MySelectMulti_dftClass = [
 export const MySelectMulti_labelDftClass     = 'font-bold text-xs whitespace-nowrap'
 export const MySelectMulti_containerDftClass = 'flex items-center gap-2'
 export const MySelectMulti_panelDftClass     = 'absolute z-10 mt-1 top-full left-0 min-w-max bg-white border border-gray-200 rounded shadow-md p-1'
+export const MySelectMulti_selectedDividerClass = 'border-b border-gray-200 mb-1'
 
 //
 //  MySelectRows
