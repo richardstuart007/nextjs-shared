@@ -22,6 +22,7 @@ import { MyHelpField } from '../components/MyHelpField'
 import { MyHelpStep } from '../components/MyHelpStep'
 import { MyTab } from '../components/MyTab'
 import MySelectMulti from '../components/MySelectMulti'
+import { isSelectionFiltering } from '../components/isSelectionFiltering'
 import MySelectRows from '../components/MySelectRows'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'
@@ -1528,6 +1529,7 @@ function MySelectMultiTab() {
           <ReturnRow label='count' value={String(selected.length)} />
           <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
           <ReturnRow label='className' value={computedClass} />
+          <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, checkboxOptions.length))} />
         </>
       }
     />

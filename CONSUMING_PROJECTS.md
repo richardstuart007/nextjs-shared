@@ -670,6 +670,20 @@ import MySelectMulti from 'nextjs-shared/MySelectMulti'
 />
 ```
 
+**`isSelectionFiltering` — deciding whether a `MySelectMulti` selection should filter a query.**
+Since both extremes (nothing selected, everything selected) mean "no filter" and `MySelectMulti`
+reports the identical full-array value for either, a consumer should never derive "is this
+filtering?" itself (`.length > 0`, `.length < options.length`, or similar ad hoc checks) — use this
+helper instead, which is true only for a genuine partial selection:
+
+```tsx
+import { isSelectionFiltering } from 'nextjs-shared/isSelectionFiltering'
+
+if (isSelectionFiltering(selectedClubs, clubOptions.length)) {
+  params.set('clubs', selectedClubs.join(','))
+}
+```
+
 ### MySelectRows props
 
 A thin wrapper around `MySelect` for the common "rows per page" dropdown, meant to sit alongside
