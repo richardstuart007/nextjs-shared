@@ -620,6 +620,11 @@ A thin wrapper around `MySelect` for the common "rows per page" dropdown, meant 
 project can override per call site — the defaults themselves are internal to nextjs-shared (not
 exported), so overriding is done by passing `options`/`value`, not by importing the shared default.
 
+**Single-option behavior:** if `options` has 0 entries, renders nothing. If it has exactly 1 entry
+(nothing to choose between), renders a plain static text label (`{n} rows`, styled via
+`MySelectRows_staticTextClass`) instead of a `<select>` — there's no point offering a dropdown with
+only one choice. 2+ options render the normal interactive dropdown as before.
+
 | Prop | Type | Default |
 |---|---|---|
 | `value` | `number` | — |

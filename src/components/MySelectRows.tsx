@@ -1,7 +1,13 @@
 'use client'
 
 import MySelect from './MySelect'
-import { MySelectRows_optionsDftShared, MySelectRows_dftClass } from '../constants'
+import {
+  MySelectRows_optionsDftShared,
+  MySelectRows_dftClass,
+  MySelectRows_staticTextClass,
+  MySelect_labelDftClass,
+  MySelect_containerDftClass
+} from '../constants'
 
 type Props = {
   value: number
@@ -16,7 +22,9 @@ type Props = {
 }
 
 //----------------------------------------------------------------------------------
-//  MySelectRows — <select> dropdown of rows-per-page choices, for use alongside MyPagination
+//  MySelectRows — <select> dropdown of rows-per-page choices, for use alongside MyPagination.
+//  Renders a plain static label instead of a dropdown when there's nothing to choose between
+//  (0 or 1 options).
 //----------------------------------------------------------------------------------
 export default function MySelectRows({
   value,
@@ -26,9 +34,20 @@ export default function MySelectRows({
   id,
   defaultClass = MySelectRows_dftClass,
   overrideClass,
-  labelClass,
-  containerClass
+  labelClass = MySelect_labelDftClass,
+  containerClass = MySelect_containerDftClass
 }: Props) {
+  if (options.length === 0) return null
+
+  if (options.length === 1) {
+    return (
+      <div className={containerClass}>
+        {label && <span className={labelClass}>{label}</span>}
+        <span className={MySelectRows_staticTextClass}>{options[0]} rows</span>
+      </div>
+    )
+  }
+
   return (
     <MySelect
       label={label}

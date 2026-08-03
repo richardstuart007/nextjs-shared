@@ -200,10 +200,13 @@ Re-verified against actual file contents as of this entry, not just the original
   (`MyConfirmDialog` has no built-in loading state). No outstanding items remain in this project.
 
 ### next-bridge
-- `src/ui/shared/RowsPerPageSelect.tsx` — local rows-per-page dropdown, predates the shared
-  `nextjs-shared/MySelectRows` (and `MyPaginationFooter`, which combines it with `MyPagination`).
-  Should be migrated to the shared component. Not actioned here (project isolation) — needs a
-  session opened in next-bridge.
+- ~~`src/ui/shared/RowsPerPageSelect.tsx` local rows-per-page dropdown~~ — **fixed**, via `#audit`.
+  Migrated `HomePageClient.tsx`, `PlayerPageClient.tsx`, `PartnersTable.tsx`, and
+  `SessionPageClient.tsx` to `nextjs-shared/MyPaginationFooter`; deleted the now-unused
+  `RowsPerPageSelect.tsx` and the now-dead `ROWS_PER_PAGE_OPTIONS` constant. `RankingsPageClient.tsx`
+  was excluded (no existing page-based pagination to swap — uses a client-side Top-N pattern
+  instead; would need real `fetchFiltered`/`fetchTotalPages` pagination added first, a separate,
+  bigger task not yet scheduled).
 - ~~`src/app/owner/page.tsx` hand-rolled tab bar~~ — **fixed**. Now uses `OwnerPage` correctly.
   Minor polish only: `ToolsPanel` still wraps its content in `p-8`, which may double up with
   `OwnerLayout`'s own `px-6 py-4` padding — low-priority cosmetic follow-up, not a functional bug.

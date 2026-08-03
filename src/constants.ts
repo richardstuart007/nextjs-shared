@@ -213,6 +213,7 @@ export const MySelectMulti_panelDftClass     = 'absolute z-10 mt-1 top-full left
 export const MySelectRows_optionsDftShared = [10, 20, 50, 100] as const
 export const MySelectRows_valueDftShared = 20
 export const MySelectRows_dftClass = MySelect_dftClass.replace('w-72', 'w-24')
+export const MySelectRows_staticTextClass = 'text-xs text-gray-700'
 
 //
 //  MyTab — one default class per variant/active combination
