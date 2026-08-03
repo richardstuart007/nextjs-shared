@@ -18,6 +18,10 @@ type Props = {
   selected: string[]
   onChange: (values: string[]) => void
   id?: string
+  mode?: 'any' | 'all'
+  selectAllLabel?: string
+  minSelected?: number
+  maxSelected?: number
   showReset?: boolean
   resetLabel?: string
   defaultClass?: string
@@ -43,6 +47,10 @@ export default function MySelectMulti({
   selected,
   onChange,
   id,
+  mode = 'any',
+  selectAllLabel = 'All',
+  minSelected,
+  maxSelected,
   showReset = false,
   resetLabel = 'All',
   defaultClass = MySelectMulti_dftClass,
@@ -65,16 +73,58 @@ export default function MySelectMulti({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  const allSelected = selected.length === normalized.length
+  const canSelectAll = maxSelected === undefined || maxSelected >= normalized.length
+
   function toggle(value: string) {
-    onChange(selected.includes(value) ? selected.filter(v => v !== value) : [...selected, value])
+    const isSelected = selected.includes(value)
+
+    if (isSelected) {
+      if (mode === 'all' && allSelected) {
+        const candidate = [value]
+        if (minSelected !== undefined && candidate.length < minSelected) return
+        onChange(candidate)
+        return
+      }
+      const candidate = selected.filter(v => v !== value)
+      if (minSelected !== undefined && candidate.length < minSelected) return
+      onChange(candidate)
+      return
+    }
+
+    if (maxSelected !== undefined && selected.length + 1 > maxSelected) {
+      if (minSelected !== undefined && minSelected === maxSelected) {
+        onChange([...selected.slice(1), value])
+      }
+      return
+    }
+    onChange([...selected, value])
+  }
+
+  function selectAll() {
+    if (!canSelectAll) return
+    onChange(normalized.map(opt => opt.value))
   }
 
   function resetSelection() {
+    if (minSelected !== undefined && minSelected > 0) return
     onChange([])
     setOpen(false)
   }
 
-  const display = selected.length === 0 ? 'All' : `${selected.length} selected`
+  const countLabel = maxSelected !== undefined ? `${selected.length}/${maxSelected} selected` : `${selected.length} selected`
+  const display =
+    mode === 'all'
+      ? (allSelected ? selectAllLabel : countLabel)
+      : (selected.length === 0 ? 'All' : countLabel)
+  let constraintTitle: string | undefined
+  if (minSelected !== undefined && maxSelected !== undefined) {
+    constraintTitle = minSelected === maxSelected ? `Select ${minSelected}` : `Select ${minSelected}-${maxSelected}`
+  } else if (minSelected !== undefined) {
+    constraintTitle = `Select at least ${minSelected}`
+  } else if (maxSelected !== undefined) {
+    constraintTitle = `Select up to ${maxSelected}`
+  }
   const selectedItems = normalized.filter(opt => selected.includes(opt.value))
   const unselectedItems = normalized.filter(opt => !selected.includes(opt.value))
 
@@ -87,6 +137,7 @@ export default function MySelectMulti({
           type='button'
           aria-haspopup='listbox'
           aria-expanded={open}
+          title={constraintTitle}
           onClick={() => setOpen(o => !o)}
           className={className}
         >
@@ -94,7 +145,18 @@ export default function MySelectMulti({
         </button>
         {open && (
           <div role='listbox' aria-multiselectable='true' className={panelClass}>
-            {showReset && selected.length > 0 && (
+            {canSelectAll && (
+              <label className='flex items-center gap-1 px-1 py-0.5 mb-1 pb-1 border-b border-gray-200 font-semibold hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
+                <input
+                  type='checkbox'
+                  checked={allSelected}
+                  onChange={selectAll}
+                  className='h-3 w-3'
+                />
+                {selectAllLabel}
+              </label>
+            )}
+            {mode !== 'all' && showReset && selected.length > 0 && (
               <button
                 type='button'
                 onClick={resetSelection}
@@ -107,7 +169,7 @@ export default function MySelectMulti({
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input
                   type='checkbox'
-                  checked={selected.includes(opt.value)}
+                  checked={mode === 'all' && allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
                   className='h-3 w-3'
                 />
@@ -121,7 +183,7 @@ export default function MySelectMulti({
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input
                   type='checkbox'
-                  checked={selected.includes(opt.value)}
+                  checked={mode === 'all' && allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
                   className='h-3 w-3'
                 />
