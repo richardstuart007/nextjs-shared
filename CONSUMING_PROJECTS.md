@@ -579,6 +579,17 @@ panel of checkboxes on click, closing on outside click. Distinct from `MyCheckbo
 is an always-expanded checkbox group meant for dedicated form space; `MySelectMulti` is for
 space-constrained filter bars where the option list should stay collapsed until needed.
 
+**Selection convention: every option selected = no filter.** The trigger label shows
+`selectAllLabel` (default `'All'`) when every option is currently selected, otherwise
+`${selected.length} selected` (or `${selected.length}/${maxSelected} selected` if `maxSelected` is
+set — see below). A "select all" checkbox row renders first inside the open panel (labelled by
+`selectAllLabel`); checking it sets `selected` to every option's value in one action. While
+everything is selected, individual per-option checkboxes render **unchecked** (even though they're
+technically all in `selected`) — only the "select all" row's own checkbox shows ticked, so the
+special "all selected" state isn't visually indistinguishable from every item being individually
+ticked. Also while everything is selected, clicking an individual option's checkbox narrows the
+selection to just that one item (not "all minus one").
+
 **Floating selections:** whenever an item is checked, it floats to the top of the open panel
 (above a thin divider, `MySelectMulti_selectedDividerClass`); unchecking it sinks it back down to
 its original position among the unselected options. Both groups preserve their original relative
@@ -593,12 +604,9 @@ to their new position instantly. This is the panel's default ordering behavior f
 | `selected` | `string[]` | — |
 | `onChange` | `(values: string[]) => void` | — |
 | `id` | `string` | derived from `label` |
-| `mode` | `'any' \| 'all'` | `'any'` |
 | `selectAllLabel` | `string` | `'All'` |
 | `minSelected` | `number` | — (no minimum) |
 | `maxSelected` | `number` | — (no maximum) |
-| `showReset` | `boolean` | `false` |
-| `resetLabel` | `string` | `'All'` |
 | `defaultClass` | `string` | `MySelectMulti_dftClass` |
 | `overrideClass` | `string` | `''` |
 | `labelClass` | `string` | `MySelectMulti_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |
@@ -607,46 +615,14 @@ to their new position instantly. This is the panel's default ordering behavior f
 
 Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass`, `MySelectMulti_selectedDividerClass` (from `nextjs-shared/constants`).
 
-`showReset` defaults to `false` — every existing caller is unaffected. When `true` and `selected.length > 0`,
-an extra row (labelled by `resetLabel`) renders first inside the open panel, visually separated from
-the checkbox options by a bottom border. Clicking it calls `onChange([])` and closes the panel —
-a one-click way back to the "All" state, which otherwise requires unchecking every option
-individually.
-
-**`mode` — which selection state means "no filter":** `mode` defaults to `'any'`, which is
-everything described above (empty `selected` = no filter, shown as `'All'`). `mode='all'` inverts
-the convention for callers where *every option selected* is the no-filter state:
-- The trigger label shows `selectAllLabel` (default `'All'`) when every option is currently
-  selected, otherwise `${selected.length} selected` (or `${selected.length}/${maxSelected} selected`
-  if `maxSelected` is set — see below) — same logic as `'any'` mode, just evaluated against
-  full-selection instead of empty-selection.
-- While everything is selected, individual per-option checkboxes render **unchecked** (even though
-  they're technically all in `selected`) — only the "select all" row's own checkbox shows ticked.
-  Matches next-bridge's `StringMultiSelect` exactly; avoids every single item showing a checkmark
-  when the state really just means "no filter."
-- While everything is selected, clicking an individual option's checkbox narrows the selection to
-  just that one item (not "all minus one") — matches the exact behavior of next-bridge's
-  `StringMultiSelect`, which this mode is meant to replace at call sites like `ClubSelect` and
-  `EventTypeSelect`.
-- `showReset`/`resetLabel` are ignored in this mode (the reset row never renders), since an empty
-  selection isn't a meaningful state when "all selected" is what "no filter" means.
-- Floating-selected-to-top behavior still applies normally.
-
 ```tsx
 <MySelectMulti
   label='Day of week'
-  mode='all'
   options={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']}
   selected={selectedDays}
   onChange={setSelectedDays}
 />
 ```
-
-**"Select all" row — always present, both modes:** a checkbox row labelled `selectAllLabel`
-(default `'All'`) renders first inside the open panel in *both* `mode='any'` and `mode='all'`,
-with no opt-out prop — every existing caller gets it automatically. Checking it sets `selected` to
-every option's value in one action. The only time it's hidden is when `maxSelected` makes "every
-option selected" impossible to reach (see below).
 
 **`minSelected` / `maxSelected` — capping the selection count:** both are optional and unset by
 default (no limit), and both are hard floors/ceilings enforced by the component itself — clicking
@@ -662,12 +638,10 @@ anything), there's no disabled/greyed-out visual state.
   works by replacing the oldest one. Note this "oldest" is insertion order, not necessarily the
   item currently shown at the very top of the floated group (floating order follows the original
   `options` position, an independent ordering) — the two can differ, and that's expected.
-- `showReset`'s reset-to-empty action also respects `minSelected`: if `minSelected > 0`, the reset
-  button is a no-op (can't reset to a state that violates the minimum).
 - When `maxSelected` is set below `options.length`, reaching "every option selected" is impossible
   by definition. In that case the "select all" row is not rendered and the trigger never shows
   `selectAllLabel`/"All" for the full-selection state — the label always falls back to the
-  `${selected.length}/${maxSelected} selected` count. This applies regardless of `mode`.
+  `${selected.length}/${maxSelected} selected` count.
 - When `maxSelected` is set, the trigger label always shows `${selected.length}/${maxSelected}
   selected` instead of the plain `${selected.length} selected`.
 - Whenever `minSelected` and/or `maxSelected` is set, the trigger button gets a `title` attribute

@@ -18,12 +18,9 @@ type Props = {
   selected: string[]
   onChange: (values: string[]) => void
   id?: string
-  mode?: 'any' | 'all'
   selectAllLabel?: string
   minSelected?: number
   maxSelected?: number
-  showReset?: boolean
-  resetLabel?: string
   defaultClass?: string
   overrideClass?: string
   labelClass?: string
@@ -47,12 +44,9 @@ export default function MySelectMulti({
   selected,
   onChange,
   id,
-  mode = 'any',
   selectAllLabel = 'All',
   minSelected,
   maxSelected,
-  showReset = false,
-  resetLabel = 'All',
   defaultClass = MySelectMulti_dftClass,
   overrideClass = '',
   labelClass = MySelectMulti_labelDftClass,
@@ -80,7 +74,7 @@ export default function MySelectMulti({
     const isSelected = selected.includes(value)
 
     if (isSelected) {
-      if (mode === 'all' && allSelected) {
+      if (allSelected) {
         const candidate = [value]
         if (minSelected !== undefined && candidate.length < minSelected) return
         onChange(candidate)
@@ -106,17 +100,8 @@ export default function MySelectMulti({
     onChange(normalized.map(opt => opt.value))
   }
 
-  function resetSelection() {
-    if (minSelected !== undefined && minSelected > 0) return
-    onChange([])
-    setOpen(false)
-  }
-
   const countLabel = maxSelected !== undefined ? `${selected.length}/${maxSelected} selected` : `${selected.length} selected`
-  const display =
-    mode === 'all'
-      ? (allSelected ? selectAllLabel : countLabel)
-      : (selected.length === 0 ? 'All' : countLabel)
+  const display = allSelected ? selectAllLabel : countLabel
   let constraintTitle: string | undefined
   if (minSelected !== undefined && maxSelected !== undefined) {
     constraintTitle = minSelected === maxSelected ? `Select ${minSelected}` : `Select ${minSelected}-${maxSelected}`
@@ -156,20 +141,11 @@ export default function MySelectMulti({
                 {selectAllLabel}
               </label>
             )}
-            {mode !== 'all' && showReset && selected.length > 0 && (
-              <button
-                type='button'
-                onClick={resetSelection}
-                className='block w-full text-left px-1 py-0.5 mb-1 pb-1 border-b border-gray-200 italic font-semibold hover:bg-gray-50 text-xs whitespace-nowrap'
-              >
-                {resetLabel}
-              </button>
-            )}
             {selectedItems.map(opt => (
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input
                   type='checkbox'
-                  checked={mode === 'all' && allSelected ? false : selected.includes(opt.value)}
+                  checked={allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
                   className='h-3 w-3'
                 />
@@ -183,7 +159,7 @@ export default function MySelectMulti({
               <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
                 <input
                   type='checkbox'
-                  checked={mode === 'all' && allSelected ? false : selected.includes(opt.value)}
+                  checked={allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
                   className='h-3 w-3'
                 />

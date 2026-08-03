@@ -21,6 +21,10 @@ import { MyHelp } from '../components/MyHelp'
 import { MyHelpField } from '../components/MyHelpField'
 import { MyHelpStep } from '../components/MyHelpStep'
 import { MyTab } from '../components/MyTab'
+import MySelectMulti from '../components/MySelectMulti'
+import MySelectRows from '../components/MySelectRows'
+import MyPaginationFooter from '../components/MyPaginationFooter'
+import { MyBackHomeNav } from '../components/MyBackHomeNav'
 import { MyBoxProject } from './components_wrappers/MyBox'
 import { MyBox_dftClass_Project } from './components_wrappers/defaults'
 import {
@@ -36,6 +40,11 @@ import {
   MyTab_underlineInactiveClass,
   MyTab_pillActiveClass,
   MyTab_pillInactiveClass,
+  MySelectMulti_dftClass,
+  MySelectRows_dftClass,
+  MyPaginationFooter_dftClass,
+  MyBackHomeNav_containerDftClass,
+  MyBackHomeNav_linkDftClass,
 } from '../constants'
 
 //
@@ -83,6 +92,10 @@ export default function OwnerComponentTest() {
     { label: 'MyHelpField', content: <MyHelpFieldTab /> },
     { label: 'MyHelpStep', content: <MyHelpStepTab /> },
     { label: 'MyTab', content: <MyTabTab /> },
+    { label: 'MySelectMulti', content: <MySelectMultiTab /> },
+    { label: 'MySelectRows', content: <MySelectRowsTab /> },
+    { label: 'MyPaginationFooter', content: <MyPaginationFooterTab /> },
+    { label: 'MyBackHomeNav', content: <MyBackHomeNavTab /> },
   ]
   const result = <OwnerPage tabs={tabs} />
   return result
@@ -146,6 +159,14 @@ function ThreeSection({ controls, preview, returns }: ThreeSectionProps) {
       </div>
     </div>
   )
+}
+
+//----------------------------------------------------------------------------------
+//  parseNumberList — parses a comma-separated string into a number[]
+//----------------------------------------------------------------------------------
+function parseNumberList(str: string): number[] {
+  const result = str.split(',').map(s => Number(s.trim())).filter(n => !Number.isNaN(n))
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -1425,6 +1446,275 @@ function MyTabTab() {
           {Object.entries(parseRestProps(applied.restProps)).map(([k, v]) => (
             <ReturnRow key={k} label={k} value={v} />
           ))}
+        </>
+      }
+    />
+  )
+}
+
+type SelectMultiControlProps = {
+  label: string
+  selectAllLabel: string
+  minSelected: string
+  maxSelected: string
+  overrideClass: string
+}
+const selectMultiDefaults: SelectMultiControlProps = {
+  label: 'Fruits',
+  selectAllLabel: 'All',
+  minSelected: '',
+  maxSelected: '',
+  overrideClass: '',
+}
+
+//----------------------------------------------------------------------------------------------
+//  MySelectMultiTab
+//----------------------------------------------------------------------------------------------
+function MySelectMultiTab() {
+  const [draft, setDraft] = useState<SelectMultiControlProps>(selectMultiDefaults)
+  const [applied, setApplied] = useState<SelectMultiControlProps>(selectMultiDefaults)
+  const [selected, setSelected] = useState<string[]>([])
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelected([])
+  }
+
+  const computedClass = myMergeClasses(MySelectMulti_dftClass, applied.overrideClass)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='selectAllLabel'>
+            <MyInput value={draft.selectAllLabel} onChange={e => setDraft(d => ({ ...d, selectAllLabel: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='minSelected'>
+            <MyInput type='number' value={draft.minSelected} onChange={e => setDraft(d => ({ ...d, minSelected: e.target.value }))} overrideClass='w-20' />
+          </ControlRow>
+          <ControlRow label='maxSelected'>
+            <MyInput type='number' value={draft.maxSelected} onChange={e => setDraft(d => ({ ...d, maxSelected: e.target.value }))} overrideClass='w-20' />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea
+              value={draft.overrideClass}
+              onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))}
+              overrideClass='w-full h-48'
+            />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MySelectMulti
+          label={applied.label}
+          options={checkboxOptions}
+          selected={selected}
+          onChange={setSelected}
+          selectAllLabel={applied.selectAllLabel}
+          minSelected={applied.minSelected !== '' ? Number(applied.minSelected) : undefined}
+          maxSelected={applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined}
+          overrideClass={applied.overrideClass}
+        />
+      }
+      returns={
+        <>
+          <ReturnRow label='count' value={String(selected.length)} />
+          <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
+          <ReturnRow label='className' value={computedClass} />
+        </>
+      }
+    />
+  )
+}
+
+type SelectRowsControlProps = { label: string; options: string }
+const selectRowsDefaults: SelectRowsControlProps = { label: 'Rows', options: '10,20,50,100' }
+
+//----------------------------------------------------------------------------------------------
+//  MySelectRowsTab
+//----------------------------------------------------------------------------------------------
+function MySelectRowsTab() {
+  const [draft, setDraft] = useState<SelectRowsControlProps>(selectRowsDefaults)
+  const [applied, setApplied] = useState<SelectRowsControlProps>(selectRowsDefaults)
+  const [value, setValue] = useState(20)
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+
+  const parsedOptions = parseNumberList(applied.options)
+  const computedClass = myMergeClasses(MySelectRows_dftClass, '')
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='options (comma-sep)'>
+            <MyInput value={draft.options} onChange={e => setDraft(d => ({ ...d, options: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MySelectRows
+          label={applied.label}
+          options={parsedOptions}
+          value={value}
+          onChange={setValue}
+        />
+      }
+      returns={
+        <>
+          <ReturnRow label='value' value={String(value)} />
+          <ReturnRow label='options' value={parsedOptions.join(', ') || '(none)'} />
+          <ReturnRow label='className' value={computedClass} />
+        </>
+      }
+    />
+  )
+}
+
+type PaginationFooterControlProps = { totalPages: string; rowsOptions: string; overrideClass: string }
+const paginationFooterDefaults: PaginationFooterControlProps = { totalPages: '10', rowsOptions: '10,20,50,100', overrideClass: '' }
+
+//----------------------------------------------------------------------------------------------
+//  MyPaginationFooterTab
+//----------------------------------------------------------------------------------------------
+function MyPaginationFooterTab() {
+  const [draft, setDraft] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
+  const [applied, setApplied] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(20)
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setCurrentPage(1)
+  }
+
+  const parsedRowsOptions = parseNumberList(applied.rowsOptions)
+  const computedClass = myMergeClasses(MyPaginationFooter_dftClass, applied.overrideClass)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='totalPages'>
+            <MyInput
+              type='number'
+              value={draft.totalPages}
+              onChange={e => setDraft(d => ({ ...d, totalPages: e.target.value }))}
+              overrideClass='w-20'
+            />
+          </ControlRow>
+          <ControlRow label='rowsOptions (comma-sep)'>
+            <MyInput value={draft.rowsOptions} onChange={e => setDraft(d => ({ ...d, rowsOptions: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea
+              value={draft.overrideClass}
+              onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))}
+              overrideClass='w-full h-48'
+            />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MyPaginationFooter
+          totalPages={applied.totalPages !== '' ? Number(applied.totalPages) : 1}
+          statecurrentPage={currentPage}
+          setStateCurrentPage={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          rowsOptions={parsedRowsOptions}
+          overrideClass={applied.overrideClass}
+        />
+      }
+      returns={
+        <>
+          <ReturnRow label='currentPage' value={String(currentPage)} />
+          <ReturnRow label='rowsPerPage' value={String(rowsPerPage)} />
+          <ReturnRow label='className' value={computedClass} />
+        </>
+      }
+    />
+  )
+}
+
+type BackHomeNavControlProps = { backPath: string; backLabel: string; homePath: string; containerClass: string; linkClass: string }
+const backHomeNavDefaults: BackHomeNavControlProps = {
+  backPath: '/owner?tab=Components',
+  backLabel: 'Back',
+  homePath: '/owner',
+  containerClass: MyBackHomeNav_containerDftClass,
+  linkClass: MyBackHomeNav_linkDftClass,
+}
+
+//----------------------------------------------------------------------------------------------
+//  MyBackHomeNavTab
+//----------------------------------------------------------------------------------------------
+function MyBackHomeNavTab() {
+  const [draft, setDraft] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
+  const [applied, setApplied] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='backPath'>
+            <MyInput value={draft.backPath} onChange={e => setDraft(d => ({ ...d, backPath: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='backLabel'>
+            <MyInput value={draft.backLabel} onChange={e => setDraft(d => ({ ...d, backLabel: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='homePath'>
+            <MyInput value={draft.homePath} onChange={e => setDraft(d => ({ ...d, homePath: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='containerClass'>
+            <MyTextarea value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='linkClass'>
+            <MyTextarea value={draft.linkClass} onChange={e => setDraft(d => ({ ...d, linkClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MyBackHomeNav
+          backPath={applied.backPath || null}
+          backLabel={applied.backLabel}
+          homePath={applied.homePath}
+          containerClass={applied.containerClass}
+          linkClass={applied.linkClass}
+        />
+      }
+      returns={
+        <>
+          <ReturnRow label='backPath' value={applied.backPath || '(none)'} />
+          <ReturnRow label='homePath' value={applied.homePath} />
         </>
       }
     />
