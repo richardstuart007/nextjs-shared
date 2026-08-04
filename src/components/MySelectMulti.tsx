@@ -132,7 +132,7 @@ export default function MySelectMulti({
   }
 
   const countLabel = maxSelected !== undefined ? `${selected.length}/${maxSelected} selected` : `${selected.length} selected`
-  const display = allSelected ? selectAllLabel : countLabel
+  const display = allSelected || selected.length === 0 ? selectAllLabel : countLabel
   let constraintTitle: string | undefined
   if (minSelected !== undefined && maxSelected !== undefined) {
     constraintTitle = minSelected === maxSelected ? `Select ${minSelected}` : `Select ${minSelected}-${maxSelected}`

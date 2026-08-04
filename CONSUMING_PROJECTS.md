@@ -579,16 +579,20 @@ panel of checkboxes on click, closing on outside click. Distinct from `MyCheckbo
 is an always-expanded checkbox group meant for dedicated form space; `MySelectMulti` is for
 space-constrained filter bars where the option list should stay collapsed until needed.
 
-**Selection convention: every option selected = no filter.** The trigger label shows
-`selectAllLabel` (default `'All'`) when every option is currently selected, otherwise
-`${selected.length} selected` (or `${selected.length}/${maxSelected} selected` if `maxSelected` is
-set — see below). A "select all" checkbox row renders first inside the open panel (labelled by
-`selectAllLabel`); checking it sets `selected` to every option's value in one action. While
-everything is selected, individual per-option checkboxes render **unchecked** (even though they're
-technically all in `selected`) — only the "select all" row's own checkbox shows ticked, so the
-special "all selected" state isn't visually indistinguishable from every item being individually
-ticked. Also while everything is selected, clicking an individual option's checkbox narrows the
-selection to just that one item (not "all minus one").
+**Selection convention: every option selected, or none, = no filter.** The trigger label shows
+`selectAllLabel` (default `'All'`) when every option is currently selected **or when `selected` is
+empty**, otherwise `${selected.length} selected` (or `${selected.length}/${maxSelected} selected`
+if `maxSelected` is set — see below). This matches `isSelectionFiltering` below, which already
+treats both extremes as "no filter" — the label now reflects that for the empty case too. A
+"select all" checkbox row renders first inside the open panel (labelled by `selectAllLabel`);
+checking it sets `selected` to every option's value in one action. While everything is selected,
+individual per-option checkboxes render **unchecked** (even though they're technically all in
+`selected`) — only the "select all" row's own checkbox shows ticked, so the special "all selected"
+state isn't visually indistinguishable from every item being individually ticked. Also while
+everything is selected, clicking an individual option's checkbox narrows the selection to just
+that one item (not "all minus one"). Note: when `selected` is empty, the "select all" row's
+checkbox itself stays **unchecked** (matching the individual checkboxes, which are also unchecked
+in that state) — only the trigger label changes.
 
 **Floating selections:** whenever an item is checked, it floats to the top of the open panel
 (above a thin divider, `MySelectMulti_selectedDividerClass`); unchecking it sinks it back down to
