@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import OwnerPage from './OwnerPage'
 import { MyButton } from '../components/MyButton'
-import { MyInputProject as MyInput } from './components_wrappers/MyInput'
-import { MyInput_dftClass_Project } from './components_wrappers/defaults'
+import { MyInput } from '../components/MyInput'
 import { MyTextarea } from '../components/MyTextarea'
 import MyDropdown from '../components/MyDropdown'
 import { myMergeClasses } from '../components/MyMergeClasses'
@@ -26,10 +25,10 @@ import { isSelectionFiltering } from '../components/isSelectionFiltering'
 import MySelectRows from '../components/MySelectRows'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'
-import { MyBoxProject } from './components_wrappers/MyBox'
-import { MyBox_dftClass_Project } from './components_wrappers/defaults'
+import MyBox from '../components/MyBox'
 import {
   MyButton_dftClass,
+  MyInput_dftClass,
   MyTextarea_dftClass,
   MyDropdown_dftClass,
   MyLink_dftClass,
@@ -42,10 +41,17 @@ import {
   MyTab_pillActiveClass,
   MyTab_pillInactiveClass,
   MySelectMulti_dftClass,
+  MySelectMulti_panelDftClass,
+  MySelectMulti_panelWidthDftClass,
+  MySelectMulti_panelMaxHeightDftClass,
+  MySelectMulti_rowDftClass,
+  MySelectMulti_selectAllRowDftClass,
+  MySelectMulti_checkboxDftClass,
   MySelectRows_dftClass,
   MyPaginationFooter_dftClass,
   MyBackHomeNav_containerDftClass,
   MyBackHomeNav_linkDftClass,
+  MyBox_dftClass,
 } from '../constants'
 
 //
@@ -128,7 +134,7 @@ type ReturnRowProps = { label: string; value: string }
 function ReturnRow({ label, value }: ReturnRowProps) {
   return (
     <div className='flex gap-2 text-xs mb-1'>
-      <span className='text-gray-500 w-28 shrink-0'>{label}:</span>
+      <span className='text-gray-500 w-28 shrink-0'>{label}</span>
       <span className='font-mono text-gray-900 break-all'>{value}</span>
     </div>
   )
@@ -329,7 +335,7 @@ function MyInputTab() {
         <>
           <ReturnRow label='value' value={value || '(empty)'} />
           <ReturnRow label='length' value={String(value.length)} />
-          <ReturnRow label='className' value={myMergeClasses(MyInput_dftClass_Project, applied.overrideClass)} />
+          <ReturnRow label='className' value={myMergeClasses(MyInput_dftClass, applied.overrideClass)} />
           {Object.entries(parseRestProps(applied.restProps)).map(([k, v]) => (
             <ReturnRow key={k} label={k} value={v} />
           ))}
@@ -447,15 +453,15 @@ function MyBoxTab() {
         </form>
       }
       preview={
-        <MyBoxProject title={applied.title} className={applied.className}>
+        <MyBox title={applied.title} className={applied.className}>
           <p className='text-xs'>{applied.content}</p>
-        </MyBoxProject>
+        </MyBox>
       }
       returns={
         <>
           <ReturnRow label='title' value={applied.title || '(none)'} />
-          <ReturnRow label='defaultClass' value={MyBox_dftClass_Project} />
-          <ReturnRow label='className' value={myMergeClasses(MyBox_dftClass_Project, applied.className)} />
+          <ReturnRow label='defaultClass' value={MyBox_dftClass} />
+          <ReturnRow label='className' value={myMergeClasses(MyBox_dftClass, applied.className)} />
         </>
       }
     />
@@ -1453,19 +1459,46 @@ function MyTabTab() {
   )
 }
 
+//
+//  Static option sets for MySelectMulti — 6 fruits and 20 fruits, so the demo panel's
+//  max-height/scroll behavior can be exercised with both a short and a long list
+//
+const selectMultiFruitOptions6 = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig']
+const selectMultiFruitOptions20 = [
+  'Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig', 'Grape', 'Honeydew', 'Kiwi', 'Lemon',
+  'Mango', 'Nectarine', 'Orange', 'Papaya', 'Quince', 'Raspberry', 'Strawberry', 'Tangerine',
+  'Ugli Fruit', 'Watermelon',
+]
+
 type SelectMultiControlProps = {
+  //
+  //  Data / behavior
+  //
   label: string
+  optionSet: '6 fruits' | '20 fruits'
   selectAllLabel: string
   minSelected: string
   maxSelected: string
+  //
+  //  Style
+  //
   overrideClass: string
+  mergePanelWidthClass: string
+  mergeRowClass: string
+  mergeSelectAllRowClass: string
+  mergeCheckboxClass: string
 }
 const selectMultiDefaults: SelectMultiControlProps = {
   label: 'Fruits',
+  optionSet: '6 fruits',
   selectAllLabel: 'All',
   minSelected: '',
   maxSelected: '',
   overrideClass: '',
+  mergePanelWidthClass: '',
+  mergeRowClass: '',
+  mergeSelectAllRowClass: '',
+  mergeCheckboxClass: '',
 }
 
 //----------------------------------------------------------------------------------------------
@@ -1483,6 +1516,14 @@ function MySelectMultiTab() {
   }
 
   const computedClass = myMergeClasses(MySelectMulti_dftClass, applied.overrideClass)
+  const appliedOptions = applied.optionSet === '20 fruits' ? selectMultiFruitOptions20 : selectMultiFruitOptions6
+  const computedPanelClass = myMergeClasses(
+    myMergeClasses(MySelectMulti_panelDftClass, applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : MySelectMulti_panelWidthDftClass),
+    MySelectMulti_panelMaxHeightDftClass
+  )
+  const computedRowClass = myMergeClasses(MySelectMulti_rowDftClass, applied.mergeRowClass)
+  const computedSelectAllRowClass = myMergeClasses(MySelectMulti_selectAllRowDftClass, applied.mergeSelectAllRowClass)
+  const computedCheckboxClass = myMergeClasses(MySelectMulti_checkboxDftClass, applied.mergeCheckboxClass)
 
   return (
     <ThreeSection
@@ -1490,6 +1531,13 @@ function MySelectMultiTab() {
         <form onSubmit={handleApply} className='flex flex-col gap-2'>
           <ControlRow label='label'>
             <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='optionSet'>
+            <MySelect
+              options={['6 fruits', '20 fruits']}
+              value={draft.optionSet}
+              onChange={e => setDraft(d => ({ ...d, optionSet: e.target.value as '6 fruits' | '20 fruits' }))}
+            />
           </ControlRow>
           <ControlRow label='selectAllLabel'>
             <MyInput value={draft.selectAllLabel} onChange={e => setDraft(d => ({ ...d, selectAllLabel: e.target.value }))} overrideClass='w-full' />
@@ -1507,6 +1555,18 @@ function MySelectMultiTab() {
               overrideClass='w-full h-48'
             />
           </ControlRow>
+          <ControlRow label='mergePanelWidthClass'>
+            <MyInput value={draft.mergePanelWidthClass} onChange={e => setDraft(d => ({ ...d, mergePanelWidthClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeRowClass'>
+            <MyInput value={draft.mergeRowClass} onChange={e => setDraft(d => ({ ...d, mergeRowClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeSelectAllRowClass'>
+            <MyInput value={draft.mergeSelectAllRowClass} onChange={e => setDraft(d => ({ ...d, mergeSelectAllRowClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeCheckboxClass'>
+            <MyInput value={draft.mergeCheckboxClass} onChange={e => setDraft(d => ({ ...d, mergeCheckboxClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
           </div>
@@ -1515,13 +1575,17 @@ function MySelectMultiTab() {
       preview={
         <MySelectMulti
           label={applied.label}
-          options={checkboxOptions}
+          options={appliedOptions}
           selected={selected}
           onChange={setSelected}
           selectAllLabel={applied.selectAllLabel}
           minSelected={applied.minSelected !== '' ? Number(applied.minSelected) : undefined}
           maxSelected={applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined}
           overrideClass={applied.overrideClass}
+          mergePanelWidthClass={applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : undefined}
+          mergeRowClass={applied.mergeRowClass}
+          mergeSelectAllRowClass={applied.mergeSelectAllRowClass}
+          mergeCheckboxClass={applied.mergeCheckboxClass}
         />
       }
       returns={
@@ -1529,7 +1593,11 @@ function MySelectMultiTab() {
           <ReturnRow label='count' value={String(selected.length)} />
           <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
           <ReturnRow label='className' value={computedClass} />
-          <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, checkboxOptions.length))} />
+          <ReturnRow label='panelClassName' value={computedPanelClass} />
+          <ReturnRow label='rowClass' value={computedRowClass} />
+          <ReturnRow label='selectAllRowClass' value={computedSelectAllRowClass} />
+          <ReturnRow label='checkboxClass' value={computedCheckboxClass} />
+          <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, appliedOptions.length))} />
         </>
       }
     />

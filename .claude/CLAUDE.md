@@ -232,7 +232,19 @@ Re-verified against actual file contents as of this entry, not just the original
   `#audit`. Both now use `MySelectMulti` with `showReset`.
 - `CreateSQLConn.tsx:91-109` raw-button table list — **decided against, not a finding**. User
   confirmed `MyButton` doesn't fit this flush list-item shape well; leaving as raw HTML
-  intentionally. No outstanding items remain in this project.
+  intentionally.
+- **New, unfixed (found 2026-08-04, via a next-bridge session reading this project read-only):**
+  `SchemaSyncConn.tsx` (~line 641-642) and `CopyTableConn.tsx` (~line 532-533) still pass
+  `showReset`/`resetLabel` props to `MySelectMulti` — both props were removed from
+  `MySelectMulti`'s type entirely in an earlier nextjs-shared change (mode-removal work, predating
+  this entry's "fixed" note above, which was never updated). Confirmed against current `src/`: no
+  trace of `showReset`/`resetLabel` anywhere in this package. next-dbadmin isn't broken yet only
+  because its installed `node_modules` is still pinned to `nextjs-shared@2.1.34`, which predates
+  the removal — the next `npm install`/reinstall in next-dbadmin will fail to compile both files.
+  Fix (in a next-dbadmin session, not here — project isolation): drop the `showReset`/`resetLabel`
+  props from both call sites. The "select all" row `MySelectMulti` renders is no longer opt-in —
+  it's built into the component by default (governed by `selectAllLabel`, not a `showReset` flag),
+  so no replacement prop is needed, just deletion of the two obsolete ones.
 
 ### richard-dashboard
 - ~~Everything~~ — **fully done**. `globals.css` `@source` directive, `owner/page.tsx` buttons, and

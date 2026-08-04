@@ -612,8 +612,44 @@ to their new position instantly. This is the panel's default ordering behavior f
 | `labelClass` | `string` | `MySelectMulti_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |
 | `containerClass` | `string` | `MySelectMulti_containerDftClass` (`'flex items-center gap-2'`) |
 | `panelClass` | `string` | `MySelectMulti_panelDftClass` |
+| `mergePanelWidthClass` | `string` | `MySelectMulti_panelWidthDftClass` (`'w-full'`) |
+| `mergePanelMaxHeightClass` | `string` | `MySelectMulti_panelMaxHeightDftClass` (`'max-h-60 overflow-y-auto overflow-x-hidden'`) |
+| `mergeRowClass` | `string` | `''` |
+| `mergeSelectAllRowClass` | `string` | `''` |
+| `mergeCheckboxClass` | `string` | `''` |
 
-Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass`, `MySelectMulti_selectedDividerClass` (from `nextjs-shared/constants`).
+Exported constants: `MySelectMulti_dftClass`, `MySelectMulti_labelDftClass`, `MySelectMulti_containerDftClass`, `MySelectMulti_panelDftClass`, `MySelectMulti_panelWidthDftClass`, `MySelectMulti_panelMaxHeightDftClass`, `MySelectMulti_rowDftClass`, `MySelectMulti_selectAllRowDftClass`, `MySelectMulti_checkboxDftClass`, `MySelectMulti_selectedDividerClass` (from `nextjs-shared/constants`).
+
+**Naming convention: a `merge` prefix means the prop is merged via `myMergeClasses` against a fixed
+default, never a full replacement** — mirroring the pre-existing `overrideClass`/`defaultClass`
+pair (`overrideClass` itself keeps its original name; renaming it would be a package-wide breaking
+change across every component and consuming project, not done here — see the `merge` prefix as the
+convention for props added going forward, coexisting with the differently-named `overrideClass`).
+`mergeRowClass` styles each selected/unselected option row (`myMergeClasses(MySelectMulti_rowDftClass,
+mergeRowClass)`), `mergeSelectAllRowClass` styles the "select all" row (identical to `mergeRowClass`
+plus the divider border/bold weight), and `mergeCheckboxClass` styles all three checkbox `<input>`s
+— each defaults to `''`, matching only the piece you pass in (e.g. `mergeRowClass='hover:bg-red-100'`
+replaces just the `hover:bg-*` utility, leaving `flex items-center gap-1 px-1 py-0.5 cursor-pointer
+text-xs whitespace-nowrap` untouched). The wrapper `<div className='relative'>` around the
+trigger/panel is intentionally excluded from this pattern — it's a structural positioning
+requirement for the panel's `absolute` positioning, not a stylistic choice, so it stays hardcoded
+rather than becoming a constant/prop.
+
+`mergePanelWidthClass` and `mergePanelMaxHeightClass` are kept separate from `panelClass` so a
+caller needing a different width or height only has to override that one piece, not re-type the
+rest of the panel's styling (border, shadow, rounded corners, padding, position). `w-` and `max-h-`
+are recognized groups in `myMergeClasses`, so an override like `mergePanelWidthClass='w-40'` or
+`mergePanelMaxHeightClass='max-h-96 overflow-y-auto'` cleanly replaces just that piece.
+
+**Panel width defaults to the trigger button's rendered width, not its content.** The trigger
+button and panel are siblings inside a `relative` wrapper that is itself a flex item of
+`containerClass` (default `'flex items-center gap-2'`), so the wrapper already shrink-wraps to the
+button's exact width; `mergePanelWidthClass`'s default of `'w-full'` inherits that same width.
+Option rows are `whitespace-nowrap` and not wrapped automatically — if an option's label is wider
+than the header/panel, it is silently clipped on the right (no scrollbar, `overflow-x-hidden`).
+This is intentional: truncation showing up in testing is the signal to widen the trigger
+(`overrideClass`) or the panel (`mergePanelWidthClass`), not something the component papers over by
+wrapping text.
 
 ```tsx
 <MySelectMulti

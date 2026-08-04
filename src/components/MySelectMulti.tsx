@@ -7,12 +7,20 @@ import {
   MySelectMulti_labelDftClass,
   MySelectMulti_containerDftClass,
   MySelectMulti_panelDftClass,
+  MySelectMulti_panelWidthDftClass,
+  MySelectMulti_panelMaxHeightDftClass,
+  MySelectMulti_rowDftClass,
+  MySelectMulti_selectAllRowDftClass,
+  MySelectMulti_checkboxDftClass,
   MySelectMulti_selectedDividerClass
 } from '../constants'
 
 type Option = string | { value: string; label: string }
 
 type Props = {
+  //
+  //  Data / behavior
+  //
   label?: string
   options: Option[]
   selected: string[]
@@ -21,11 +29,19 @@ type Props = {
   selectAllLabel?: string
   minSelected?: number
   maxSelected?: number
+  //
+  //  Style
+  //
   defaultClass?: string
   overrideClass?: string
   labelClass?: string
   containerClass?: string
   panelClass?: string
+  mergePanelWidthClass?: string
+  mergePanelMaxHeightClass?: string
+  mergeRowClass?: string
+  mergeSelectAllRowClass?: string
+  mergeCheckboxClass?: string
 }
 
 //----------------------------------------------------------------------------------
@@ -39,6 +55,9 @@ function normalize(opt: Option): { value: string; label: string } {
 //  MySelectMulti — compact checkbox-dropdown multi-select
 //----------------------------------------------------------------------------------
 export default function MySelectMulti({
+  //
+  //  Data / behavior
+  //
   label,
   options,
   selected,
@@ -47,17 +66,29 @@ export default function MySelectMulti({
   selectAllLabel = 'All',
   minSelected,
   maxSelected,
+  //
+  //  Style
+  //
   defaultClass = MySelectMulti_dftClass,
   overrideClass = '',
   labelClass = MySelectMulti_labelDftClass,
   containerClass = MySelectMulti_containerDftClass,
   panelClass = MySelectMulti_panelDftClass,
+  mergePanelWidthClass = MySelectMulti_panelWidthDftClass,
+  mergePanelMaxHeightClass = MySelectMulti_panelMaxHeightDftClass,
+  mergeRowClass = '',
+  mergeSelectAllRowClass = '',
+  mergeCheckboxClass = '',
 }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const normalized = options.map(normalize)
   const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
   const className = myMergeClasses(defaultClass, overrideClass)
+  const panelClassName = myMergeClasses(myMergeClasses(panelClass, mergePanelWidthClass), mergePanelMaxHeightClass)
+  const rowClassName = myMergeClasses(MySelectMulti_rowDftClass, mergeRowClass)
+  const selectAllRowClassName = myMergeClasses(MySelectMulti_selectAllRowDftClass, mergeSelectAllRowClass)
+  const checkboxClassName = myMergeClasses(MySelectMulti_checkboxDftClass, mergeCheckboxClass)
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -129,25 +160,25 @@ export default function MySelectMulti({
           {display}
         </button>
         {open && (
-          <div role='listbox' aria-multiselectable='true' className={panelClass}>
+          <div role='listbox' aria-multiselectable='true' className={panelClassName}>
             {canSelectAll && (
-              <label className='flex items-center gap-1 px-1 py-0.5 mb-1 pb-1 border-b border-gray-200 font-semibold hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
+              <label className={selectAllRowClassName}>
                 <input
                   type='checkbox'
                   checked={allSelected}
                   onChange={selectAll}
-                  className='h-3 w-3'
+                  className={checkboxClassName}
                 />
                 {selectAllLabel}
               </label>
             )}
             {selectedItems.map(opt => (
-              <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
+              <label key={opt.value} className={rowClassName}>
                 <input
                   type='checkbox'
                   checked={allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
-                  className='h-3 w-3'
+                  className={checkboxClassName}
                 />
                 {opt.label}
               </label>
@@ -156,12 +187,12 @@ export default function MySelectMulti({
               <div className={MySelectMulti_selectedDividerClass} />
             )}
             {unselectedItems.map(opt => (
-              <label key={opt.value} className='flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'>
+              <label key={opt.value} className={rowClassName}>
                 <input
                   type='checkbox'
                   checked={allSelected ? false : selected.includes(opt.value)}
                   onChange={() => toggle(opt.value)}
-                  className='h-3 w-3'
+                  className={checkboxClassName}
                 />
                 {opt.label}
               </label>

@@ -205,7 +205,12 @@ export const MySelectMulti_dftClass = [
 ].join(' ')
 export const MySelectMulti_labelDftClass     = 'font-bold text-xs whitespace-nowrap'
 export const MySelectMulti_containerDftClass = 'flex items-center gap-2'
-export const MySelectMulti_panelDftClass     = 'absolute z-10 mt-1 top-full left-0 min-w-max bg-white border border-gray-200 rounded shadow-md p-1'
+export const MySelectMulti_panelDftClass     = 'absolute z-10 mt-1 top-full left-0 bg-white border border-gray-200 rounded shadow-md p-1'
+export const MySelectMulti_panelWidthDftClass = 'w-full'
+export const MySelectMulti_panelMaxHeightDftClass = 'max-h-60 overflow-y-auto overflow-x-hidden'
+export const MySelectMulti_rowDftClass = 'flex items-center gap-1 px-1 py-0.5 hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'
+export const MySelectMulti_selectAllRowDftClass = 'flex items-center gap-1 px-1 py-0.5 mb-1 pb-1 border-b border-gray-200 font-semibold hover:bg-gray-50 cursor-pointer text-xs whitespace-nowrap'
+export const MySelectMulti_checkboxDftClass = 'h-3 w-3'
 export const MySelectMulti_selectedDividerClass = 'border-b border-gray-200 mb-1'
 
 //
