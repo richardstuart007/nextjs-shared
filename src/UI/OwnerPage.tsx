@@ -2,6 +2,7 @@
 
 import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
 import { MyTab } from '../components/MyTab'
+import { SessionStorageKeyPrefixShared } from '../constants'
 
 type TabConfig = { label: string; content: React.ReactNode }
 
@@ -14,7 +15,7 @@ export default function OwnerPage({ tabs, persistKey }: { tabs: TabConfig[]; per
   //
   useEffect(() => {
     if (!persistKey) return
-    const stored = sessionStorage.getItem(persistKey)
+    const stored = sessionStorage.getItem(SessionStorageKeyPrefixShared + persistKey)
     if (stored && tabs.some(t => t.label === stored)) setActiveTab(stored)
   }, [persistKey])
 
@@ -24,7 +25,7 @@ export default function OwnerPage({ tabs, persistKey }: { tabs: TabConfig[]; per
   //
   useEffect(() => {
     if (!persistKey || !restoredRef.current) return
-    sessionStorage.setItem(persistKey, activeTab)
+    sessionStorage.setItem(SessionStorageKeyPrefixShared + persistKey, activeTab)
   }, [persistKey, activeTab])
 
   //

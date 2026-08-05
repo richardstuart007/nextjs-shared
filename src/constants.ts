@@ -272,3 +272,13 @@ export const OwnerTableCache_filterDebounceMs = 2000
 export const OwnerTableLogging_filterDebounceMs = 2000
 export const OwnerTableLogging_msgTruncateLen = 200
 export const OwnerTableLogging_rowsOptions = [10, 20, 40, 100] as const
+
+//
+//  SessionStorage key naming convention — every sessionStorage key nextjs-shared or a consuming
+//  project wants visible in OwnerTableSessionStorage must start with SessionStorageKeyPrefix.
+//  nextjs-shared's own helpers (useBackNav, OwnerPage persistKey, OwnerLayout/DevLayoutHeader
+//  ownerFrom) write under SessionStorageKeyPrefixShared, which itself starts with the umbrella
+//  prefix. A consuming project may similarly adopt its own rs7_<code>_ sub-prefix for its own keys.
+//
+export const SessionStorageKeyPrefix = 'rs7_'
+export const SessionStorageKeyPrefixShared = 'rs7_shr_'

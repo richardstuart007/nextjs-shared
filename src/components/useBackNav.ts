@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { SessionStorageKeyPrefixShared } from '../constants'
 
 //----------------------------------------------------------------------------------
 //  saveBackNav — stores `path` under `key`; call before navigating away. When `path` is
@@ -8,7 +9,10 @@ import { useEffect, useRef, useState } from 'react'
 //  already-known back-target (chained navigation) instead of the current URL.
 //----------------------------------------------------------------------------------
 export function saveBackNav(key: string, path?: string) {
-  sessionStorage.setItem(key, path ?? window.location.pathname + window.location.search)
+  sessionStorage.setItem(
+    SessionStorageKeyPrefixShared + key,
+    path ?? window.location.pathname + window.location.search
+  )
 }
 
 //----------------------------------------------------------------------------------
@@ -25,8 +29,9 @@ export function useBackNav(key: string): string | null {
   useEffect(() => {
     if (readRef.current) return
     readRef.current = true
-    const stored = sessionStorage.getItem(key)
-    sessionStorage.removeItem(key)
+    const prefixedKey = SessionStorageKeyPrefixShared + key
+    const stored = sessionStorage.getItem(prefixedKey)
+    sessionStorage.removeItem(prefixedKey)
     setBackPath(stored)
   }, [key])
 

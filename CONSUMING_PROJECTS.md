@@ -1076,6 +1076,7 @@ Use `OwnerPage` from nextjs-shared for the tab bar. Pass each tab's label and co
 import OwnerPage from 'nextjs-shared/OwnerPage'
 import OwnerTableLogging from 'nextjs-shared/OwnerTableLogging'
 import OwnerTableCache from 'nextjs-shared/OwnerTableCache'
+import OwnerTableSessionStorage from 'nextjs-shared/OwnerTableSessionStorage'
 
 export default function Page() {
   return (
@@ -1083,11 +1084,43 @@ export default function Page() {
       tabs={[
         { label: 'Logging', content: <OwnerTableLogging /> },
         { label: 'Cache', content: <OwnerTableCache /> },
+        { label: 'Session Storage', content: <OwnerTableSessionStorage /> },
       ]}
     />
   )
 }
 ```
+
+### Session Storage tab
+
+`OwnerTableSessionStorage` displays sessionStorage entries whose key starts with
+`SessionStorageKeyPrefix` (`'rs7_'`, from `nextjs-shared/constants`). Unlike Logging/Cache, this is
+a pure client component with no server round-trip — `sessionStorage` never leaves the browser, so
+there's nothing for the server to read.
+
+**Why an include-list, not "show everything":** the browser's `sessionStorage` for any project also
+holds entries this display shouldn't show — framework/dev-tooling internals (e.g. Next.js dev mode
+writes `__next_debug_channel:*` entries), browser extensions, anything not meant as inspectable app
+state. Filtering to a known prefix keeps the table meaningful instead of full of noise.
+
+**The `rs7_` naming convention:** nextjs-shared is a package that runs inside every consuming
+project's own browser origin, so its own sessionStorage keys (from `useBackNav`/`saveBackNav`,
+`OwnerPage`'s `persistKey`, `OwnerLayout`/`DevLayoutHeader`'s back-link key) share a namespace with
+whatever keys that project writes itself. nextjs-shared writes its own keys under
+`SessionStorageKeyPrefixShared` (`'rs7_shr_'`) automatically and transparently — existing call
+sites (`useBackNav('myKey')`, `persistKey='owner-main'`, etc.) don't change, the prefix is applied
+internally. A consuming project that wants its **own** sessionStorage keys visible in this same tab
+should adopt its own `rs7_<code>_` sub-prefix for them (e.g. `rs7_br_` for next-bridge, `rs7_ch_`
+for chess) — since that also starts with the umbrella `rs7_`, it's picked up automatically with no
+extra configuration or props. A project that doesn't adopt the convention simply won't see its own
+keys here — nothing else changes.
+
+**Tab-scoping caveat:** it only shows entries in the *current browser tab's* `sessionStorage`. A
+fresh tab only shows whatever that tab itself has written (typically just `OwnerPage`'s
+`persistKey` entry, if set) — not keys set by navigating other pages in a different tab. Refresh
+is manual (a Refresh button) rather than automatic, since same-tab `sessionStorage` writes don't
+fire a browser event to react to. "Clear All" only removes the `rs7_`-prefixed entries actually
+shown in the table, not the tab's entire `sessionStorage`.
 
 ### Persisting the active tab across navigation (`persistKey`)
 
@@ -1129,7 +1162,9 @@ export default function Page() {
 
 ### Projects without a database
 
-Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use only project-specific tabs:
+Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. `Session Storage` needs
+no database and can still be included. Use only project-specific tabs (plus `Session Storage` if
+wanted):
 
 ```tsx
 <OwnerPage tabs={[{ label: 'Tools', content: <MyToolsPanel /> }]} />
@@ -1143,6 +1178,7 @@ Omit Logging and Cache tabs — they require `xlg_logging` and the DB cache. Use
 | `nextjs-shared/OwnerPage` | No | Tab bar chrome — pass `tabs: { label, content }[]` |
 | `nextjs-shared/OwnerTableLogging` | Yes | Paginated, filterable view of `xlg_logging` |
 | `nextjs-shared/OwnerTableCache` | Yes | Inspector for the server-side cache |
+| `nextjs-shared/OwnerTableSessionStorage` | No | Display + delete/clear-all for the current tab's `rs7_`-prefixed browser `sessionStorage` entries — see "Session Storage tab" below |
 | `nextjs-shared/DevLayoutHeader` | No | Dev-only top nav bar (Owner link + optional extra links + optional DB-location badge) — see below |
 
 ### DevLayoutHeader props

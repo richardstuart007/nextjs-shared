@@ -281,3 +281,10 @@ Re-verified against actual file contents as of this entry, not just the original
   equivalent (`NB_BACK_FROM_KEY`) that's the obvious first candidate to refactor onto the shared
   hook, and any other project's list/detail pages wanting back-path restoration are candidates too.
   This needs a Claude Code session opened in each consuming project — project isolation.
+- **`Session Storage` tab rollout** — not started. `nextjs-shared` now exports
+  `OwnerTableSessionStorage` (`src/UI/OwnerTableSessionStorage.tsx`), a client-only component that
+  displays + lets you delete/clear the current browser tab's `sessionStorage` entries (see
+  `CONSUMING_PROJECTS.md`'s "Session Storage tab" section). Added to this project's own `/owner`
+  page tabs. Not yet rolled out to any consuming project's own `/owner` page — each project that
+  wants it needs a `Session Storage` tab added alongside its existing Logging/Cache tabs. This
+  needs a Claude Code session opened in each consuming project — project isolation.

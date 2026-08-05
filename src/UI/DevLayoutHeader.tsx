@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { SessionStorageKeyPrefixShared } from '../constants'
 
 type ExtraLink = { href: string; label: string }
 
@@ -25,7 +26,7 @@ export function DevLayoutHeader({ dbLocation, extraLinks = [] }: Props = {}) {
 
   function handleOwnerClick() {
     if (!pathname.startsWith('/owner')) {
-      sessionStorage.setItem('ownerFrom', pathname)
+      sessionStorage.setItem(SessionStorageKeyPrefixShared + 'ownerFrom', pathname)
     }
   }
 

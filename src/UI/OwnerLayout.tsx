@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'
+import { SessionStorageKeyPrefixShared } from '../constants'
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -14,7 +15,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       return
     }
     if (pathname === '/owner') {
-      setBackPath(sessionStorage.getItem('ownerFrom'))
+      setBackPath(sessionStorage.getItem(SessionStorageKeyPrefixShared + 'ownerFrom'))
     } else {
       setBackPath('/owner')
     }
