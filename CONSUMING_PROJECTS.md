@@ -270,6 +270,17 @@ history to have been that way since the page was first built. For a complete, cu
 reference to model a new paginated list on, see chess's `src/lib/actions/games.ts`
 (`fetchFilteredGames`/`getGamesPageCount`) and `src/ui/games/GameList.tsx`.
 
+**Filtering a `text[]` array column:** the standard `Comparison_operator` list (`=`, `<>`, `LIKE`,
+`NOT LIKE`, `>`, `>=`, `<`, `<=`, `IN`, `NOT IN`, `IS NULL`, `IS NOT NULL`) only compares scalar
+values — none of them can express "this array column contains one of these values." Use
+`'ARRAY_OVERLAP'` for that instead, with an array `value` (builds a Postgres `&&` overlap check):
+
+```ts
+const filters: Filter[] = [
+  { column: 'my_tags_col', value: ['news', 'opinion'], operator: 'ARRAY_OVERLAP' },
+]
+```
+
 ---
 
 ## 6. Cache

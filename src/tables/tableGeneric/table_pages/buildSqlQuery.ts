@@ -41,6 +41,24 @@ export function buildSqlQuery({
         return `${column} ${operator} (${placeholders})`
       }
 
+      if (operator === 'ARRAY_OVERLAP') {
+        if (!Array.isArray(value)) {
+          throw new Error(`Value for operator ${operator} must be an array.`)
+        }
+
+        const placeholders = value
+          .map(v => {
+            if (typeof v !== 'string' && typeof v !== 'number') {
+              throw new Error(`Invalid value type for ARRAY_OVERLAP: ${typeof v}`)
+            }
+            queryValues.push(v)
+            return `$${queryValues.length}`
+          })
+          .join(', ')
+
+        return `${column} && ARRAY[${placeholders}]::text[]`
+      }
+
       const adjustedColumn =
         operator === 'LIKE' || operator === 'NOT LIKE' ? `LOWER(${column})` : column
       const adjustedValue =

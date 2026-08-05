@@ -14,6 +14,7 @@ export type Comparison_operator =
   | 'NOT IN'
   | 'IS NULL'
   | 'IS NOT NULL'
+  | 'ARRAY_OVERLAP'
 //
 // Column-value pairs
 //
