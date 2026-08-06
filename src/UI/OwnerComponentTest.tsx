@@ -21,7 +21,7 @@ import { MyHelpField } from '../components/MyHelpField'
 import { MyHelpStep } from '../components/MyHelpStep'
 import { MyTab } from '../components/MyTab'
 import MySelectMulti from '../components/MySelectMulti'
-import { isSelectionFiltering } from '../components/isSelectionFiltering'
+import { isSelectionFiltering, serializeSelection } from '../components/isSelectionFiltering'
 import MySelectRows from '../components/MySelectRows'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'
@@ -1598,6 +1598,7 @@ function MySelectMultiTab() {
           <ReturnRow label='selectAllRowClass' value={computedSelectAllRowClass} />
           <ReturnRow label='checkboxClass' value={computedCheckboxClass} />
           <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, appliedOptions.length))} />
+          <ReturnRow label='serializeSelection' value={JSON.stringify(serializeSelection(selected, appliedOptions.length))} />
         </>
       }
     />

@@ -735,6 +735,24 @@ if (isSelectionFiltering(selectedClubs, clubOptions.length)) {
 }
 ```
 
+**`SELECTION_ALL` / `serializeSelection` — persisting a `MySelectMulti` selection (e.g. to
+`sessionStorage`) across reloads.** Don't persist a literal snapshot of `selected` — as soon as the
+underlying option list grows (a new club, grade, etc. appears), the old array no longer covers
+every current option, so `isSelectionFiltering` starts reporting a genuine partial filter on
+restore, silently excluding the new value from what should still be "all." `serializeSelection`
+returns the sentinel `SELECTION_ALL` instead of an array whenever the selection means "no filter"
+(nothing selected or everything selected), so restoring it means "select whatever the full option
+list is right now," not a frozen list:
+
+```tsx
+import { SELECTION_ALL, serializeSelection } from 'nextjs-shared/isSelectionFiltering'
+
+sessionStorage.setItem('clubs', JSON.stringify(serializeSelection(selectedClubs, clubOptions.length)))
+
+const stored = JSON.parse(sessionStorage.getItem('clubs') ?? 'null')
+const restored = stored === SELECTION_ALL ? clubOptions.map((o) => o.value) : (stored ?? [])
+```
+
 ### MySelectRows props
 
 A thin wrapper around `MySelect` for the common "rows per page" dropdown, meant to sit alongside
