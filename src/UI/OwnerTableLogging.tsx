@@ -8,6 +8,7 @@ import type { Filter } from '../tables/structures'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
+import MyPopup from '../components/MyPopup'
 import { action_truncateLogging } from './OwnerTableLogging_actions'
 import {
   OwnerTableLogging_filterDebounceMs,
@@ -125,152 +126,148 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
           Truncate Logging
         </MyButton>
       </div>
-      <div className='flex gap-4 bg-yellow-100'>
-        <div className='shrink-0 bg-pink-100'>
-          <table className='text-gray-900 table-fixed'>
-            <thead className='sticky top-0 z-10 bg-teal-100 text-left font-normal text-xxs'>
-              <tr>
-                <th scope='col' className='font-medium px-2 w-10'>ID</th>
-                <th scope='col' className='font-medium px-2 w-14 text-center'>Level</th>
-                <th scope='col' className='font-medium px-2 w-16 text-center'>Severity</th>
-                <th scope='col' className='font-medium px-2 w-32'>Table</th>
-                <th scope='col' className='font-medium px-2 w-16 text-center'>IsUpdate</th>
-                <th scope='col' className='font-medium px-2 w-44'>Caller</th>
-                <th scope='col' className='font-medium px-2 w-44'>Function Name</th>
-                <th scope='col' className='font-medium px-2 w-96'>Message</th>
-                <th scope='col' className='font-medium px-2 w-28 whitespace-nowrap'>Date (UTC)</th>
-              </tr>
-              <tr className='text-xxs align-bottom'>
-                <th scope='col' className='px-2'></th>
-                <th scope='col' className='px-2'>
-                  <div className='text-center'>
-                    <MyInput
-                      id='level'
-                      name='level'
-                      overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
-                      type='text'
-                      value={level}
-                      onChange={e => setlevel(e.target.value)}
-                    />
-                  </div>
-                </th>
-                <th scope='col' className='px-2'>
-                  <div className='text-center'>
-                    <MyInput
-                      id='severity'
-                      name='severity'
-                      overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
-                      type='text'
-                      value={severity}
-                      onChange={e => setseverity(e.target.value.toUpperCase())}
-                    />
-                  </div>
-                </th>
-                <th scope='col' className='px-2'>
+      <div className='bg-yellow-100'>
+        <table className='text-gray-900 table-fixed'>
+          <thead className='sticky top-0 z-10 bg-teal-100 text-left font-normal text-xxs'>
+            <tr>
+              <th scope='col' className='font-medium px-2 w-10'>ID</th>
+              <th scope='col' className='font-medium px-2 w-14 text-center'>Level</th>
+              <th scope='col' className='font-medium px-2 w-16 text-center'>Severity</th>
+              <th scope='col' className='font-medium px-2 w-32'>Table</th>
+              <th scope='col' className='font-medium px-2 w-16 text-center'>IsUpdate</th>
+              <th scope='col' className='font-medium px-2 w-44'>Caller</th>
+              <th scope='col' className='font-medium px-2 w-44'>Function Name</th>
+              <th scope='col' className='font-medium px-2 w-96'>Message</th>
+              <th scope='col' className='font-medium px-2 w-28 whitespace-nowrap'>Date (UTC)</th>
+            </tr>
+            <tr className='text-xxs align-bottom'>
+              <th scope='col' className='px-2'></th>
+              <th scope='col' className='px-2'>
+                <div className='text-center'>
                   <MyInput
-                    id='table'
-                    name='table'
-                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                    id='level'
+                    name='level'
+                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     type='text'
-                    value={table}
-                    onChange={e => settable(e.target.value)}
+                    value={level}
+                    onChange={e => setlevel(e.target.value)}
                   />
-                </th>
-                <th scope='col' className='px-2'>
-                  <div className='text-center'>
-                    <MyInput
-                      id='isupdate'
-                      name='isupdate'
-                      overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
-                      type='text'
-                      value={isupdate}
-                      onChange={e => setisupdate(e.target.value)}
-                    />
-                  </div>
-                </th>
-                <th scope='col' className='px-2'>
+                </div>
+              </th>
+              <th scope='col' className='px-2'>
+                <div className='text-center'>
                   <MyInput
-                    id='caller'
-                    name='caller'
-                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                    id='severity'
+                    name='severity'
+                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     type='text'
-                    value={caller}
-                    onChange={e => setcaller(e.target.value)}
+                    value={severity}
+                    onChange={e => setseverity(e.target.value.toUpperCase())}
                   />
-                </th>
-                <th scope='col' className='px-2'>
+                </div>
+              </th>
+              <th scope='col' className='px-2'>
+                <MyInput
+                  id='table'
+                  name='table'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  type='text'
+                  value={table}
+                  onChange={e => settable(e.target.value)}
+                />
+              </th>
+              <th scope='col' className='px-2'>
+                <div className='text-center'>
                   <MyInput
-                    id='functionname'
-                    name='functionname'
-                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                    id='isupdate'
+                    name='isupdate'
+                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     type='text'
-                    value={functionname}
-                    onChange={e => setfunctionname(e.target.value)}
+                    value={isupdate}
+                    onChange={e => setisupdate(e.target.value)}
                   />
-                </th>
-                <th scope='col' className='px-2'>
-                  <MyInput
-                    id='msg'
-                    name='msg'
-                    overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
-                    type='text'
-                    value={msg}
-                    onChange={e => setmsg(e.target.value)}
-                  />
-                </th>
-                <th scope='col' className='px-2'></th>
-              </tr>
-            </thead>
-            <tbody className='bg-sky-50 text-xxs'>
-              {tabledata && tabledata.length > 0 ? (
-                tabledata.map(row => (
-                  <tr
-                    key={row.lg_lgid}
-                    className={`w-full border-b border-gray-100 cursor-pointer ${popup?.lg_lgid === row.lg_lgid ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
-                    onClick={() => setPopup(row)}
-                  >
-                    <td className='px-2 text-xxs'>{row.lg_lgid}</td>
-                    <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
-                    <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
-                    <td className='px-2 text-xxs'>{row.lg_table}</td>
-                    <td className='px-2 text-center text-xxs'>{row.lg_isupdate ? 'Y' : 'N'}</td>
-                    <td className='px-2 text-xxs'>{row.lg_caller}</td>
-                    <td className='px-2 text-xxs'>{row.lg_functionname}</td>
-                    <td className='px-2 text-xxs'>
-                      <div className='truncate'>
-                        {row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg}
-                      </div>
-                    </td>
-                    <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={9}>No data available</td>
+                </div>
+              </th>
+              <th scope='col' className='px-2'>
+                <MyInput
+                  id='caller'
+                  name='caller'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  type='text'
+                  value={caller}
+                  onChange={e => setcaller(e.target.value)}
+                />
+              </th>
+              <th scope='col' className='px-2'>
+                <MyInput
+                  id='functionname'
+                  name='functionname'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  type='text'
+                  value={functionname}
+                  onChange={e => setfunctionname(e.target.value)}
+                />
+              </th>
+              <th scope='col' className='px-2'>
+                <MyInput
+                  id='msg'
+                  name='msg'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  type='text'
+                  value={msg}
+                  onChange={e => setmsg(e.target.value)}
+                />
+              </th>
+              <th scope='col' className='px-2'></th>
+            </tr>
+          </thead>
+          <tbody className='bg-sky-50 text-xxs'>
+            {tabledata && tabledata.length > 0 ? (
+              tabledata.map(row => (
+                <tr
+                  key={row.lg_lgid}
+                  className={`w-full border-b border-gray-100 cursor-pointer ${popup?.lg_lgid === row.lg_lgid ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
+                  onClick={() => setPopup(row)}
+                >
+                  <td className='px-2 text-xxs'>{row.lg_lgid}</td>
+                  <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
+                  <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
+                  <td className='px-2 text-xxs'>{row.lg_table}</td>
+                  <td className='px-2 text-center text-xxs'>{row.lg_isupdate ? 'Y' : 'N'}</td>
+                  <td className='px-2 text-xxs'>{row.lg_caller}</td>
+                  <td className='px-2 text-xxs'>{row.lg_functionname}</td>
+                  <td className='px-2 text-xxs'>
+                    <div className='truncate'>
+                      {row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg}
+                    </div>
+                  </td>
+                  <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-          <p className='text-red-600'>{message}</p>
-          <div className='mt-2'>
-            <MyPaginationFooter
-              totalPages={totalPages}
-              statecurrentPage={currentPage}
-              setStateCurrentPage={setcurrentPage}
-              rowsPerPage={rowsPerPage}
-              setRowsPerPage={v => { setRowsPerPage(v); setcurrentPage(1) }}
-              rowsOptions={OwnerTableLogging_rowsOptions}
-              totalRows={totalRows}
-            />
-          </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={9}>No data available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <p className='text-red-600'>{message}</p>
+        <div className='mt-2'>
+          <MyPaginationFooter
+            totalPages={totalPages}
+            statecurrentPage={currentPage}
+            setStateCurrentPage={setcurrentPage}
+            rowsPerPage={rowsPerPage}
+            setRowsPerPage={v => { setRowsPerPage(v); setcurrentPage(1) }}
+            rowsOptions={OwnerTableLogging_rowsOptions}
+            totalRows={totalRows}
+          />
         </div>
-
-        {popup !== null && (
-          <div className='w-[40rem] pl-4 shrink-0'>
-            <LoggingDetail row={popup} />
-          </div>
-        )}
       </div>
+
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
+        {popup !== null && <LoggingDetail row={popup} />}
+      </MyPopup>
     </div>
   )
 }
@@ -323,7 +320,7 @@ function LoggingDetail({ row }: { row: table_Logging }) {
 
       <div>
         <p className='text-xs font-medium text-gray-500 mb-1'>Message:</p>
-        <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+        <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
           {row.lg_msg}
         </pre>
       </div>

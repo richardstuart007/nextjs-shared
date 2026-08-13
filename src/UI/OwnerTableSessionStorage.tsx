@@ -41,8 +41,7 @@ export default function OwnerTableSessionStorage() {
 
   return (
     <>
-      <div className='flex items-center gap-2 mb-2'>
-        <span className='text-xs font-medium text-gray-600'>{entries.length} entries</span>
+      <div className='flex items-center gap-2 mb-2 bg-orange-50'>
         <MyButton onClick={refresh}>Refresh</MyButton>
         <MyButton
           overrideClass='bg-red-500 hover:bg-red-600'
@@ -54,7 +53,7 @@ export default function OwnerTableSessionStorage() {
       </div>
       <div>
         <table className='min-w-full text-gray-900 table-auto'>
-          <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xxs'>
+          <thead className='sticky top-0 z-10 bg-teal-100 text-left font-normal text-xxs'>
             <tr>
               <th scope='col' className='font-medium px-2'>#</th>
               <th scope='col' className='font-medium px-2'>Key</th>
@@ -62,7 +61,7 @@ export default function OwnerTableSessionStorage() {
               <th scope='col' className='font-medium px-2'></th>
             </tr>
           </thead>
-          <tbody className='bg-white text-xxs'>
+          <tbody className='bg-sky-50 text-xxs'>
             {entries.length > 0 ? (
               entries.map((entry, idx) => (
                 <tr key={entry.key} className='w-full border-b border-gray-100'>

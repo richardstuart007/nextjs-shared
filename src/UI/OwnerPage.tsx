@@ -53,11 +53,13 @@ export default function OwnerPage({ tabs, persistKey }: { tabs: TabConfig[]; per
         ))}
       </nav>
       <Suspense>
-        {tabs.map(tab => (
-          <Fragment key={tab.label}>
-            {activeTab === tab.label && tab.content}
-          </Fragment>
-        ))}
+        <div className='pt-4'>
+          {tabs.map(tab => (
+            <Fragment key={tab.label}>
+              {activeTab === tab.label && tab.content}
+            </Fragment>
+          ))}
+        </div>
       </Suspense>
     </>
   )

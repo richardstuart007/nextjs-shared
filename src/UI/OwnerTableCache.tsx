@@ -103,10 +103,7 @@ export default function OwnerTableCache() {
 
   return (
     <>
-      <div className='flex items-center gap-2 mb-2'>
-        <span className='text-xs font-medium text-gray-600'>
-          {totalCount} / {overallSize} entries
-        </span>
+      <div className='flex items-center gap-2 mb-2 bg-orange-50'>
         <MyButton onClick={fetchdata} disabled={loading}>
           Refresh
         </MyButton>
@@ -121,7 +118,7 @@ export default function OwnerTableCache() {
       <div>
         <div>
           <table className='min-w-full text-gray-900 table-auto'>
-            <thead className='sticky top-0 z-10 bg-gray-50 text-left font-normal text-xxs'>
+            <thead className='sticky top-0 z-10 bg-teal-100 text-left font-normal text-xxs'>
               <tr>
                 <th scope='col' className='font-medium px-2'>#</th>
                 <th scope='col' className='font-medium px-2'>Tables</th>
@@ -161,7 +158,7 @@ export default function OwnerTableCache() {
                   <MyInput
                     id='keyFilter'
                     name='keyFilter'
-                    overrideClass='w-[400px] font-normal text-xxs'
+                    overrideClass='w-[800px] font-normal text-xxs'
                     type='text'
                     value={keyFilter}
                     onChange={e => setKeyFilter(e.target.value)}
@@ -171,7 +168,7 @@ export default function OwnerTableCache() {
                 <th scope='col' className='px-2'></th>
               </tr>
             </thead>
-            <tbody className='bg-white text-xxs'>
+            <tbody className='bg-sky-50 text-xxs'>
               {entries.length > 0 ? (
                 entries.map((entry, idx) => (
                   <tr
@@ -224,7 +221,7 @@ export default function OwnerTableCache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw]'>
+      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
         {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>
@@ -276,7 +273,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
 
       <div className='mb-4'>
         <p className='text-xs font-medium text-gray-500 mb-1'>Key (SQL):</p>
-        <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+        <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
           {entry.sql}
         </pre>
       </div>
@@ -293,7 +290,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
           <div className='flex gap-4'>
             <div className='flex-1 border rounded overflow-auto'>
               <table className='min-w-full text-xxs text-gray-900'>
-                <thead className='sticky top-0 bg-gray-100'>
+                <thead className='sticky top-0'>
                   <tr>
                     {columns.map(col => (
                       <th key={col} className='px-2 py-1 font-medium text-left whitespace-nowrap'>
@@ -337,7 +334,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
                         {val === null || val === undefined ? (
                           <span className='text-gray-400'>null</span>
                         ) : (
-                          <pre className='bg-gray-100 rounded px-2 py-0.5 font-mono whitespace-pre-wrap break-all'>
+                          <pre className='rounded px-2 py-0.5 font-mono whitespace-pre-wrap break-all'>
                             {fmtCellValue(val)}
                           </pre>
                         )}
@@ -349,7 +346,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
             )}
           </div>
         ) : (
-          <pre className='bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+          <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
             {JSON.stringify(data, null, 2)}
           </pre>
         )}
