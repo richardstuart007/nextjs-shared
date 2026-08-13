@@ -6,7 +6,13 @@ export function buildSql_Readable(
   for (let i = values.length; i >= 1; i--) {
     const placeholder = `$${i}`
     const value = values[i - 1]
-    readableSql = readableSql.replaceAll(placeholder, String(value))
+    const literal =
+      value === null
+        ? 'NULL'
+        : typeof value === 'string'
+          ? `'${value.replace(/'/g, "''")}'`
+          : String(value)
+    readableSql = readableSql.replaceAll(placeholder, literal)
   }
   return readableSql
 }
