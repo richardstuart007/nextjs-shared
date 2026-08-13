@@ -281,11 +281,38 @@ const filters: Filter[] = [
 ]
 ```
 
+### `fetchTotalRows` — actual row count (no page-size rounding)
+
+`fetchTotalPages` returns a page count (`Math.ceil(rows / items_per_page)`), which is enough to
+drive `MyPagination`, but `MyPaginationFooter`'s `totalRows` prop wants the real row count — if
+`totalRows` isn't passed, the footer falls back to an estimate (`totalPages * rowsPerPage`), which
+overstates the count on a partially-filled last page. Use `fetchTotalRows` (same `table`/`joins`/
+`filters` shape as `fetchTotalPages`, no `items_per_page`) to get the actual count and pass it
+through:
+
+```ts
+import { fetchTotalRows } from 'nextjs-shared/fetchTotalRows'
+
+const totalRows = await fetchTotalRows({ caller, table: 'my_table', filters })
+const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE))
+```
+
+```tsx
+<MyPaginationFooter
+  totalPages={totalPages}
+  statecurrentPage={currentPage}
+  setStateCurrentPage={setCurrentPage}
+  rowsPerPage={rowsPerPage}
+  setRowsPerPage={setRowsPerPage}
+  totalRows={totalRows}
+/>
+```
+
 ---
 
 ## 6. Cache
 
-The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, `fetchTotalPages`, and `table_query` (read calls only, i.e. `isupdate` not set), and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
+The cache is a server-side in-memory store keyed by SQL string. It is automatically populated by `table_fetch`, `table_fetch_join`, `fetchFiltered`, `fetchTotalPages`, `fetchTotalRows`, and `table_query` (read calls only, i.e. `isupdate` not set), and automatically cleared on any write/update/delete by `table_write`, `table_update`, `table_upsert`, and `table_delete`.
 
 **Functions with no cache awareness** — the consuming project is responsible for calling `cache_clearTable` (or `cache_clearAll`) after using any of these:
 

@@ -135,3 +135,65 @@ export async function table_fetch_pages_total({
     throw new Error(`${functionName}: Failed`)
   }
 }
+
+//---------------------------------------------------------------------
+// Shared logic for the actual total row count (no page-size division)
+//---------------------------------------------------------------------
+export async function table_fetch_rows_total({
+  table,
+  joins = [],
+  filters = [],
+  distinctColumns = [],
+  caller = '',
+  level = 1,
+  severity = 'I'
+}: {
+  table: string
+  joins?: JoinParams[]
+  filters?: Filter[]
+  distinctColumns?: string[]
+  caller?: string
+  level?: number
+  severity?: string
+}): Promise<number> {
+  const functionName = 'table_fetch_rows_total'
+  const db = await sql()
+
+  const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
+  let readableSql = ''
+  try {
+    const countQuery = buildCountQuery(sqlQuery, distinctColumns)
+
+    readableSql = buildSql_Readable(countQuery, queryValues)
+
+    //
+    // Execute Query
+    //
+    const result = await db.query({
+      query: countQuery,
+      params: queryValues,
+      functionName: functionName,
+      caller: caller,
+      table,
+      level,
+      severity
+    })
+
+    //
+    // Return the actual row count
+    //
+    const count = Number(result.rows[0].count)
+    return count
+  } catch (error) {
+    const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
+    write_logging({
+      lg_caller: caller,
+      lg_functionname: functionName,
+      lg_msg: errorMessage,
+      lg_severity: 'E',
+      lg_table: table,
+      lg_level: level
+    })
+    throw new Error(`${functionName}: Failed`)
+  }
+}

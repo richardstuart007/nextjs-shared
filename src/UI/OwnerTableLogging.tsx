@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { table_Logging } from '../tables/structures'
 import { fetchFiltered } from '../tables/tableGeneric/table_pages/fetchFiltered'
-import { fetchTotalPages } from '../tables/tableGeneric/table_pages/fetchTotalPages'
+import { fetchTotalRows } from '../tables/tableGeneric/table_pages/fetchTotalRows'
 import type { Filter } from '../tables/structures'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyInput } from '../components/MyInput'
@@ -35,6 +35,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [rowsPerPage, setRowsPerPage] = useState(LOGGING_ROWS_PER_PAGE)
   const [tabledata, settabledata] = useState<table_Logging[]>(initialRows ?? [])
   const [totalPages, setTotalPages] = useState<number>(initialTotalPages ?? 0)
+  const [totalRows, setTotalRows] = useState<number>(0)
   const prevFilters = useRef({
     msg: '',
     caller: '',
@@ -94,14 +95,14 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
         skipCache: true
       })
       settabledata(data)
-      const fetchedTotalPages = await fetchTotalPages({
+      const fetchedTotalRows = await fetchTotalRows({
         caller: functionName,
         table: tableName,
         filters,
-        items_per_page: rowsPerPage,
         skipCache: true
       })
-      setTotalPages(fetchedTotalPages)
+      setTotalRows(fetchedTotalRows)
+      setTotalPages(Math.max(1, Math.ceil(fetchedTotalRows / rowsPerPage)))
     } catch (error) {
       console.error('Error fetching logging:', error)
     }
@@ -259,6 +260,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               rowsPerPage={rowsPerPage}
               setRowsPerPage={v => { setRowsPerPage(v); setcurrentPage(1) }}
               rowsOptions={OwnerTableLogging_rowsOptions}
+              totalRows={totalRows}
             />
           </div>
         </div>

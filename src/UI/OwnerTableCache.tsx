@@ -219,6 +219,7 @@ export default function OwnerTableCache() {
           setStateCurrentPage={setCurrentPage}
           rowsPerPage={rowsPerPage}
           setRowsPerPage={v => { setRowsPerPage(v); setCurrentPage(1) }}
+          totalRows={totalCount}
         />
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
