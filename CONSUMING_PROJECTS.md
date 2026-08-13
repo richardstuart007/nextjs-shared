@@ -818,10 +818,12 @@ arrow buttons.
 
 ### MyPaginationFooter props
 
-Combines `MySelectRows` (left) and `MyPagination` (right, centered in the row) in one row — use
-this instead of placing the two components separately unless the layout genuinely needs them
-apart. Default container background is yellow; layout is a 3-column grid so the page controls sit
-centered relative to the whole row, not just the leftover space after the rows dropdown.
+Combines `MySelectRows` (left), `MyPagination` (center), and a total-rows count (right) in one
+row — use this instead of placing the two components separately unless the layout genuinely needs
+them apart. Default container background is yellow; layout is a 3-column grid so the page controls
+sit centered relative to the whole row, not just the leftover space after the rows dropdown. The
+right slot shows `{totalRows} rows` when `totalRows` is passed; if omitted, it falls back to an
+estimate — `totalPages * rowsPerPage` (the max possible, i.e. every page full).
 
 | Prop | Type | Default |
 |---|---|---|
@@ -831,10 +833,12 @@ centered relative to the whole row, not just the leftover space after the rows d
 | `rowsPerPage` | `number` | — |
 | `setRowsPerPage` | `(value: number) => void` | — |
 | `rowsOptions` | `readonly number[]` | `MySelectRows_optionsDftShared` (`[10, 20, 50, 100]`) |
+| `totalRows` | `number` | — (optional; omitted falls back to `totalPages * rowsPerPage` estimate) |
 | `defaultClass` | `string` | `MyPaginationFooter_dftClass` (yellow background, `grid grid-cols-3 items-center`) |
 | `overrideClass` | `string` | `''` |
 | `paginationOverrideClass` | `string` | — (passed to the nested `MyPagination`'s own `overrideClass`) |
 | `selectRowsOverrideClass` | `string` | — (passed to the nested `MySelectRows`'s own `overrideClass`; `MySelectRows`'s own `MySelectRows_dftClass` default, `w-24`, applies unless overridden here) |
+| `totalRowsClass` | `string` | `MyPaginationFooter_totalRowsClass` (`'flex justify-end text-xs text-gray-700'`) |
 
 ```tsx
 import MyPaginationFooter from 'nextjs-shared/MyPaginationFooter'

@@ -3,7 +3,11 @@
 import MyPagination from './MyPagination'
 import MySelectRows from './MySelectRows'
 import { myMergeClasses } from './MyMergeClasses'
-import { MyPaginationFooter_dftClass, MySelectRows_optionsDftShared } from '../constants'
+import {
+  MyPaginationFooter_dftClass,
+  MyPaginationFooter_totalRowsClass,
+  MySelectRows_optionsDftShared,
+} from '../constants'
 
 type Props = {
   totalPages: number
@@ -12,10 +16,12 @@ type Props = {
   rowsPerPage: number
   setRowsPerPage: (value: number) => void
   rowsOptions?: readonly number[]
+  totalRows?: number
   defaultClass?: string
   overrideClass?: string
   paginationOverrideClass?: string
   selectRowsOverrideClass?: string
+  totalRowsClass?: string
 }
 
 //----------------------------------------------------------------------------------
@@ -29,12 +35,15 @@ export default function MyPaginationFooter({
   rowsPerPage,
   setRowsPerPage,
   rowsOptions = MySelectRows_optionsDftShared,
+  totalRows,
   defaultClass = MyPaginationFooter_dftClass,
   overrideClass = '',
   paginationOverrideClass,
   selectRowsOverrideClass,
+  totalRowsClass = MyPaginationFooter_totalRowsClass,
 }: Props) {
   const className = myMergeClasses(defaultClass, overrideClass)
+  const displayRows = totalRows ?? totalPages * rowsPerPage
   return (
     <div className={className}>
       <MySelectRows
@@ -51,7 +60,7 @@ export default function MyPaginationFooter({
           overrideClass={paginationOverrideClass}
         />
       </div>
-      <div />
+      <div className={totalRowsClass}>{displayRows} rows</div>
     </div>
   )
 }

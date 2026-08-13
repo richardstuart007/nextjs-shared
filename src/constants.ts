@@ -157,6 +157,7 @@ export const MyPagination_arrowIconClass = 'w-4'
 //  MyPaginationFooter
 //
 export const MyPaginationFooter_dftClass = 'grid grid-cols-3 items-center bg-yellow-100 px-2 py-1 rounded-md'
+export const MyPaginationFooter_totalRowsClass = 'flex justify-end text-xs text-gray-700'
 
 //
 //  MyPopup
