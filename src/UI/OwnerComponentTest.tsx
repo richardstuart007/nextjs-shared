@@ -415,8 +415,8 @@ function MyTextareaTab() {
   )
 }
 
-type BoxProps = { title: string; content: string; className: string }
-const boxDefaults: BoxProps = { title: 'Box Title', content: 'Box content', className: '' }
+type BoxProps = { title: string; content: string; className: string; collapsible: boolean; defaultOpen: boolean }
+const boxDefaults: BoxProps = { title: 'Box Title', content: 'Box content', className: '', collapsible: false, defaultOpen: true }
 
 //----------------------------------------------------------------------------------
 //  MyBoxTab
@@ -447,13 +447,25 @@ function MyBoxTab() {
               overrideClass='w-full h-48'
             />
           </ControlRow>
+          <ControlRow label='collapsible'>
+            <input type='checkbox' checked={draft.collapsible} onChange={e => setDraft(d => ({ ...d, collapsible: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='defaultOpen'>
+            <input type='checkbox' checked={draft.defaultOpen} onChange={e => setDraft(d => ({ ...d, defaultOpen: e.target.checked }))} />
+          </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
           </div>
         </form>
       }
       preview={
-        <MyBox title={applied.title} className={applied.className}>
+        <MyBox
+          key={`${applied.collapsible}-${applied.defaultOpen}`}
+          title={applied.title}
+          className={applied.className}
+          collapsible={applied.collapsible}
+          defaultOpen={applied.defaultOpen}
+        >
           <p className='text-xs'>{applied.content}</p>
         </MyBox>
       }
@@ -462,6 +474,8 @@ function MyBoxTab() {
           <ReturnRow label='title' value={applied.title || '(none)'} />
           <ReturnRow label='defaultClass' value={MyBox_dftClass} />
           <ReturnRow label='className' value={myMergeClasses(MyBox_dftClass, applied.className)} />
+          <ReturnRow label='collapsible' value={String(applied.collapsible)} />
+          <ReturnRow label='defaultOpen' value={String(applied.defaultOpen)} />
         </>
       }
     />

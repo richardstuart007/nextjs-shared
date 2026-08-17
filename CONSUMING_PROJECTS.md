@@ -932,8 +932,13 @@ import { MyTab } from 'nextjs-shared/MyTab'
 | `defaultClass` | `string` | `MyBox_dftClass` |
 | `className` | `string` | `''` — merged over `defaultClass` via `myMergeClasses` |
 | `titleClass` | `string` | `MyBox_titleDftClass` (`'text-xs font-bold mb-2'`) |
+| `collapsible` | `boolean` | `false` — when `true` and `title` is set, wraps the title in a toggle button with a rotating chevron and collapses `children` |
+| `defaultOpen` | `boolean` | `true` — initial open state when `collapsible` |
+| `toggleButtonClass` | `string` | `MyBox_toggleButtonDftClass` (`'flex items-center justify-between gap-1 mb-2 w-full text-left'`) |
+| `chevronClass` | `string` | `MyBox_chevronDftClass` (`'h-4 w-4 text-gray-500 transition-transform duration-200'`) |
 
-Exported constants: `MyBox_dftClass`, `MyBox_titleDftClass` (from `nextjs-shared/constants`).
+Exported constants: `MyBox_dftClass`, `MyBox_titleDftClass`, `MyBox_toggleButtonDftClass`,
+`MyBox_chevronDftClass` (from `nextjs-shared/constants`).
 
 ### MyToggle props
 

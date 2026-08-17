@@ -23,6 +23,8 @@ export const MyBox_dftClass = [
   'p-2 md:p-3',
   'mb-3',
 ].join(' ')
+export const MyBox_toggleButtonDftClass = 'flex items-center justify-between gap-1 mb-2 w-full text-left'
+export const MyBox_chevronDftClass = 'h-4 w-4 text-gray-500 transition-transform duration-200'
 
 //
 //  MyButton
