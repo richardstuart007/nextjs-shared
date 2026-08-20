@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
 import {
@@ -37,6 +37,8 @@ export default function MySelect({
   searchClass = MySelect_searchDftClass,
   children,
   id,
+  value,
+  onChange,
   ...rest
 }: Props) {
   const [searchTerm, setSearchTerm] = useState<string>('')
@@ -58,6 +60,18 @@ export default function MySelect({
     return result
   }, [updatedOptions, searchEnabled, searchTerm])
 
+  //----------------------------------------------------------------------------------------------
+  //  Auto-select the sole remaining option once search narrows the list to one match
+  //----------------------------------------------------------------------------------------------
+  useEffect(() => {
+    if (searchEnabled && filteredOptions.length === 1 && value !== filteredOptions[0] && onChange) {
+      const syntheticEvent = {
+        target: { value: filteredOptions[0] }
+      } as React.ChangeEvent<HTMLSelectElement>
+      onChange(syntheticEvent)
+    }
+  }, [searchEnabled, filteredOptions, value, onChange])
+
   return (
     <div className={containerClass}>
       {label && <label htmlFor={autoId} className={labelClass}>{label}</label>}
@@ -71,7 +85,14 @@ export default function MySelect({
             onChange={e => setSearchTerm(e.target.value)}
           />
         )}
-        <select id={autoId} className={className} suppressHydrationWarning {...rest}>
+        <select
+          id={autoId}
+          className={className}
+          suppressHydrationWarning
+          value={value}
+          onChange={onChange}
+          {...rest}
+        >
           {options.length > 0
             ? filteredOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)
             : children}

@@ -622,9 +622,11 @@ options come from a DB table, use `MySelectTable` instead.
 
 Exported constants: `MySelect_dftClass`, `MySelect_labelDftClass`, `MySelect_containerDftClass`, `MySelect_searchDftClass` (from `nextjs-shared/constants`).
 
-Unlike `MyDropdown`/`MySelectTable`, `MySelect`'s search does not auto-select when filtering narrows
-the list to a single match — `MySelect` has no controlled `selectedOption`/`setSelectedOption` pair
-to call, only the native `value`/`onChange` passed through via `{...rest}`.
+When `searchEnabled` narrows `options` to exactly one match, `MySelect` auto-selects it by calling
+the caller's `onChange` (from `{...rest}`) with a synthetic change event — matching the
+auto-select-on-single-match behavior `MyDropdown`/`MySelectTable` already have. This requires the
+caller to pass both `value` and `onChange` (a controlled `<select>`); an uncontrolled `MySelect`
+(no `onChange`) skips the auto-select.
 
 ### MySelectMulti props
 
