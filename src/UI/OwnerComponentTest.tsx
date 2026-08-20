@@ -12,6 +12,7 @@ import { MyConfirmDialog, ConfirmDialogInt } from '../components/MyConfirmDialog
 import MyPagination from '../components/MyPagination'
 import { MyLink } from '../components/MyLink'
 import MySelect from '../components/MySelect'
+import MySelectTable from '../components/MySelectTable'
 import { MyToggle } from '../components/MyToggle'
 import { MyLoadingMessage } from '../components/MyLoadingMessage'
 import MyPopup from '../components/MyPopup'
@@ -33,6 +34,7 @@ import {
   MyDropdown_dftClass,
   MyLink_dftClass,
   MySelect_dftClass,
+  MySelect_searchDftClass,
   MyToggle_dftClass,
   MyPopup_dftClass,
   MyHourGlass_dftClass,
@@ -85,12 +87,15 @@ export default function OwnerComponentTest() {
     { label: 'MyInput', content: <MyInputTab /> },
     { label: 'MyTextarea', content: <MyTextareaTab /> },
     { label: 'MyBox', content: <MyBoxTab /> },
-    { label: 'MyDropdown', content: <MyDropdownTab /> },
     { label: 'MyCheckBox', content: <MyCheckBoxTab /> },
     { label: 'MyPagination', content: <MyPaginationTab /> },
     { label: 'MyConfirmDialog', content: <MyConfirmDialogTab /> },
     { label: 'MyLink', content: <MyLinkTab /> },
+    { label: 'MyDropdown', content: <MyDropdownTab /> },
     { label: 'MySelect', content: <MySelectTab /> },
+    { label: 'MySelectTable', content: <MySelectTableTab /> },
+    { label: 'MySelectMulti', content: <MySelectMultiTab /> },
+    { label: 'MySelectRows', content: <MySelectRowsTab /> },
     { label: 'MyToggle', content: <MyToggleTab /> },
     { label: 'MyLoadingMessage', content: <MyLoadingMessageTab /> },
     { label: 'MyPopup', content: <MyPopupTab /> },
@@ -99,8 +104,6 @@ export default function OwnerComponentTest() {
     { label: 'MyHelpField', content: <MyHelpFieldTab /> },
     { label: 'MyHelpStep', content: <MyHelpStepTab /> },
     { label: 'MyTab', content: <MyTabTab /> },
-    { label: 'MySelectMulti', content: <MySelectMultiTab /> },
-    { label: 'MySelectRows', content: <MySelectRowsTab /> },
     { label: 'MyPaginationFooter', content: <MyPaginationFooterTab /> },
     { label: 'MyBackHomeNav', content: <MyBackHomeNavTab /> },
   ]
@@ -893,13 +896,25 @@ function MyLinkTab() {
   )
 }
 
-type SelectControlProps = { label: string; options: string; overrideClass: string; labelClass: string; containerClass: string }
+type SelectControlProps = {
+  label: string
+  options: string
+  overrideClass: string
+  labelClass: string
+  containerClass: string
+  searchEnabled: boolean
+  includeBlank: boolean
+  searchClass: string
+}
 const selectDefaults: SelectControlProps = {
   label: 'Pick one',
   options: 'Apple,Banana,Cherry',
   overrideClass: '',
   labelClass: 'font-bold text-xs whitespace-nowrap',
   containerClass: 'flex items-center gap-2',
+  searchEnabled: false,
+  includeBlank: false,
+  searchClass: '',
 }
 
 //----------------------------------------------------------------------------------
@@ -938,6 +953,15 @@ function MySelectTab() {
           <ControlRow label='containerClass'>
             <MyInput value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full' />
           </ControlRow>
+          <ControlRow label='searchEnabled'>
+            <input type='checkbox' checked={draft.searchEnabled} onChange={e => setDraft(d => ({ ...d, searchEnabled: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='includeBlank'>
+            <input type='checkbox' checked={draft.includeBlank} onChange={e => setDraft(d => ({ ...d, includeBlank: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='searchClass'>
+            <MyTextarea value={draft.searchClass} onChange={e => setDraft(d => ({ ...d, searchClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
           </div>
@@ -950,6 +974,9 @@ function MySelectTab() {
           overrideClass={applied.overrideClass}
           labelClass={applied.labelClass}
           containerClass={applied.containerClass}
+          searchEnabled={applied.searchEnabled}
+          includeBlank={applied.includeBlank}
+          searchClass={applied.searchClass}
           value={selected}
           onChange={e => setSelected(e.target.value)}
         />
@@ -958,6 +985,84 @@ function MySelectTab() {
         <>
           <ReturnRow label='selected' value={selected || '(none)'} />
           <ReturnRow label='className' value={computedClass} />
+          <ReturnRow label='searchClassName' value={myMergeClasses(MySelect_searchDftClass, applied.searchClass)} />
+        </>
+      }
+    />
+  )
+}
+
+type SelectTableControlProps = {
+  label: string
+  overrideClass_Dropdown: string
+  includeBlank: boolean
+  searchEnabled: boolean
+}
+const selectTableDefaults: SelectTableControlProps = {
+  label: 'Function name',
+  overrideClass_Dropdown: 'w-72',
+  includeBlank: true,
+  searchEnabled: true,
+}
+
+//----------------------------------------------------------------------------------
+//  MySelectTableTab
+//----------------------------------------------------------------------------------
+function MySelectTableTab() {
+  const [draft, setDraft] = useState<SelectTableControlProps>(selectTableDefaults)
+  const [applied, setApplied] = useState<SelectTableControlProps>(selectTableDefaults)
+  const [selectedOption, setSelectedOption] = useState<string | number>('')
+
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelectedOption('')
+  }
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='overrideClass_Dropdown'>
+            <MyTextarea
+              value={draft.overrideClass_Dropdown}
+              onChange={e => setDraft(d => ({ ...d, overrideClass_Dropdown: e.target.value }))}
+              overrideClass='w-full h-48'
+            />
+          </ControlRow>
+          <ControlRow label='includeBlank'>
+            <input type='checkbox' checked={draft.includeBlank} onChange={e => setDraft(d => ({ ...d, includeBlank: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='searchEnabled'>
+            <input type='checkbox' checked={draft.searchEnabled} onChange={e => setDraft(d => ({ ...d, searchEnabled: e.target.checked }))} />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MySelectTable
+          selectedOption={selectedOption}
+          setSelectedOption={setSelectedOption}
+          table='xlg_logging'
+          optionLabel='lg_functionname'
+          optionValue='lg_functionname'
+          label={applied.label}
+          name='lg_functionname'
+          includeBlank={applied.includeBlank}
+          searchEnabled={applied.searchEnabled}
+          overrideClass_Dropdown={applied.overrideClass_Dropdown}
+        />
+      }
+      returns={
+        <>
+          <ReturnRow label='selectedOption' value={selectedOption !== '' ? String(selectedOption) : '(none)'} />
+          <ReturnRow label='type' value={selectedOption !== '' ? typeof selectedOption : '—'} />
+          <ReturnRow label='className' value={myMergeClasses(MyDropdown_dftClass, applied.overrideClass_Dropdown)} />
         </>
       }
     />

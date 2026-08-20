@@ -73,7 +73,8 @@ Consumer projects never call the DB directly — they always go through this pac
 - `copyTables` — copy table data between databases
 
 **UI Components**
-- `MyButton`, `MyInput`, `MyDropdown`, `MyTextarea`, `MyConfirmDialog`, `MyTab`
+- `MyButton`, `MyInput`, `MySelect`, `MySelectTable`, `MyTextarea`, `MyConfirmDialog`, `MyTab`
+- `MyDropdown` — retained only until consuming projects migrate to `MySelect`/`MySelectTable`; see Outstanding items
 
 **Full UI panels (src/UI/)**
 - `OwnerLayout` — dev-only guard layout with sessionStorage back-link
@@ -111,6 +112,15 @@ src/
 ---
 
 ## Component authoring rules
+
+### The OwnerComponentTest demo page must stay in sync with component changes
+`src/UI/OwnerComponentTest.tsx` (the "Components" tab on `/owner`) is the only place a shared
+component can actually be exercised in the browser before committing. Whenever a component's
+props, defaults, or behavior change — a new prop added, an existing one's meaning changed, a new
+component created — its tab in `OwnerComponentTest.tsx` must be updated (or added) in the same
+change, so the new/changed behavior can be tested here first. A change to `src/components/` or
+`src/UI/` is not complete until its demo tab reflects it; do not report the task done, and do not
+propose `#commit`, while the demo page is still showing the old prop surface.
 
 ### overrideClass — main element
 Every component that renders a single styled element (button, input, select, textarea) must accept `overrideClass?: string` and merge it via `myMergeClasses(defaultClass, overrideClass)`. Define default classes as a joined array, one concern per line:
@@ -189,7 +199,15 @@ Re-verified against actual file contents as of this entry, not just the original
   uses `MySelect` for its run-id picker) and `src/ui/player/PlayerProfile.tsx`. No action needed.
 - `PipelineHelp.tsx` — dismissed, not a finding (confirmed intentionally chess-specific content,
   not a shared-component gap).
-- No outstanding items remain in this project.
+- **New, unfixed (found 2026-08-20, via the MyDropdown → MySelect/MySelectTable migration survey):**
+  `src/ui/board/ChessBoardView.tsx` has 2 `MyDropdown` call sites (`chesscom-p1` line ~1556,
+  `chesscom-p2` line ~1571), both passing `tableData={masterPlayerNames.map(...)}` +
+  `searchEnabled` + `includeBlank`. Both are candidates to migrate to `MySelect` (now that it
+  supports `searchEnabled`/`includeBlank` — see `CONSUMING_PROJECTS.md`). Fix (in a chess session,
+  not here — project isolation): replace both `MyDropdown` call sites with `MySelect`, mapping
+  `optionLabel`/`optionValue='name'` to a plain `options={masterPlayerNames}` string array (since
+  label and value are the same field here), and `selectedOption`/`setSelectedOption` to `value`/
+  `onChange`.
 
 ### infostore
 - ~~Everything~~ — **fully done**, via `#audit`. Raw `<input>`/`<textarea>`/`<select>`/`<button>`
@@ -223,8 +241,41 @@ Re-verified against actual file contents as of this entry, not just the original
 ### next-bridgeschool
 - ~~Everything~~ — **fully done**, via `#audit`. 7 raw-`sql()` calls, `NavDrawer.tsx`,
   `login/form.tsx`, both textareas, and the `/owner` page tab bar (now `OwnerPage`, with an
-  accepted active-tab color change from black/gray to `MyTab`'s default blue) are all fixed. No
-  outstanding items remain in this project.
+  accepted active-tab color change from black/gray to `MyTab`'s default blue) are all fixed.
+- **New, unfixed (found 2026-08-20, via the MyDropdown → MySelect/MySelectTable migration
+  survey):** 34 `MyDropdown` call sites across 14 files — the heaviest user of `MyDropdown` of any
+  consuming project. Fix (in a next-bridgeschool session, not here — project isolation): migrate
+  each to `MySelect` or `MySelectTable` per its current prop (`tableData` → `MySelect`, `table` →
+  `MySelectTable`), then remove the now-unused `MyDropdown` import from each file.
+  - **8 pass `tableData` → migrate to `MySelect`:**
+    `src/ui/dashboard/users/form.tsx:249` (`formattedCountries`),
+    `src/ui/dashboard/graph/User/User_Header.tsx:50` (`User_limitMonths_Average_Options`),
+    `src/ui/dashboard/graph/Recent/Recent_Header.tsx:71` (`Recent_usersReturned_Options`),
+    `src/ui/dashboard/graph/Recent/Recent_Header.tsx:85` (`Recent_usersAverage_Options`),
+    `src/ui/dashboard/graph/Top/Top_Header.tsx:45` (`Top_limitMonths_Options`),
+    `src/ui/admin/questions/table.tsx:408` (`Comparison_values`),
+    `src/ui/admin/subject/form.tsx:176` (`LEVEL_OPTIONS`),
+    `src/ui/admin/subject/table.tsx:341` (`LEVEL_OPTIONS`).
+  - **26 pass `table` → migrate to `MySelectTable`** (just drop-in rename, since `MySelectTable`'s
+    props are identical to `MyDropdown`'s minus `tableData`):
+    `src/ui/dashboard/history/table.tsx:515,538` (`tuo_usersowner`, `tsb_subject`),
+    `src/ui/dashboard/users/form.tsx:338` (`tow_owner`),
+    `src/ui/dashboard/reference/table.tsx:490,513,575,595` (`tuo_usersowner`, `tsb_subject`,
+    `twh_who`, `trt_reftype`),
+    `src/ui/admin/usersowner/table.tsx:222,239` (`tus_users`, `tow_owner`),
+    `src/ui/admin/questions/table.tsx:340,360` (`tow_owner`, `tsb_subject`),
+    `src/ui/admin/usersowner/form.tsx:52,69` (`tus_users`, `tow_owner`),
+    `src/ui/admin/reference/table.tsx:317,337,397,412` (`tow_owner`, `tsb_subject`, `twh_who`,
+    `trt_reftype`),
+    `src/ui/admin/questions/detail/form.tsx:127,163,248` (`tow_owner`, `tsb_subject`,
+    `trf_reference`),
+    `src/ui/admin/subject/form.tsx:78` (`tow_owner`),
+    `src/ui/admin/subject/table.tsx:287` (`tow_owner`),
+    `src/ui/admin/reference/form.tsx:109,138,231,247` (`tow_owner`, `tsb_subject`, `twh_who`,
+    `trt_reftype`).
+  - Also, `src/content/conventions/architecture/components/content.ts:15` documents
+    `'MySelect / MyDropdown'` as the single-choice dropdown pattern — low-priority doc update to
+    mention `MySelectTable` too, once the migration above is done.
 
 ### next-dbadmin
 - ~~`DatabaseToolsConn.tsx:49-59` hand-rolled tab bar~~ — **fixed**, via `#audit`. Now uses `MyTab`.

@@ -192,6 +192,7 @@ export const MySelect_dftClass = [
 ].join(' ')
 export const MySelect_labelDftClass     = 'font-bold text-xs whitespace-nowrap'
 export const MySelect_containerDftClass = 'flex items-center gap-2'
+export const MySelect_searchDftClass    = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
 
 //
 //  MySelectMulti

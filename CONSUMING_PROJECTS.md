@@ -357,8 +357,9 @@ All are React client components. Import individually.
 | `nextjs-shared/useTabQueryState` | Syncs a tabbed component's active tab to a URL query param (built on `nuqs`) — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
-| `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch |
-| `nextjs-shared/MySelect` | Labelled select (label + select element) |
+| `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch — retained only until consuming projects migrate to `MySelect`/`MySelectTable`; do not use in new code |
+| `nextjs-shared/MySelect` | Labelled select (label + select element) for pre-supplied options; optional search + blank option |
+| `nextjs-shared/MySelectTable` | Labelled select whose options are always fetched from a DB table (like `MyDropdown`, but table-only — no `tableData` path) |
 | `nextjs-shared/MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars — collapsed trigger, opens on click |
 | `nextjs-shared/MySelectRows` | Rows-per-page dropdown, for use alongside `MyPagination` |
 | `nextjs-shared/MyTab` | Single tab button — `underline` or `pill` variant, active state controlled by the caller |
@@ -602,18 +603,28 @@ Exported constant: `MyTextarea_dftClass` (from `nextjs-shared/constants`).
 
 ### MySelect props
 
+Always takes pre-supplied data (`options` or `children`) — it never fetches. For a dropdown whose
+options come from a DB table, use `MySelectTable` instead.
+
 | Prop | Type | Default |
 |---|---|---|
 | `label` | `string` | — |
 | `options` | `string[]` | `[]` — omit to pass `children` directly as `<option>` elements |
+| `searchEnabled` | `boolean` | `false` — shows a search box above the `<select>` that filters `options` by case-insensitive substring match; no effect when using `children` |
+| `includeBlank` | `boolean` | `false` — prepends a blank `''` option to `options`; no effect when using `children` |
 | `defaultClass` | `string` | `MySelect_dftClass` |
 | `overrideClass` | `string` | `''` |
 | `labelClass` | `string` | `MySelect_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |
 | `containerClass` | `string` | `MySelect_containerDftClass` (`'flex items-center gap-2'`) |
+| `searchClass` | `string` | `MySelect_searchDftClass` — only used when `searchEnabled` |
 | `id` | `string` | derived from `label` (e.g. `"Sort By"` → `"sort-by"`) |
 | + all `<select>` HTML attributes | | |
 
-Exported constants: `MySelect_dftClass`, `MySelect_labelDftClass`, `MySelect_containerDftClass` (from `nextjs-shared/constants`).
+Exported constants: `MySelect_dftClass`, `MySelect_labelDftClass`, `MySelect_containerDftClass`, `MySelect_searchDftClass` (from `nextjs-shared/constants`).
+
+Unlike `MyDropdown`/`MySelectTable`, `MySelect`'s search does not auto-select when filtering narrows
+the list to a single match — `MySelect` has no controlled `selectedOption`/`setSelectedOption` pair
+to call, only the native `value`/`onChange` passed through via `{...rest}`.
 
 ### MySelectMulti props
 
@@ -959,7 +970,12 @@ Exported constants: `MyBox_dftClass`, `MyBox_titleDftClass`, `MyBox_toggleButton
 
 Exported constants: `MyToggle_dftClass`, `MyToggle_labelDftClass` (from `nextjs-shared/constants`).
 
-### MyDropdown props
+### MyDropdown props — do not use in new code
+
+**Retained only until consuming projects migrate off it — see `MySelect`/`MySelectTable` instead.**
+Call sites passing `tableData` should move to `MySelect`; call sites passing `table` should move to
+`MySelectTable`. `MyDropdown` will be deleted once that migration is confirmed complete across all
+consuming projects.
 
 | Prop | Type | Default |
 |---|---|---|
@@ -986,6 +1002,36 @@ Exported constants: `MyToggle_dftClass`, `MyToggle_labelDftClass` (from `nextjs-
 Exported constants: `MyDropdown_dftClass`, `MyDropdown_labelDftClass`, `MyDropdown_searchDftClass` (from `nextjs-shared/constants`).
 
 Auto-selects the single option when only one exists. Fetches from DB on mount when `table` is supplied; pass `tableData` to use pre-fetched rows instead.
+
+### MySelectTable props
+
+Same as `MyDropdown` above, minus `tableData` — `table` is required. Use this for any new dropdown
+whose options should be fetched from a DB table.
+
+| Prop | Type | Default |
+|---|---|---|
+| `selectedOption` | `string \| number` | — |
+| `setSelectedOption` | `(value: string \| number) => void` | — |
+| `optionLabel` | `string` | — column name used for display text |
+| `optionValue` | `string \| number` | — column name used for the value |
+| `name` | `string` | — |
+| `label` | `string` | — |
+| `table` | `string` | — table to fetch from |
+| `tableColumn` | `string` | — WHERE column |
+| `tableColumnValue` | `string \| number` | — WHERE value |
+| `orderBy` | `string` | `''` (defaults to `optionLabel`) |
+| `searchEnabled` | `boolean` | `false` |
+| `includeBlank` | `boolean` | `false` |
+| `defaultClass` | `string` | `MyDropdown_dftClass` |
+| `defaultClass_Label` | `string` | `MyDropdown_labelDftClass` |
+| `defaultClass_Search` | `string` | `MyDropdown_searchDftClass` |
+| `overrideClass_Dropdown` | `string` | `''` |
+| `overrideClass_Label` | `string` | `''` |
+| `overrideClass_Search` | `string` | `''` |
+
+Exported constants: same as `MyDropdown` — `MyDropdown_dftClass`, `MyDropdown_labelDftClass`, `MyDropdown_searchDftClass` (from `nextjs-shared/constants`; `MySelectTable` has no constants of its own).
+
+Auto-selects the single option when only one exists. Always fetches from DB on mount.
 
 ### MyCheckbox props
 
