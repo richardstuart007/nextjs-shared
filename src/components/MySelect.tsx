@@ -61,20 +61,22 @@ export default function MySelect({
   return (
     <div className={containerClass}>
       {label && <label htmlFor={autoId} className={labelClass}>{label}</label>}
-      {searchEnabled && options.length > 0 && (
-        <MyInput
-          overrideClass={searchClass}
-          type='text'
-          placeholder='Search...'
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-      )}
-      <select id={autoId} className={className} suppressHydrationWarning {...rest}>
-        {options.length > 0
-          ? filteredOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)
-          : children}
-      </select>
+      <div className='flex flex-col gap-1'>
+        {searchEnabled && options.length > 0 && (
+          <MyInput
+            overrideClass={searchClass}
+            type='text'
+            placeholder='Search...'
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        )}
+        <select id={autoId} className={className} suppressHydrationWarning {...rest}>
+          {options.length > 0
+            ? filteredOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)
+            : children}
+        </select>
+      </div>
     </div>
   )
 }

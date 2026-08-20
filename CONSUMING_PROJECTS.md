@@ -987,8 +987,7 @@ consuming projects.
 | `label` | `string` | — |
 | `tableData` | `Array<Record<string, string \| number>>` | — pre-fetched rows; use instead of `table` |
 | `table` | `string` | — table to fetch from |
-| `tableColumn` | `string` | — WHERE column |
-| `tableColumnValue` | `string \| number` | — WHERE value |
+| `whereColumnValuePairs` | `ColumnValuePair[]` | — optional WHERE filter(s), same shape as `table_fetch`'s own `whereColumnValuePairs` |
 | `orderBy` | `string` | `''` (defaults to `optionLabel`) |
 | `searchEnabled` | `boolean` | `false` |
 | `includeBlank` | `boolean` | `false` |
@@ -1017,8 +1016,7 @@ whose options should be fetched from a DB table.
 | `name` | `string` | — |
 | `label` | `string` | — |
 | `table` | `string` | — table to fetch from |
-| `tableColumn` | `string` | — WHERE column |
-| `tableColumnValue` | `string \| number` | — WHERE value |
+| `whereColumnValuePairs` | `ColumnValuePair[]` | — optional WHERE filter(s), same shape as `table_fetch`'s own `whereColumnValuePairs` |
 | `orderBy` | `string` | `''` (defaults to `optionLabel`) |
 | `searchEnabled` | `boolean` | `false` |
 | `includeBlank` | `boolean` | `false` |

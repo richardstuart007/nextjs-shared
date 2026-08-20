@@ -6,6 +6,7 @@ import { table_fetch, table_fetch_Props } from '../tables/tableGeneric/table_fet
 import { write_logging } from '../tables/tableGeneric/write_logging'
 import { MyInput } from './MyInput'
 import { MyDropdown_dftClass, MyDropdown_labelDftClass, MyDropdown_searchDftClass } from '../constants'
+import { ColumnValuePair } from '../tables/structures'
 
 //
 //  Define the options
@@ -20,8 +21,7 @@ type DropdownProps<T extends string, U extends string> = {
   label?: string
   tableData?: Array<RowData<T, U>>
   table?: string
-  tableColumn?: string
-  tableColumnValue?: string | number
+  whereColumnValuePairs?: ColumnValuePair[]
   orderBy?: string
   optionLabel: string
   optionValue: string | number
@@ -47,8 +47,7 @@ export default function MyDropdown<T extends string, U extends string>({
   label,
   tableData,
   table,
-  tableColumn,
-  tableColumnValue,
+  whereColumnValuePairs,
   orderBy = '',
   optionLabel,
   optionValue,
@@ -128,8 +127,8 @@ export default function MyDropdown<T extends string, U extends string>({
           distinct: true
         } as table_fetch_Props
 
-        if (tableColumn && tableColumnValue) {
-          fetchParams.whereColumnValuePairs = [{ column: tableColumn, value: tableColumnValue }]
+        if (whereColumnValuePairs && whereColumnValuePairs.length > 0) {
+          fetchParams.whereColumnValuePairs = whereColumnValuePairs
         }
         const data = await table_fetch(fetchParams)
         return data
@@ -170,7 +169,7 @@ export default function MyDropdown<T extends string, U extends string>({
     } finally {
       setLoading(false)
     }
-  }, [optionValue, optionLabel, tableData, table, tableColumn, tableColumnValue, orderBy])
+  }, [optionValue, optionLabel, tableData, table, whereColumnValuePairs, orderBy])
 
   //----------------------------------------------------------------------------------------------
   //  Fetch options on component mount and whenever dependencies change
