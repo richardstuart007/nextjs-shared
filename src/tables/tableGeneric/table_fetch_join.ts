@@ -109,11 +109,13 @@ async function table_fetch_join_query({
   level = 1,
   severity = 'I'
 }: table_fetch_join_Props): Promise<any[]> {
+  let finalQuery = ''
+  let values: any[] = []
   try {
     //
     // Build the SQL with placeholders
     //
-    const { sqlQuery, values } = buildSql_Placeholders({
+    const built = buildSql_Placeholders({
       table,
       whereColumnValuePairs,
       orderBy,
@@ -121,10 +123,11 @@ async function table_fetch_join_query({
       columns,
       limit
     })
+    values = built.values
     //
     // Inject JOIN clauses after FROM ${table}
     //
-    const finalQuery = injectJoins(sqlQuery, table, joins)
+    finalQuery = injectJoins(built.sqlQuery, table, joins)
     //
     // Execute the query
     //
@@ -154,7 +157,10 @@ async function table_fetch_join_query({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: finalQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(finalQuery, values)
     })
     throw error
   }

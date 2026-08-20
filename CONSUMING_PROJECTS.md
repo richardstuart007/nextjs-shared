@@ -99,8 +99,13 @@ await write_logging({
   lg_level: 1,         // descriptive call-depth marker (1 = top level, 2 = next level, ...) — default 1
   lg_table: 'tusr_users', // table the operation touched — default ''
   lg_isupdate: false,  // true marks this row as a successful table update — default false
+  lg_sql_raw: sqlQuery,      // optional — the raw SQL text associated with this log line
+  lg_sql_params: values,     // optional — the bound params array; stored as jsonb, undefined mapped to a distinguishable marker
+  lg_sql_readable: readableSql, // optional — SQL with params substituted inline, ready to paste into pgAdmin4
 })
 ```
+
+All `table_` functions populate `lg_sql_raw`/`lg_sql_params`/`lg_sql_readable` automatically wherever a query is in scope — most callers never need to pass these manually.
 
 ### Display the log table
 
@@ -112,7 +117,7 @@ export default function LoggingPage() {
 }
 ```
 
-No props required. Displays `xlg_logging` with filters for level, severity, table, isupdate, caller, function name, and message.
+No props required. Displays `xlg_logging` with filters for level, severity, table, isupdate, caller, function name, message, SQL, and SQL params. Click a row to see the full message plus the raw SQL, bound params, and a pgAdmin4-ready readable SQL string in a detail popup.
 
 ### Coding convention
 

@@ -1,7 +1,4 @@
-export function buildSql_Readable(
-  sqlQuery: string,
-  values: (string | number | null | boolean)[]
-): string {
+export function buildSql_Readable(sqlQuery: string, values: any[]): string {
   let readableSql = sqlQuery
   for (let i = values.length; i >= 1; i--) {
     const placeholder = `$${i}`

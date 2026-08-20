@@ -2,6 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
+import { buildSql_Readable } from './buildSql_Readable'
 
 interface Props {
   table_from: string
@@ -18,6 +19,8 @@ export async function table_copy_data({
   level = 1,
   severity = 'I'
 }: Props): Promise<boolean> {
+  let lastSql = ''
+  let lastValues: any[] = []
   try {
     //
     // Define the connection
@@ -49,6 +52,8 @@ export async function table_copy_data({
     //
     // Execute the query
     //
+    lastSql = sqlQuery
+    lastValues = []
     await db.query({
       caller: caller,
       query: sqlQuery,
@@ -61,9 +66,12 @@ export async function table_copy_data({
     //
     //  Reset sequences for any identity columns in the destination table
     //
+    const identityColsQuery = `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND is_identity = 'YES'`
+    lastSql = identityColsQuery
+    lastValues = [table_to]
     const identityCols = await db.query({
       caller: caller,
-      query: `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND is_identity = 'YES'`,
+      query: identityColsQuery,
       params: [table_to],
       functionName: functionName,
       table: table_to,
@@ -72,9 +80,12 @@ export async function table_copy_data({
     })
     for (const row of identityCols.rows as { column_name: string }[]) {
       const col = row.column_name
+      const setvalQuery = `SELECT setval(pg_get_serial_sequence('${table_to}', '${col}'), COALESCE((SELECT MAX(${col}) FROM ${table_to}), 1))`
+      lastSql = setvalQuery
+      lastValues = []
       await db.query({
         caller: caller,
-        query: `SELECT setval(pg_get_serial_sequence('${table_to}', '${col}'), COALESCE((SELECT MAX(${col}) FROM ${table_to}), 1))`,
+        query: setvalQuery,
         params: [],
         functionName: functionName,
         table: table_to,
@@ -93,7 +104,10 @@ export async function table_copy_data({
       lg_severity: severity,
       lg_table: table_to,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     //
     // All ok
@@ -110,7 +124,10 @@ export async function table_copy_data({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table_to,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: lastSql,
+      lg_sql_params: lastValues,
+      lg_sql_readable: buildSql_Readable(lastSql, lastValues)
     })
     console.error('Error:', errorMessage)
     throw new Error(`${functionName}: Failed`)

@@ -83,7 +83,10 @@ export async function table_query({
       lg_severity: 'E',
       lg_table: table,
       lg_level: level,
-      lg_isupdate: isupdate
+      lg_isupdate: isupdate,
+      lg_sql_raw: query,
+      lg_sql_params: params,
+      lg_sql_readable: readableSql
     })
     return []
   }

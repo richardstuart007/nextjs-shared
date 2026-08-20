@@ -100,11 +100,13 @@ async function table_fetch_query({
   level = 1,
   severity = 'I'
 }: table_fetch_Props): Promise<any[]> {
+  let sqlQuery = ''
+  let values: any[] = []
   try {
     //
     // Build the SQL with placeholders
     //
-    const { sqlQuery, values } = buildSql_Placeholders({
+    const built = buildSql_Placeholders({
       table,
       whereColumnValuePairs,
       orderBy,
@@ -112,6 +114,8 @@ async function table_fetch_query({
       columns,
       limit
     })
+    sqlQuery = built.sqlQuery
+    values = built.values
     //
     // Execute the query
     //
@@ -141,7 +145,10 @@ async function table_fetch_query({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     throw error
   }

@@ -1,6 +1,7 @@
 import { Client } from 'pg'
 import { Pool } from '@neondatabase/serverless'
 import { write_logging } from './tableGeneric/write_logging'
+import { buildSql_Readable } from './tableGeneric/buildSql_Readable'
 //
 // Placeholder for the `query` method
 //
@@ -81,7 +82,10 @@ async function createDbQueryHandler(): Promise<void> {
             lg_severity: 'E',
             lg_table: table,
             lg_level: level,
-            lg_isupdate: isupdate
+            lg_isupdate: isupdate,
+            lg_sql_raw: query,
+            lg_sql_params: params,
+            lg_sql_readable: buildSql_Readable(query, params)
           })
         }
         console.error('Error executing Neon query:', error)
@@ -133,7 +137,10 @@ async function createDbQueryHandler(): Promise<void> {
             lg_severity: 'E',
             lg_table: table,
             lg_level: level,
-            lg_isupdate: isupdate
+            lg_isupdate: isupdate,
+            lg_sql_raw: query,
+            lg_sql_params: params,
+            lg_sql_readable: buildSql_Readable(query, params)
           })
         }
         console.error('Error:', errorMessage)
@@ -162,19 +169,18 @@ async function log_query(
   //
   if (functionName === 'write_logging') return
   //
-  //  Values (if any)
-  //
-  const valuesJson = params?.length ? `, Values: ${JSON.stringify(params).replace(/"/g, "'")}` : ''
-  //
-  //  Logging
+  //  Logging — query/params/readable now live in their own columns, not embedded in lg_msg
   //
   write_logging({
     lg_functionname: functionName,
-    lg_msg: `DB_SQL | ${query}${valuesJson}`,
+    lg_msg: 'DB_SQL',
     lg_severity: severity,
     lg_caller: caller,
     lg_table: table,
     lg_level: level,
-    lg_isupdate: isupdate
+    lg_isupdate: isupdate,
+    lg_sql_raw: query,
+    lg_sql_params: params,
+    lg_sql_readable: buildSql_Readable(query, params)
   })
 }

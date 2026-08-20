@@ -10,7 +10,10 @@ export async function write_logging({
   lg_severity = 'E',
   lg_level = 1,
   lg_isupdate = false,
-  lg_caller = ''
+  lg_caller = '',
+  lg_sql_raw,
+  lg_sql_params,
+  lg_sql_readable
 }: WriteLoggingProps): Promise<boolean> {
   const functionName = 'write_logging'
   try {
@@ -40,6 +43,14 @@ export async function write_logging({
     //
     const lg_msgTrim = lg_msg.trim()
     //
+    //  Params — map undefined to an object marker so it stays distinguishable from a real
+    //  null once serialized (an object can never collide with a real param value, since
+    //  every table_ function's params are string | number | boolean | null)
+    //
+    const lg_sql_paramsJson = lg_sql_params
+      ? JSON.stringify(lg_sql_params.map(p => (p === undefined ? { __undefined__: true } : p)))
+      : null
+    //
     //  Query statement
     //
     const sqlQueryStatement = `
@@ -51,9 +62,12 @@ export async function write_logging({
       lg_functionname,
       lg_table,
       lg_msg,
-      lg_datetime
+      lg_datetime,
+      lg_sql_raw,
+      lg_sql_params,
+      lg_sql_readable
       )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
   `
     const queryValues = [
       lg_severity,
@@ -63,7 +77,10 @@ export async function write_logging({
       lg_functionname,
       lg_table,
       lg_msgTrim,
-      lg_datetime
+      lg_datetime,
+      lg_sql_raw ?? null,
+      lg_sql_paramsJson,
+      lg_sql_readable ?? null
     ]
     //
     // Remove redundant spaces

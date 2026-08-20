@@ -3,6 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { ColumnValuePair } from '../structures'
+import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
 //
@@ -28,8 +29,8 @@ export async function table_count({
   // Build the base SQL query
   //
   let sqlQuery = `SELECT COUNT(*) FROM ${table}`
+  let values: (string | number)[] = []
   try {
-    const values: (string | number)[] = []
     let paramIndex = 0 // Added to track parameter positions
     if (whereColumnValuePairs && whereColumnValuePairs.length > 0) {
       const whereClause = whereColumnValuePairs
@@ -82,7 +83,10 @@ export async function table_count({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

@@ -2,6 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
+import { buildSql_Readable } from './buildSql_Readable'
 //
 //  Input values
 //
@@ -35,6 +36,8 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     maxValue: 0,
     ok: false
   }
+  let lastSql = ''
+  let lastValues: any[] = []
 
   try {
     const db = await sql()
@@ -59,6 +62,8 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
           AND t.relname = $1
     `
     const values = [tableName]
+    lastSql = sqlQuery
+    lastValues = values
     const sequenceResult = await db.query({
       caller: caller,
       query: sqlQuery,
@@ -85,7 +90,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_msg: message,
         lg_severity: 'E',
         lg_table: tableName,
-        lg_level: level
+        lg_level: level,
+        lg_sql_raw: sqlQuery,
+        lg_sql_params: values,
+        lg_sql_readable: buildSql_Readable(sqlQuery, values)
       })
       return returnValues
     }
@@ -99,12 +107,17 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_msg: message,
       lg_severity: severity,
       lg_table: tableName,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     //
     //  Get the maxValue
     //
     const sqlQueryMax = `SELECT COALESCE((SELECT MAX(${columnName}) FROM ${tableName}), 0)`
+    lastSql = sqlQueryMax
+    lastValues = []
     const maxValueResult = await db.query({
       caller: caller,
       query: sqlQueryMax,
@@ -125,7 +138,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_msg: message,
         lg_severity: 'E',
         lg_table: tableName,
-        lg_level: level
+        lg_level: level,
+        lg_sql_raw: sqlQueryMax,
+        lg_sql_params: [],
+        lg_sql_readable: buildSql_Readable(sqlQueryMax, [])
       })
       return returnValues
     }
@@ -139,7 +155,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_msg: message1,
       lg_severity: severity,
       lg_table: tableName,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQueryMax,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQueryMax, [])
     })
     //
     //  Return the sequence with ok set to true
@@ -161,7 +180,10 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: tableName,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: lastSql,
+      lg_sql_params: lastValues,
+      lg_sql_readable: buildSql_Readable(lastSql, lastValues)
     })
     return returnValues
   }

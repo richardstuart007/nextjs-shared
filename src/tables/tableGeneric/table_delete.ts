@@ -4,6 +4,7 @@ import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { ColumnValuePair } from '../structures'
 import { cache_clearTable } from '../cache/userCache_store'
+import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
 //
@@ -32,12 +33,9 @@ export async function table_delete({
   //
   // Construct the SQL DELETE query
   //
+  let sqlQueryStatement = `DELETE FROM ${table}`
+  let values: (string | number)[] = []
   try {
-    //
-    // Base DELETE query
-    //
-    let sqlQueryStatement = `DELETE FROM ${table}`
-    let values: (string | number)[] = []
     //
     // WHERE clause
     //
@@ -95,7 +93,10 @@ export async function table_delete({
       lg_severity: severity,
       lg_table: table,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQueryStatement,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQueryStatement, values)
     })
     //
     // If RETURNING * is specified, return the deleted rows
@@ -112,7 +113,10 @@ export async function table_delete({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQueryStatement,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQueryStatement, values)
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

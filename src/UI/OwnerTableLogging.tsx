@@ -32,6 +32,8 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [level, setlevel] = useState('')
   const [table, settable] = useState('')
   const [isupdate, setisupdate] = useState('')
+  const [sqlfilter, setsqlfilter] = useState('')
+  const [sqlView, setSqlView] = useState<'raw' | 'readable' | 'params'>('raw')
   const [currentPage, setcurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(LOGGING_ROWS_PER_PAGE)
   const [tabledata, settabledata] = useState<table_Logging[]>(initialRows ?? [])
@@ -44,7 +46,9 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     severity: '',
     level: '',
     table: '',
-    isupdate: ''
+    isupdate: '',
+    sqlfilter: '',
+    sqlView: 'raw' as 'raw' | 'readable' | 'params'
   })
   const [message, setMessage] = useState('')
   const [popup, setPopup] = useState<table_Logging | null>(null)
@@ -61,18 +65,26 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       severity !== prevFilters.current.severity ||
       level !== prevFilters.current.level ||
       table !== prevFilters.current.table ||
-      isupdate !== prevFilters.current.isupdate
+      isupdate !== prevFilters.current.isupdate ||
+      sqlfilter !== prevFilters.current.sqlfilter ||
+      sqlView !== prevFilters.current.sqlView
     setMessage(filtersChanged ? 'Applying filters...' : '')
     const timeout = filtersChanged ? OwnerTableLogging_filterDebounceMs : 1
     const handler = setTimeout(() => {
-      prevFilters.current = { msg, caller, functionname, severity, level, table, isupdate }
+      prevFilters.current = { msg, caller, functionname, severity, level, table, isupdate, sqlfilter, sqlView }
       fetchdata()
       setMessage('')
     }, timeout)
     return () => clearTimeout(handler)
-  }, [msg, caller, functionname, severity, level, table, isupdate, currentPage, rowsPerPage])
+  }, [msg, caller, functionname, severity, level, table, isupdate, sqlfilter, sqlView, currentPage, rowsPerPage])
 
   async function fetchdata() {
+    //
+    //  The SQL column's filter targets whichever field the header toggle has selected —
+    //  lg_sql_params is jsonb, so it's cast to text so LIKE can search inside it
+    //
+    const sqlFilterColumn =
+      sqlView === 'raw' ? 'lg_sql_raw' : sqlView === 'readable' ? 'lg_sql_readable' : 'lg_sql_params::text'
     const filtersToUpdate: Filter[] = [
       { column: 'lg_msg', value: msg, operator: 'LIKE' },
       { column: 'lg_caller', value: caller, operator: 'LIKE' },
@@ -80,7 +92,8 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       { column: 'lg_severity', value: severity, operator: '=' },
       { column: 'lg_level', value: level, operator: '=' },
       { column: 'lg_table', value: table, operator: 'LIKE' },
-      { column: 'lg_isupdate', value: isupdate, operator: '=' }
+      { column: 'lg_isupdate', value: isupdate, operator: '=' },
+      { column: sqlFilterColumn, value: sqlfilter, operator: 'LIKE' }
     ]
     const filters = filtersToUpdate.filter(filter => filter.value)
     try {
@@ -137,7 +150,24 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               <th scope='col' className='font-medium px-2 w-16 text-center'>IsUpdate</th>
               <th scope='col' className='font-medium px-2 w-44'>Caller</th>
               <th scope='col' className='font-medium px-2 w-44'>Function Name</th>
-              <th scope='col' className='font-medium px-2 w-96'>Message</th>
+              <th scope='col' className='font-medium px-2 w-64'>Message</th>
+              <th scope='col' className='font-medium px-2 w-96'>
+                <div className='flex items-center gap-2'>
+                  <span>SQL</span>
+                  <div className='flex gap-1'>
+                    {(['raw', 'readable', 'params'] as const).map(opt => (
+                      <button
+                        key={opt}
+                        type='button'
+                        onClick={() => setSqlView(opt)}
+                        className={`px-1.5 py-0.5 rounded text-xxs font-normal ${sqlView === opt ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                      >
+                        {opt === 'raw' ? 'Raw' : opt === 'readable' ? 'Readable' : 'Params'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </th>
               <th scope='col' className='font-medium px-2 w-28 whitespace-nowrap'>Date (UTC)</th>
             </tr>
             <tr className='text-xxs align-bottom'>
@@ -218,6 +248,16 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                   onChange={e => setmsg(e.target.value)}
                 />
               </th>
+              <th scope='col' className='px-2'>
+                <MyInput
+                  id='sqlfilter'
+                  name='sqlfilter'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  type='text'
+                  value={sqlfilter}
+                  onChange={e => setsqlfilter(e.target.value)}
+                />
+              </th>
               <th scope='col' className='px-2'></th>
             </tr>
           </thead>
@@ -241,12 +281,15 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                       {row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg}
                     </div>
                   </td>
+                  <td className='px-2 text-xxs'>
+                    <div className='truncate'>{truncateDisplay(sqlViewValue(row, sqlView))}</div>
+                  </td>
                   <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9}>No data available</td>
+                <td colSpan={10}>No data available</td>
               </tr>
             )}
           </tbody>
@@ -277,6 +320,17 @@ function fmtDate(val: Date | string): string {
   return d.toISOString().slice(0, 16).replace('T', ' ')
 }
 
+function truncateDisplay(val: string | null): string {
+  if (!val) return ''
+  return val.length > OwnerTableLogging_msgTruncateLen ? val.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : val
+}
+
+function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): string | null {
+  if (view === 'raw') return row.lg_sql_raw
+  if (view === 'readable') return row.lg_sql_readable
+  return row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
+}
+
 function LoggingDetail({ row }: { row: table_Logging }) {
   return (
     <div>
@@ -297,7 +351,7 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         </div>
         <div>
           <span className='font-medium text-gray-500'>Table: </span>
-          {row.lg_table || '—'}
+          {row.lg_table || ''}
         </div>
         <div>
           <span className='font-medium text-gray-500'>IsUpdate: </span>
@@ -305,7 +359,7 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         </div>
         <div>
           <span className='font-medium text-gray-500'>Caller: </span>
-          {row.lg_caller || '—'}
+          {row.lg_caller || ''}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Date (UTC): </span>
@@ -318,12 +372,39 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         <p className='text-xs'>{row.lg_functionname}</p>
       </div>
 
-      <div>
+      <div className='mb-3'>
         <p className='text-xs font-medium text-gray-500 mb-1'>Message:</p>
         <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
           {row.lg_msg}
         </pre>
       </div>
+
+      {row.lg_sql_raw && (
+        <div className='mb-3'>
+          <p className='text-xs font-medium text-gray-500 mb-1'>SQL (raw):</p>
+          <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+            {row.lg_sql_raw}
+          </pre>
+        </div>
+      )}
+
+      {row.lg_sql_params !== null && row.lg_sql_params !== undefined && (
+        <div className='mb-3'>
+          <p className='text-xs font-medium text-gray-500 mb-1'>SQL Params:</p>
+          <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+            {JSON.stringify(row.lg_sql_params, null, 2)}
+          </pre>
+        </div>
+      )}
+
+      {row.lg_sql_readable && (
+        <div>
+          <p className='text-xs font-medium text-gray-500 mb-1'>SQL (readable):</p>
+          <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
+            {row.lg_sql_readable}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

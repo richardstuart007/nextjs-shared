@@ -56,6 +56,9 @@ export type table_Logging = {
   lg_table: string
   lg_msg: string
   lg_datetime: Date
+  lg_sql_raw: string | null
+  lg_sql_params: any
+  lg_sql_readable: string | null
 }
 export type WriteLoggingProps = {
   lg_functionname: string
@@ -65,4 +68,7 @@ export type WriteLoggingProps = {
   lg_level?: number
   lg_isupdate?: boolean
   lg_caller: string
+  lg_sql_raw?: string
+  lg_sql_params?: any[]
+  lg_sql_readable?: string
 }

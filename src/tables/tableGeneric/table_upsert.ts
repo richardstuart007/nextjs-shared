@@ -4,6 +4,7 @@ import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
 import { WriteColumnValuePair } from '../structures'
+import { buildSql_Readable } from './buildSql_Readable'
 //
 // Define the props interface for the upsert function
 //
@@ -90,7 +91,10 @@ export async function table_upsert({
       lg_severity: severity,
       lg_table: table,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     //
     // Return the upserted rows
@@ -108,7 +112,10 @@ export async function table_upsert({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

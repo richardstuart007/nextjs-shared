@@ -17,6 +17,9 @@ export async function action_generateLogs(): Promise<string> {
     level?: number
     isupdate?: boolean
     table?: string
+    sql?: string
+    params?: any[]
+    readable?: string
   }[] = [
     {
       severity: 'E',
@@ -29,7 +32,10 @@ export async function action_generateLogs(): Promise<string> {
       fn: 'testFunction_E',
       msg: 'Database connection failed while attempting to fetch user records from tus_users: ECONNREFUSED 127.0.0.1:5432 — the connection was refused, which usually means PostgreSQL is not running or is not accepting connections on that port. Check that the database server is started and that POSTGRES_URL is set correctly in your environment.',
       level: 3,
-      table: 'tus_users'
+      table: 'tus_users',
+      sql: 'SELECT * FROM tus_users WHERE tus_active = $1 ORDER BY tus_created DESC LIMIT $2',
+      params: [true, 50],
+      readable: 'SELECT * FROM tus_users WHERE tus_active = true ORDER BY tus_created DESC LIMIT 50'
     },
     {
       severity: 'E',
@@ -37,7 +43,21 @@ export async function action_generateLogs(): Promise<string> {
       msg: 'Unhandled exception in table_write: duplicate key value violates unique constraint "tus_users_pkey" — DETAIL: Key (tus_tusid)=(42) already exists. This occurred during a bulk import of 3,000 user records. The import has been aborted at row 847. All rows before this point were committed. Re-run the import starting from row 848 after resolving the duplicate key conflict.',
       level: 3,
       isupdate: true,
-      table: 'tus_users'
+      table: 'tus_users',
+      sql: 'INSERT INTO tus_users (tus_tusid, tus_email, tus_name, tus_active) VALUES ($1, $2, $3, $4) RETURNING *',
+      params: [42, 'jane.doe@example.com', 'Jane Doe', true],
+      readable: "INSERT INTO tus_users (tus_tusid, tus_email, tus_name, tus_active) VALUES (42, 'jane.doe@example.com', 'Jane Doe', true) RETURNING *"
+    },
+    {
+      severity: 'E',
+      fn: 'upgradePositionEvaluation_gev_upsert',
+      msg: 'SQL FAILED: inconsistent types deduced for parameter $2',
+      level: 1,
+      isupdate: true,
+      table: 'tgev_game_evals',
+      sql: 'INSERT INTO tgev_game_evals (gev_gdid, gev_ply, gev_cp, gev_mate) VALUES ($1, $2, $3, $4) ON CONFLICT (gev_gdid, gev_ply) DO UPDATE SET gev_cp = EXCLUDED.gev_cp, gev_mate = EXCLUDED.gev_mate',
+      params: [1042, undefined, -35, null],
+      readable: 'INSERT INTO tgev_game_evals (gev_gdid, gev_ply, gev_cp, gev_mate) VALUES (1042, undefined, -35, NULL) ON CONFLICT (gev_gdid, gev_ply) DO UPDATE SET gev_cp = EXCLUDED.gev_cp, gev_mate = EXCLUDED.gev_mate'
     },
     {
       severity: 'W',
@@ -57,7 +77,10 @@ export async function action_generateLogs(): Promise<string> {
       fn: 'testFunction_W',
       msg: 'Response time for fetchFiltered on tplr_player exceeded 2000ms (actual: 3142ms). Query returned 12,450 rows with no LIMIT applied. This is likely caused by a missing index on tplr_name. Recommended action: CREATE INDEX CONCURRENTLY idx_tplr_name ON tplr_player(tplr_name) to bring query time under 100ms.',
       level: 2,
-      table: 'tplr_player'
+      table: 'tplr_player',
+      sql: 'SELECT * FROM tplr_player WHERE tplr_active = $1 ORDER BY tplr_name ASC',
+      params: [true],
+      readable: 'SELECT * FROM tplr_player WHERE tplr_active = true ORDER BY tplr_name ASC'
     },
     {
       severity: 'I',
@@ -87,10 +110,13 @@ export async function action_generateLogs(): Promise<string> {
     {
       severity: 'D',
       fn: 'testFunction_D',
-      msg: 'Debug trace: fetchFiltered on tplr_player took 42ms — SQL(SELECT * FROM tplr_player WHERE tplr_active = $1 ORDER BY tplr_rating_blitz DESC LIMIT 40 OFFSET 0) params([true]). Cache miss, result cached under key hash 8f3a1c. Row count: 40.',
+      msg: 'Debug trace: fetchFiltered on tplr_player took 42ms. Cache miss, result cached under key hash 8f3a1c. Row count: 40.',
       level: 1,
       isupdate: true,
-      table: 'tplr_player'
+      table: 'tplr_player',
+      sql: 'SELECT * FROM tplr_player WHERE tplr_active = $1 ORDER BY tplr_rating_blitz DESC LIMIT 40 OFFSET 0',
+      params: [true],
+      readable: 'SELECT * FROM tplr_player WHERE tplr_active = true ORDER BY tplr_rating_blitz DESC LIMIT 40 OFFSET 0'
     }
   ]
   for (const entry of entries) {
@@ -101,7 +127,10 @@ export async function action_generateLogs(): Promise<string> {
       lg_severity: entry.severity,
       lg_level: entry.level ?? 1,
       lg_isupdate: entry.isupdate ?? false,
-      lg_table: entry.table ?? ''
+      lg_table: entry.table ?? '',
+      lg_sql_raw: entry.sql,
+      lg_sql_params: entry.params,
+      lg_sql_readable: entry.readable
     })
   }
   return `${entries.length} log entries written`

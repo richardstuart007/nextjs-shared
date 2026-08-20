@@ -1,6 +1,7 @@
 'use server'
 import { sql } from '../db'
 import { write_logging } from './write_logging'
+import { buildSql_Readable } from './buildSql_Readable'
 
 export async function table_truncate(
   table: string,
@@ -10,11 +11,8 @@ export async function table_truncate(
   severity: string = 'I'
 ): Promise<boolean> {
   const functionName = 'table_truncate'
+  const sqlQuery = `TRUNCATE Table ${table}${restartIdentity ? ' RESTART IDENTITY' : ''}`
   try {
-    //
-    // Base TRUNCATE query
-    //
-    const sqlQuery = `TRUNCATE Table ${table}${restartIdentity ? ' RESTART IDENTITY' : ''}`
     //
     // Run query
     //
@@ -38,7 +36,10 @@ export async function table_truncate(
       lg_severity: severity,
       lg_table: table,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     return true
   } catch (error) {
@@ -53,7 +54,10 @@ export async function table_truncate(
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     throw new Error(`${functionName}, ${errorMessage}`)
   }

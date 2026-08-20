@@ -2,6 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
+import { buildSql_Readable } from './buildSql_Readable'
 
 interface Props {
   table_from: string
@@ -19,14 +20,11 @@ export async function table_duplicate({
   severity = 'I'
 }: Props): Promise<boolean> {
   const functionName = 'table_duplicate'
-
-  try {
-    //
-    // Create the backup table
-    //
-    const sqlQuery = `
+  const sqlQuery = `
         CREATE TABLE ${table_to}
         (LIKE ${table_from} INCLUDING ALL)`
+
+  try {
     //
     // Execute the query
     //
@@ -50,7 +48,10 @@ export async function table_duplicate({
       lg_severity: severity,
       lg_table: table_to,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     //
     // All ok
@@ -67,7 +68,10 @@ export async function table_duplicate({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table_to,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: [],
+      lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     console.error('Error:', errorMessage)
     throw new Error(`${functionName}: Failed`)

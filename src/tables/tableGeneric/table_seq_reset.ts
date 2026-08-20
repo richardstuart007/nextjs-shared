@@ -3,6 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { table_seqGet } from './table_seq_get'
+import { buildSql_Readable } from './buildSql_Readable'
 
 interface Props {
   tableName: string
@@ -20,6 +21,8 @@ export async function table_seqReset({
   severity = 'I'
 }: Props): Promise<boolean> {
   const functionName = 'table_seqReset'
+  let sqlQuery = ''
+  let values: any[] = []
 
   try {
     //
@@ -38,8 +41,8 @@ export async function table_seqReset({
     const columnName = returnValues.columnName
     const maxValue = returnValues.maxValue
 
-    const sqlQuery = `SELECT setval($1, GREATEST($2::bigint, 1), $2::bigint > 0)`
-    const values = [sequenceName, maxValue]
+    sqlQuery = `SELECT setval($1, GREATEST($2::bigint, 1), $2::bigint > 0)`
+    values = [sequenceName, maxValue]
     await db.query({
       caller: caller,
       query: sqlQuery,
@@ -61,7 +64,10 @@ export async function table_seqReset({
       lg_severity: severity,
       lg_table: tableName,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     return true
     //
@@ -76,7 +82,10 @@ export async function table_seqReset({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: tableName,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     return false
   }

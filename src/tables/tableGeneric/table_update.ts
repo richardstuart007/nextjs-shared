@@ -4,6 +4,7 @@ import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
 import { WriteColumnValuePair } from '../structures'
+import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
 //
@@ -51,11 +52,8 @@ export async function table_update({
   //
   // Construct the SQL UPDATE query
   //
+  const sqlQuery = `UPDATE ${table} SET ${setClause} WHERE ${whereClause} RETURNING *`
   try {
-    //
-    // Build the SQL query
-    //
-    const sqlQuery = `UPDATE ${table} SET ${setClause} WHERE ${whereClause} RETURNING *`
     //
     //  Execute the sql
     //
@@ -85,7 +83,10 @@ export async function table_update({
       lg_severity: severity,
       lg_table: table,
       lg_level: level,
-      lg_isupdate: true
+      lg_isupdate: true,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     //
     // Return rows updated
@@ -103,7 +104,10 @@ export async function table_update({
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: table,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: sqlQuery,
+      lg_sql_params: values,
+      lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
     throw new Error(`${functionName}: ${errorMessage}`)
   }

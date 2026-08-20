@@ -3,6 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { TableColumnValuePairs } from '../structures'
+import { buildSql_Readable } from './buildSql_Readable'
 
 export async function table_check(
   tableColumnValuePairs: TableColumnValuePairs[],
@@ -12,6 +13,8 @@ export async function table_check(
 ): Promise<{ found: boolean; message: string }> {
   const functionName = 'table_check'
   let currentTable = ''
+  let currentSql = ''
+  let currentValues: any[] = []
 
   try {
     //
@@ -37,6 +40,8 @@ export async function table_check(
       FROM ${table}
       WHERE ${whereClause}
       LIMIT 1`
+      currentSql = sqlQuery
+      currentValues = values
       //
       // Execute the query
       //
@@ -61,7 +66,10 @@ export async function table_check(
           lg_msg: errorMessage,
           lg_severity: severity,
           lg_table: table,
-          lg_level: level
+          lg_level: level,
+          lg_sql_raw: sqlQuery,
+          lg_sql_params: values,
+          lg_sql_readable: buildSql_Readable(sqlQuery, values)
         })
         return { found: true, message: errorMessage }
       }
@@ -81,7 +89,10 @@ export async function table_check(
       lg_msg: errorMessage,
       lg_severity: 'E',
       lg_table: currentTable,
-      lg_level: level
+      lg_level: level,
+      lg_sql_raw: currentSql,
+      lg_sql_params: currentValues,
+      lg_sql_readable: buildSql_Readable(currentSql, currentValues)
     })
     console.error('Error:', errorMessage)
     throw new Error(`${functionName}: Failed`)
