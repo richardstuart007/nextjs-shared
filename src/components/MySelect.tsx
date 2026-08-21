@@ -10,9 +10,11 @@ import {
   MySelect_searchDftClass
 } from '../constants'
 
+export type MySelectOption = string | { value: string; label: string }
+
 type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string
-  options?: string[]
+  options?: MySelectOption[]
   searchEnabled?: boolean
   includeBlank?: boolean
   defaultClass?: string
@@ -46,16 +48,20 @@ export default function MySelect({
   const className = myMergeClasses(defaultClass, overrideClass)
 
   //----------------------------------------------------------------------------------------------
-  //  Add the optional blank option, then filter by the search term
+  //  Normalize options to {value,label}, add the optional blank option, then filter by search term
   //----------------------------------------------------------------------------------------------
+  const normalizedOptions = useMemo(() => options.map(normalizeOption), [options])
+
   const updatedOptions = useMemo(() => {
-    const result = includeBlank ? ['', ...options] : options
+    const result = includeBlank
+      ? [{ value: '', label: '' }, ...normalizedOptions]
+      : normalizedOptions
     return result
-  }, [includeBlank, options])
+  }, [includeBlank, normalizedOptions])
 
   const filteredOptions = useMemo(() => {
     const result = searchEnabled
-      ? updatedOptions.filter(opt => opt.toLowerCase().includes(searchTerm.toLowerCase()))
+      ? updatedOptions.filter(opt => opt.label.toLowerCase().includes(searchTerm.toLowerCase()))
       : updatedOptions
     return result
   }, [updatedOptions, searchEnabled, searchTerm])
@@ -64,9 +70,14 @@ export default function MySelect({
   //  Auto-select the sole remaining option once search narrows the list to one match
   //----------------------------------------------------------------------------------------------
   useEffect(() => {
-    if (searchEnabled && filteredOptions.length === 1 && value !== filteredOptions[0] && onChange) {
+    if (
+      searchEnabled &&
+      filteredOptions.length === 1 &&
+      value !== filteredOptions[0].value &&
+      onChange
+    ) {
       const syntheticEvent = {
-        target: { value: filteredOptions[0] }
+        target: { value: filteredOptions[0].value }
       } as React.ChangeEvent<HTMLSelectElement>
       onChange(syntheticEvent)
     }
@@ -94,10 +105,19 @@ export default function MySelect({
           {...rest}
         >
           {options.length > 0
-            ? filteredOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)
+            ? filteredOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))
             : children}
         </select>
       </div>
     </div>
   )
+}
+
+function normalizeOption(opt: MySelectOption): { value: string; label: string } {
+  const result = typeof opt === 'string' ? { value: opt, label: opt } : opt
+  return result
 }

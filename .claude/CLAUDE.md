@@ -199,15 +199,11 @@ Re-verified against actual file contents as of this entry, not just the original
   uses `MySelect` for its run-id picker) and `src/ui/player/PlayerProfile.tsx`. No action needed.
 - `PipelineHelp.tsx` — dismissed, not a finding (confirmed intentionally chess-specific content,
   not a shared-component gap).
-- **New, unfixed (found 2026-08-20, via the MyDropdown → MySelect/MySelectTable migration survey):**
-  `src/ui/board/ChessBoardView.tsx` has 2 `MyDropdown` call sites (`chesscom-p1` line ~1556,
-  `chesscom-p2` line ~1571), both passing `tableData={masterPlayerNames.map(...)}` +
-  `searchEnabled` + `includeBlank`. Both are candidates to migrate to `MySelect` (now that it
-  supports `searchEnabled`/`includeBlank` — see `CONSUMING_PROJECTS.md`). Fix (in a chess session,
-  not here — project isolation): replace both `MyDropdown` call sites with `MySelect`, mapping
-  `optionLabel`/`optionValue='name'` to a plain `options={masterPlayerNames}` string array (since
-  label and value are the same field here), and `selectedOption`/`setSelectedOption` to `value`/
-  `onChange`.
+- ~~`ChessBoardView.tsx`'s 2 `MyDropdown` call sites (`chesscom-p1`/`chesscom-p2`)~~ — **fixed**.
+  Re-verified 2026-08-21 (via `PLAN_myselect-label-value-options`): both now use `MySelect` with
+  flat string `options={masterPlayerNames}` (label === value for player names), at lines ~1613 and
+  ~1625. The prior "New, unfixed (found 2026-08-20)" note here was stale — chess has no remaining
+  `MyDropdown` usage.
 
 ### infostore
 - ~~Everything~~ — **fully done**, via `#audit`. Raw `<input>`/`<textarea>`/`<select>`/`<button>`
@@ -242,12 +238,17 @@ Re-verified against actual file contents as of this entry, not just the original
 - ~~Everything~~ — **fully done**, via `#audit`. 7 raw-`sql()` calls, `NavDrawer.tsx`,
   `login/form.tsx`, both textareas, and the `/owner` page tab bar (now `OwnerPage`, with an
   accepted active-tab color change from black/gray to `MyTab`'s default blue) are all fixed.
-- **New, unfixed (found 2026-08-20, via the MyDropdown → MySelect/MySelectTable migration
-  survey):** 34 `MyDropdown` call sites across 14 files — the heaviest user of `MyDropdown` of any
-  consuming project. Fix (in a next-bridgeschool session, not here — project isolation): migrate
-  each to `MySelect` or `MySelectTable` per its current prop (`tableData` → `MySelect`, `table` →
-  `MySelectTable`), then remove the now-unused `MyDropdown` import from each file.
-  - **8 pass `tableData` → migrate to `MySelect`:**
+- **New, unfixed (found 2026-08-20, re-confirmed 2026-08-21 via a fresh grep during
+  `PLAN_myselect-label-value-options`):** 34 `MyDropdown` call sites across 14 files — the
+  heaviest user of `MyDropdown` of any consuming project. Fix (in a next-bridgeschool session, not
+  here — project isolation): migrate each to `MySelect` or `MySelectTable` per its current prop
+  (`tableData` → `MySelect`, `table` → `MySelectTable`), then remove the now-unused `MyDropdown`
+  import from each file.
+  - **8 pass `tableData` → migrate to `MySelect`.** `MySelect`'s `options` prop now accepts
+    `{value,label}` pairs (shipped via `PLAN_myselect-label-value-options`), closing the gap that
+    blocked this migration — spot-checked and confirmed label ≠ value for `formattedCountries` and
+    `LEVEL_OPTIONS`; the other 5 follow the same shape and should be checked individually during
+    the actual migration:
     `src/ui/dashboard/users/form.tsx:249` (`formattedCountries`),
     `src/ui/dashboard/graph/User/User_Header.tsx:50` (`User_limitMonths_Average_Options`),
     `src/ui/dashboard/graph/Recent/Recent_Header.tsx:71` (`Recent_usersReturned_Options`),

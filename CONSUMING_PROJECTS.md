@@ -606,12 +606,17 @@ Exported constant: `MyTextarea_dftClass` (from `nextjs-shared/constants`).
 Always takes pre-supplied data (`options` or `children`) — it never fetches. For a dropdown whose
 options come from a DB table, use `MySelectTable` instead.
 
+`options` accepts a plain string (`'Apple'` — label and submitted value are the same, the original
+behavior) or a `{ value, label }` object (e.g. `{ value: 'US', label: 'United States' }` — shows
+one thing, submits another) in the same array; the two forms can be mixed. Import the `MySelectOption`
+type from `nextjs-shared/MySelect` if you need to type an options array explicitly.
+
 | Prop | Type | Default |
 |---|---|---|
 | `label` | `string` | — |
-| `options` | `string[]` | `[]` — omit to pass `children` directly as `<option>` elements |
-| `searchEnabled` | `boolean` | `false` — shows a search box above the `<select>` that filters `options` by case-insensitive substring match; no effect when using `children` |
-| `includeBlank` | `boolean` | `false` — prepends a blank `''` option to `options`; no effect when using `children` |
+| `options` | `MySelectOption[]` (`string \| { value: string; label: string }`) | `[]` — omit to pass `children` directly as `<option>` elements |
+| `searchEnabled` | `boolean` | `false` — shows a search box above the `<select>` that filters `options` by case-insensitive substring match against each option's label; no effect when using `children` |
+| `includeBlank` | `boolean` | `false` — prepends a blank `{ value: '', label: '' }` option to `options`; no effect when using `children` |
 | `defaultClass` | `string` | `MySelect_dftClass` |
 | `overrideClass` | `string` | `''` |
 | `labelClass` | `string` | `MySelect_labelDftClass` (`'font-bold text-xs whitespace-nowrap'`) |

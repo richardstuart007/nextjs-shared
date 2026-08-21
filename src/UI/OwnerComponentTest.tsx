@@ -214,6 +214,21 @@ function parseTableData(
 }
 
 //----------------------------------------------------------------------------------
+//  parseLabelValueOptions — parses "Label,Value" lines into MySelect's {value,label}[] shape
+//----------------------------------------------------------------------------------
+function parseLabelValueOptions(str: string): { value: string; label: string }[] {
+  const result = str
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const [label, value] = line.split(',').map(s => s.trim())
+      return { label: label ?? '', value: value ?? label ?? '' }
+    })
+  return result
+}
+
+//----------------------------------------------------------------------------------
 //  parseHelpItems — parses "Heading: Body" lines into HelpItem[]
 //----------------------------------------------------------------------------------
 function parseHelpItems(str: string): HelpItem[] {
@@ -1331,7 +1346,9 @@ function MyLinkTab() {
 
 type SelectControlProps = {
   label: string
+  optionsMode: 'flat' | 'labelValue'
   options: string
+  labelValueOptions: string
   defaultClass: string
   overrideClass: string
   labelClass: string
@@ -1342,7 +1359,9 @@ type SelectControlProps = {
 }
 const selectDefaults: SelectControlProps = {
   label: 'Pick one',
+  optionsMode: 'flat',
   options: 'Apple,Banana,Cherry',
+  labelValueOptions: 'United States,US\nUnited Kingdom,UK\nFrance,FR',
   defaultClass: MySelect_dftClass,
   overrideClass: '',
   labelClass: 'font-bold text-xs whitespace-nowrap',
@@ -1366,7 +1385,10 @@ function MySelectTab() {
     setSelected('')
   }
 
-  const parsedOptions = applied.options.split(',').map(o => o.trim()).filter(Boolean)
+  const parsedOptions =
+    applied.optionsMode === 'labelValue'
+      ? parseLabelValueOptions(applied.labelValueOptions)
+      : applied.options.split(',').map(o => o.trim()).filter(Boolean)
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
 
   return (
@@ -1376,8 +1398,33 @@ function MySelectTab() {
           <ControlRow label='label'>
             <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
           </ControlRow>
+          <ControlRow label='optionsMode'>
+            <div className='flex items-center gap-3'>
+              <label className='flex items-center gap-1 text-xs'>
+                <input
+                  type='radio'
+                  name='optionsMode'
+                  checked={draft.optionsMode === 'flat'}
+                  onChange={() => setDraft(d => ({ ...d, optionsMode: 'flat' }))}
+                />
+                flat
+              </label>
+              <label className='flex items-center gap-1 text-xs'>
+                <input
+                  type='radio'
+                  name='optionsMode'
+                  checked={draft.optionsMode === 'labelValue'}
+                  onChange={() => setDraft(d => ({ ...d, optionsMode: 'labelValue' }))}
+                />
+                labelValue
+              </label>
+            </div>
+          </ControlRow>
           <ControlRow label='options (comma-sep)'>
             <MyInput value={draft.options} onChange={e => setDraft(d => ({ ...d, options: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='labelValue options (Label,Value per line)'>
+            <MyTextarea value={draft.labelValueOptions} onChange={e => setDraft(d => ({ ...d, labelValueOptions: e.target.value }))} overrideClass='w-full h-24' />
           </ControlRow>
           <ControlRow label='defaultClass'>
             <MyTextarea value={draft.defaultClass} onChange={e => setDraft(d => ({ ...d, defaultClass: e.target.value }))} overrideClass='w-full h-16' />
