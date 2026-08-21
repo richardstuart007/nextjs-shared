@@ -37,8 +37,12 @@ export async function fetchFiltered({
   const functionName = 'fetchFiltered'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
-  const cacheKeySql = applyFetchSuffix(sqlQuery, { distinctColumns, orderBy, limit, offset })
-  const cacheKey = buildSql_Readable(cacheKeySql, queryValues)
+  const { finalQuery: cacheKeySql, queryValues: cacheKeyValues } = applyFetchSuffix(
+    sqlQuery,
+    queryValues,
+    { distinctColumns, orderBy, limit, offset }
+  )
+  const cacheKey = buildSql_Readable(cacheKeySql, cacheKeyValues)
 
   if (!skipCache) {
     const cachedData = cache_get<any>(cacheKey, functionName, table, level, severity)

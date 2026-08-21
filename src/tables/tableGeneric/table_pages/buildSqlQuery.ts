@@ -82,10 +82,13 @@ export function buildSqlQuery({
 
 //---------------------------------------------------------------------
 // Apply DISTINCT ON / ORDER BY / LIMIT / OFFSET to a base SELECT * query — shared by
-// fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build
+// fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build.
+// LIMIT/OFFSET are bound as $N params (they're values); ORDER BY/DISTINCT ON stay
+// string-interpolated since they're column names/expressions, not bindable values.
 //---------------------------------------------------------------------
 export function applyFetchSuffix(
   sqlQuery: string,
+  queryValues: (string | number)[],
   {
     distinctColumns = [],
     orderBy,
@@ -97,8 +100,9 @@ export function applyFetchSuffix(
     limit?: number
     offset?: number
   }
-): string {
+): { finalQuery: string; queryValues: (string | number)[] } {
   let finalQuery = sqlQuery
+  const updatedValues = [...queryValues]
   if (distinctColumns.length > 0) {
     finalQuery = finalQuery.replace(
       'SELECT *',
@@ -106,9 +110,15 @@ export function applyFetchSuffix(
     )
   }
   if (orderBy) finalQuery += ` ORDER BY ${orderBy}`
-  if (limit !== undefined) finalQuery += ` LIMIT ${limit}`
-  if (offset !== undefined) finalQuery += ` OFFSET ${offset}`
-  return finalQuery
+  if (limit !== undefined) {
+    updatedValues.push(limit)
+    finalQuery += ` LIMIT $${updatedValues.length}`
+  }
+  if (offset !== undefined) {
+    updatedValues.push(offset)
+    finalQuery += ` OFFSET $${updatedValues.length}`
+  }
+  return { finalQuery, queryValues: updatedValues }
 }
 
 //---------------------------------------------------------------------

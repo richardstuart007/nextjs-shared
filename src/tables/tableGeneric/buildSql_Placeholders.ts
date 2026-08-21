@@ -39,7 +39,10 @@ export function buildSql_Placeholders({
   }
 
   if (orderBy) sqlQuery += ` ORDER BY ${orderBy}`
-  if (limit) sqlQuery += ` LIMIT ${limit}`
+  if (limit) {
+    values.push(limit)
+    sqlQuery += ` LIMIT $${++paramIndex}`
+  }
 
   return { sqlQuery, values }
 }

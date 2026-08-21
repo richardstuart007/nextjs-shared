@@ -39,9 +39,14 @@ export async function table_fetch_pages_filtered({
 
   let readableSql = ''
   try {
-    const finalQuery = applyFetchSuffix(sqlQuery, { distinctColumns, orderBy, limit, offset })
+    const { finalQuery, queryValues: finalValues } = applyFetchSuffix(sqlQuery, queryValues, {
+      distinctColumns,
+      orderBy,
+      limit,
+      offset
+    })
 
-    readableSql = buildSql_Readable(finalQuery, queryValues)
+    readableSql = buildSql_Readable(finalQuery, finalValues)
 
     //
     // Execute Query
@@ -49,7 +54,7 @@ export async function table_fetch_pages_filtered({
     const data = await db.query({
       caller: caller,
       query: finalQuery,
-      params: queryValues,
+      params: finalValues,
       functionName: functionName,
       table,
       level,
