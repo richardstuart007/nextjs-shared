@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
 import { MyButton } from './MyButton'
@@ -34,6 +34,7 @@ type CheckBoxProps = {
   minSelections?: number
   showResortButton?: boolean
   sortBy?: 'value' | 'label'
+  onError?: (message: string) => void
 }
 
 export default function MyCheckBox({
@@ -55,7 +56,8 @@ export default function MyCheckBox({
   maxSelections,
   minSelections,
   showResortButton = true,
-  sortBy = 'label'
+  sortBy = 'label',
+  onError
 }: CheckBoxProps) {
   //----------------------------------------------------------------------------------------------
   //  STATE DECLARATIONS
@@ -63,6 +65,13 @@ export default function MyCheckBox({
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [showSelectedFirst, setShowSelectedFirst] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
+
+  //----------------------------------------------------------------------------------------------
+  //  Notify the caller whenever the validation error is set or cleared
+  //----------------------------------------------------------------------------------------------
+  useEffect(() => {
+    onError?.(error)
+  }, [error, onError])
 
   //----------------------------------------------------------------------------------------------
   //  Sort options based on sortBy prop

@@ -1056,6 +1056,7 @@ Auto-selects the single option when only one exists. Always fetches from DB on m
 | `overrideClass_Search` | `string` | `''` |
 | `overrideClass_Container` | `string` | `''` |
 | `overrideClass_CheckboxItem` | `string` | `''` |
+| `onError` | `(message: string) => void` | — called whenever the internal min/max validation error is set or cleared (empty string on clear) |
 
 Exported constants: `MyCheckbox_labelDftClass`, `MyCheckbox_searchDftClass`, `MyCheckbox_containerDftClass`, `MyCheckbox_itemDftClass` (from `nextjs-shared/constants`).
 
