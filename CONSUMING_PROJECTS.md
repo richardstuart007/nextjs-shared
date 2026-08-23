@@ -216,6 +216,34 @@ if (!result.ok) { /* show result.error */ }
 const rows = result.data
 ```
 
+### `table_fetch_join` — SELECT rows with LEFT JOINs
+
+```ts
+import { table_fetch_join } from 'nextjs-shared/table_fetch_join'
+
+const result = await table_fetch_join({
+  caller: 'myFunction',
+  table: 'my_table',
+  joins: [
+    { table: 'other_table', on: 'other_table.other_id = my_table.my_other_id' },
+  ],
+  whereColumnValuePairs: [
+    { column: 'my_col', value: 'abc', operator: '=' },
+  ],
+  orderBy: 'my_id DESC',
+  columns: ['my_id', 'my_name', 'other_table.other_name'],
+  limit: 50,
+  skipCache: false,
+})
+if (!result.ok) { /* show result.error */ }
+const rows = result.data
+```
+
+Same shape as `table_fetch`, plus a `joins` array — each entry adds a `LEFT JOIN <table> ON <on>`
+clause right after `FROM <table>`. Use this instead of dropping to `table_query` for a
+straightforward join with no subquery/aggregation. **Hard constraint:** every joined table must
+live in the same physical database — see §2a's no-cross-database-join note.
+
 ### `table_write` — INSERT a row
 
 ```ts
@@ -232,6 +260,30 @@ const result = await table_write({
 if (!result.ok) { /* show result.error */ }
 // result.data — inserted row(s) via RETURNING *
 ```
+
+### `table_upsert` — INSERT ... ON CONFLICT DO UPDATE
+
+```ts
+import { table_upsert } from 'nextjs-shared/table_upsert'
+
+const result = await table_upsert({
+  caller: 'myFunction',
+  table: 'my_table',
+  columnValuePairs: [
+    { column: 'my_key', value: 'abc' },
+    { column: 'my_count', value: 1 },
+  ],
+  conflictColumns: ['my_key'],
+  updateColumns: ['my_count'],  // optional — restrict which non-conflict columns update on conflict;
+                                // omit to update all of them
+})
+if (!result.ok) { /* show result.error */ }
+// result.data — inserted/updated row(s) via RETURNING *
+```
+
+Builds `INSERT ... ON CONFLICT (conflictColumns) DO UPDATE SET ...` (or `DO NOTHING` if every
+non-conflict column ends up excluded). Clears the table's cache entries automatically, same as
+`table_write`/`table_update`/`table_delete`.
 
 ### `table_update` — UPDATE rows
 
@@ -293,6 +345,53 @@ const result = await table_count({
 })
 // result.data — the count (0 on failure, so check result.ok first)
 ```
+
+### `table_seqGet` / `table_seqReset` — inspect or fix up a table's identity sequence
+
+```ts
+import { table_seqGet } from 'nextjs-shared/table_seq_get'
+import { table_seqReset } from 'nextjs-shared/table_seq_reset'
+
+const seq = await table_seqGet({ tableName: 'my_table', caller: 'myFunction' })
+if (!seq.ok) { /* show seq.error */ }
+// seq.data — { columnName, sequenceName, maxValue }
+
+const reset = await table_seqReset({ tableName: 'my_table', caller: 'myFunction' })
+if (!reset.ok) { /* show reset.error */ }
+// reset.data — true on success
+```
+
+`table_seqGet` finds the identity/serial sequence backing a table's primary key and its column's
+current MAX value. `table_seqReset` calls `table_seqGet` internally, then `setval`s that sequence
+to match — use after a bulk load or `table_copy_data` inserted explicit key values, so the next
+auto-generated insert doesn't collide with one already in the table.
+
+### `table_drop` / `table_truncate` / `table_duplicate` / `table_copy_data` — schema/admin operations
+
+```ts
+import { table_drop } from 'nextjs-shared/table_drop'
+import { table_truncate } from 'nextjs-shared/table_truncate'
+import { table_duplicate } from 'nextjs-shared/table_duplicate'
+import { table_copy_data } from 'nextjs-shared/table_copy_data'
+
+const dropped = await table_drop('my_table', 'myFunction')          // DROP TABLE
+const truncated = await table_truncate('my_table', 'myFunction', true) // TRUNCATE ... RESTART IDENTITY
+const duplicated = await table_duplicate({ table_from: 'my_table', table_to: 'my_table_bk', caller: 'myFunction' })
+const copied = await table_copy_data({ table_from: 'my_table', table_to: 'my_table_bk', caller: 'myFunction' })
+if (!dropped.ok || !truncated.ok || !duplicated.ok || !copied.ok) { /* show .error */ }
+```
+
+- `table_drop` / `table_truncate` take **positional args** (`table`, `caller`, then
+  `restartIdentity`/`level`/`severity` where applicable) — not an options object.
+- `table_duplicate` — `CREATE TABLE table_to (LIKE table_from INCLUDING ALL)`: structure only, no
+  data. Pair with `table_copy_data` to also copy rows.
+- `table_copy_data` — copies rows for every column name common to both tables, then resets any
+  identity-column sequences on `table_to` to match. **Cannot copy across two physical
+  databases** — see §2a.
+- All four are **destructive or schema-altering** — reserved for admin tooling (e.g. next-dbadmin)
+  and pipeline reset/rebuild steps, not ordinary app request paths.
+- `table_truncate` and `table_copy_data` **do not clear the affected table's cache entries** — call
+  `cache_clearTable(table, caller)` explicitly afterward (see §6).
 
 ### `table_query` — raw SQL with logging (auto-cached reads)
 
