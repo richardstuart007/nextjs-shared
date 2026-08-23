@@ -2,7 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
-import { ColumnValuePair } from '../structures'
+import { ColumnValuePair, TableResult } from '../structures'
 import { cache_get, cache_set } from '../cache/userCache_store'
 import { buildSql_Placeholders } from './buildSql_Placeholders'
 import { buildSql_Readable } from './buildSql_Readable'
@@ -41,7 +41,7 @@ export async function table_fetch({
   noLog = false,
   level = 1,
   severity = 'I'
-}: table_fetch_Props): Promise<any[]> {
+}: table_fetch_Props): Promise<TableResult<any[]>> {
   // Build the SQL with placeholders
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
     table,
@@ -57,7 +57,7 @@ export async function table_fetch({
   const readableSql = buildSql_Readable(sqlWithPlaceholders, values)
   if (!skipCache) {
     const cachedData = cache_get<any>(readableSql, functionName, table, level, severity)
-    if (cachedData) return cachedData
+    if (cachedData) return { ok: true, data: cachedData, error: null }
   }
 
   try {
@@ -79,9 +79,9 @@ export async function table_fetch({
     if (!skipCache) {
       cache_set(readableSql, data, caller, table, level, severity)
     }
-    return data
-  } catch {
-    return []
+    return { ok: true, data, error: null }
+  } catch (error) {
+    return { ok: false, data: [], error: (error as Error).message }
   }
 }
 

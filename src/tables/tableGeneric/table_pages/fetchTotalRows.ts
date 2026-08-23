@@ -3,6 +3,7 @@
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
+import { TableResult } from '../../structures'
 import { table_fetch_rows_total } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
 
@@ -29,7 +30,7 @@ export async function fetchTotalRows({
   skipCache?: boolean
   level?: number
   severity?: string
-}): Promise<number> {
+}): Promise<TableResult<number>> {
   const functionName = 'fetchTotalRows'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
@@ -38,20 +39,24 @@ export async function fetchTotalRows({
 
   if (!skipCache) {
     const cachedData = cache_get<number>(cacheKey, functionName, table, level, severity)
-    if (cachedData !== null) return cachedData
+    if (cachedData !== null) return { ok: true, data: cachedData, error: null }
   }
 
-  const totalRows = await table_fetch_rows_total({
-    table,
-    joins,
-    filters,
-    distinctColumns,
-    caller,
-    level,
-    severity
-  })
-  if (!skipCache) {
-    cache_set(cacheKey, totalRows, caller, table, level, severity)
+  try {
+    const totalRows = await table_fetch_rows_total({
+      table,
+      joins,
+      filters,
+      distinctColumns,
+      caller,
+      level,
+      severity
+    })
+    if (!skipCache) {
+      cache_set(cacheKey, totalRows, caller, table, level, severity)
+    }
+    return { ok: true, data: totalRows, error: null }
+  } catch (error) {
+    return { ok: false, data: 0, error: (error as Error).message }
   }
-  return totalRows
 }

@@ -4,6 +4,7 @@ import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { table_seqGet } from './table_seq_get'
 import { buildSql_Readable } from './buildSql_Readable'
+import { TableResult } from '../structures'
 
 interface Props {
   tableName: string
@@ -19,7 +20,7 @@ export async function table_seqReset({
   caller = '',
   level = 1,
   severity = 'I'
-}: Props): Promise<boolean> {
+}: Props): Promise<TableResult<boolean>> {
   const functionName = 'table_seqReset'
   let sqlQuery = ''
   let values: any[] = []
@@ -32,14 +33,12 @@ export async function table_seqReset({
     //
     // Step 1: Get the sequence/column/maxvalue for the table
     //
-    const returnValues = await table_seqGet({ tableName: tableName, caller: functionName, level, severity })
-    if (!returnValues.ok) return false
+    const seqResult = await table_seqGet({ tableName: tableName, caller: functionName, level, severity })
+    if (!seqResult.ok) return { ok: false, data: false, error: seqResult.error }
     //
     // Step 2: Update the sequence value based on the MAX value of the column
     //
-    const sequenceName = returnValues.sequenceName
-    const columnName = returnValues.columnName
-    const maxValue = returnValues.maxValue
+    const { sequenceName, columnName, maxValue } = seqResult.data
 
     sqlQuery = `SELECT setval($1, GREATEST($2::bigint, 1), $2::bigint > 0)`
     values = [sequenceName, maxValue]
@@ -69,7 +68,7 @@ export async function table_seqReset({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
-    return true
+    return { ok: true, data: true, error: null }
     //
     // Errors
     //
@@ -87,6 +86,6 @@ export async function table_seqReset({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
-    return false
+    return { ok: false, data: false, error: errorMessage }
   }
 }

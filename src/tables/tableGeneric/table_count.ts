@@ -2,7 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
-import { ColumnValuePair } from '../structures'
+import { ColumnValuePair, TableResult } from '../structures'
 import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
@@ -23,7 +23,7 @@ export async function table_count({
   noLog = false,
   level = 1,
   severity = 'I'
-}: Props): Promise<number> {
+}: Props): Promise<TableResult<number>> {
   const functionName = 'table_count'
   //
   // Build the base SQL query
@@ -70,7 +70,7 @@ export async function table_count({
     // Return the count
     //
     const rowCount = Number(data.rows[0].count)
-    return rowCount
+    return { ok: true, data: rowCount, error: null }
     //
     //  Errors
     //
@@ -88,6 +88,6 @@ export async function table_count({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
-    throw new Error(`${functionName}, ${errorMessage}`)
+    return { ok: false, data: 0, error: errorMessage }
   }
 }

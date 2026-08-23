@@ -118,8 +118,9 @@ export default function MySelectTable<T extends string, U extends string>({
       if (whereColumnValuePairs && whereColumnValuePairs.length > 0) {
         fetchParams.whereColumnValuePairs = whereColumnValuePairs
       }
-      const data = await table_fetch(fetchParams)
-      return data
+      const result = await table_fetch(fetchParams)
+      if (!result.ok) throw new Error(result.error ?? 'table_fetch failed')
+      return result.data
     }
 
     try {

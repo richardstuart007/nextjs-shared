@@ -4,6 +4,7 @@ import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_get, cache_set } from '../cache/userCache_store'
 import { buildSql_Readable } from './buildSql_Readable'
+import { TableResult } from '../structures'
 
 //----------------------------------------------------------------------------------
 //  Execute a raw SQL query through the shared db connection with logging.
@@ -35,7 +36,7 @@ export async function table_query({
   isupdate = false,
   severity = 'I',
   skipCache = false
-}: table_query_Props): Promise<any[]> {
+}: table_query_Props): Promise<TableResult<any[]>> {
   //
   // Reads may be cached; writes (isupdate) always bypass the cache
   //
@@ -44,7 +45,7 @@ export async function table_query({
 
   if (useCache) {
     const cachedData = cache_get<any[]>(readableSql, caller, table, level, severity)
-    if (cachedData) return cachedData
+    if (cachedData) return { ok: true, data: cachedData, error: null }
   }
 
   try {
@@ -70,12 +71,12 @@ export async function table_query({
     if (useCache) {
       cache_set(readableSql, rows, caller, table, level, severity)
     }
-    return rows
+    return { ok: true, data: rows, error: null }
     //
     // Errors
     //
   } catch (error) {
-    const errorMessage = `SQL FAILED: ${(error as Error).message}`
+    const errorMessage = `Table(${table || 'n/a'}) SQL(${readableSql}) FAILED`
     write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
@@ -88,6 +89,6 @@ export async function table_query({
       lg_sql_params: params,
       lg_sql_readable: readableSql
     })
-    return []
+    return { ok: false, data: [], error: errorMessage }
   }
 }

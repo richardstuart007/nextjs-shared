@@ -1,10 +1,11 @@
 'use server'
 
-import { sql } from '../db'
+import { sql, resolveDbKey } from '../db'
 import { WriteLoggingProps } from '../structures'
 
 export async function write_logging({
   lg_functionname,
+  lg_dbkey = null,
   lg_table = '',
   lg_msg,
   lg_severity = 'E',
@@ -43,6 +44,11 @@ export async function write_logging({
     //
     const lg_msgTrim = lg_msg.trim()
     //
+    //  Derive dbKey from table when the caller didn't already supply one — covers every
+    //  tableGeneric function's own success/failure trace log, not just db.ts's own two
+    //
+    const lg_dbkeyResolved = lg_dbkey ?? (lg_table ? await resolveDbKey(lg_table) : null)
+    //
     //  Params — map undefined to an object marker so it stays distinguishable from a real
     //  null once serialized (an object can never collide with a real param value, since
     //  every table_ function's params are string | number | boolean | null)
@@ -60,6 +66,7 @@ export async function write_logging({
       lg_isupdate,
       lg_caller,
       lg_functionname,
+      lg_dbkey,
       lg_table,
       lg_msg,
       lg_datetime,
@@ -67,7 +74,7 @@ export async function write_logging({
       lg_sql_params,
       lg_sql_readable
       )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
   `
     const queryValues = [
       lg_severity,
@@ -75,6 +82,7 @@ export async function write_logging({
       lg_isupdate,
       lg_caller,
       lg_functionname,
+      lg_dbkeyResolved,
       lg_table,
       lg_msgTrim,
       lg_datetime,

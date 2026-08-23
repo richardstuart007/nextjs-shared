@@ -3,6 +3,7 @@
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
+import { TableResult } from '../../structures'
 import { table_fetch_pages_total } from './tableFetchUtils'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
@@ -30,7 +31,7 @@ export async function fetchTotalPages({
   skipCache?: boolean
   level?: number
   severity?: string
-}): Promise<number> {
+}): Promise<TableResult<number>> {
   const functionName = 'fetchTotalPages'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
@@ -39,21 +40,25 @@ export async function fetchTotalPages({
 
   if (!skipCache) {
     const cachedData = cache_get<number>(cacheKey, functionName, table, level, severity)
-    if (cachedData !== null) return cachedData
+    if (cachedData !== null) return { ok: true, data: cachedData, error: null }
   }
 
-  const totalPages = await table_fetch_pages_total({
-    table,
-    joins,
-    filters,
-    items_per_page,
-    distinctColumns,
-    caller,
-    level,
-    severity
-  })
-  if (!skipCache) {
-    cache_set(cacheKey, totalPages, caller, table, level, severity)
+  try {
+    const totalPages = await table_fetch_pages_total({
+      table,
+      joins,
+      filters,
+      items_per_page,
+      distinctColumns,
+      caller,
+      level,
+      severity
+    })
+    if (!skipCache) {
+      cache_set(cacheKey, totalPages, caller, table, level, severity)
+    }
+    return { ok: true, data: totalPages, error: null }
+  } catch (error) {
+    return { ok: false, data: 0, error: (error as Error).message }
   }
-  return totalPages
 }

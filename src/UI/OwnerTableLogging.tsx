@@ -9,6 +9,7 @@ import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
 import MyPopup from '../components/MyPopup'
+import DbKeySelect from './DbKeySelect'
 import { action_truncateLogging } from './OwnerTableLogging_actions'
 import {
   OwnerTableLogging_filterDebounceMs,
@@ -30,6 +31,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [functionname, setfunctionname] = useState('')
   const [severity, setseverity] = useState('')
   const [level, setlevel] = useState('')
+  const [dbkey, setdbkey] = useState('')
   const [table, settable] = useState('')
   const [isupdate, setisupdate] = useState('')
   const [sqlfilter, setsqlfilter] = useState('')
@@ -45,6 +47,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     functionname: '',
     severity: '',
     level: '',
+    dbkey: '',
     table: '',
     isupdate: '',
     sqlfilter: '',
@@ -64,6 +67,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       functionname !== prevFilters.current.functionname ||
       severity !== prevFilters.current.severity ||
       level !== prevFilters.current.level ||
+      dbkey !== prevFilters.current.dbkey ||
       table !== prevFilters.current.table ||
       isupdate !== prevFilters.current.isupdate ||
       sqlfilter !== prevFilters.current.sqlfilter ||
@@ -71,12 +75,12 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     setMessage(filtersChanged ? 'Applying filters...' : '')
     const timeout = filtersChanged ? OwnerTableLogging_filterDebounceMs : 1
     const handler = setTimeout(() => {
-      prevFilters.current = { msg, caller, functionname, severity, level, table, isupdate, sqlfilter, sqlView }
+      prevFilters.current = { msg, caller, functionname, severity, level, dbkey, table, isupdate, sqlfilter, sqlView }
       fetchdata()
       setMessage('')
     }, timeout)
     return () => clearTimeout(handler)
-  }, [msg, caller, functionname, severity, level, table, isupdate, sqlfilter, sqlView, currentPage, rowsPerPage])
+  }, [msg, caller, functionname, severity, level, dbkey, table, isupdate, sqlfilter, sqlView, currentPage, rowsPerPage])
 
   async function fetchdata() {
     //
@@ -91,34 +95,37 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       { column: 'lg_functionname', value: functionname, operator: 'LIKE' },
       { column: 'lg_severity', value: severity, operator: '=' },
       { column: 'lg_level', value: level, operator: '=' },
+      { column: 'lg_dbkey', value: dbkey, operator: '=' },
       { column: 'lg_table', value: table, operator: 'LIKE' },
       { column: 'lg_isupdate', value: isupdate, operator: '=' },
       { column: sqlFilterColumn, value: sqlfilter, operator: 'LIKE' }
     ]
     const filters = filtersToUpdate.filter(filter => filter.value)
-    try {
-      const tableName = 'xlg_logging'
-      const offset = (currentPage - 1) * rowsPerPage
-      const data = await fetchFiltered({
-        caller: functionName,
-        table: tableName,
-        filters,
-        orderBy: 'lg_lgid DESC',
-        limit: rowsPerPage,
-        offset,
-        skipCache: true
-      })
-      settabledata(data)
-      const fetchedTotalRows = await fetchTotalRows({
-        caller: functionName,
-        table: tableName,
-        filters,
-        skipCache: true
-      })
-      setTotalRows(fetchedTotalRows)
-      setTotalPages(Math.max(1, Math.ceil(fetchedTotalRows / rowsPerPage)))
-    } catch (error) {
-      console.error('Error fetching logging:', error)
+    const tableName = 'xlg_logging'
+    const offset = (currentPage - 1) * rowsPerPage
+    const fetchResult = await fetchFiltered({
+      caller: functionName,
+      table: tableName,
+      filters,
+      orderBy: 'lg_lgid DESC',
+      limit: rowsPerPage,
+      offset,
+      skipCache: true
+    })
+    if (fetchResult.ok) settabledata(fetchResult.data)
+    else console.error('Error fetching logging:', fetchResult.error)
+
+    const totalRowsResult = await fetchTotalRows({
+      caller: functionName,
+      table: tableName,
+      filters,
+      skipCache: true
+    })
+    if (totalRowsResult.ok) {
+      setTotalRows(totalRowsResult.data)
+      setTotalPages(Math.max(1, Math.ceil(totalRowsResult.data / rowsPerPage)))
+    } else {
+      console.error('Error fetching logging total rows:', totalRowsResult.error)
     }
   }
 
@@ -146,6 +153,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               <th scope='col' className='font-medium px-2 w-10'>ID</th>
               <th scope='col' className='font-medium px-2 w-14 text-center'>Level</th>
               <th scope='col' className='font-medium px-2 w-16 text-center'>Severity</th>
+              <th scope='col' className='font-medium px-2 w-28'>DbKey</th>
               <th scope='col' className='font-medium px-2 w-32'>Table</th>
               <th scope='col' className='font-medium px-2 w-16 text-center'>IsUpdate</th>
               <th scope='col' className='font-medium px-2 w-44'>Caller</th>
@@ -195,6 +203,15 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                     onChange={e => setseverity(e.target.value.toUpperCase())}
                   />
                 </div>
+              </th>
+              <th scope='col' className='px-2'>
+                <DbKeySelect
+                  id='dbkey'
+                  overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
+                  includeBlank
+                  value={dbkey}
+                  onChange={setdbkey}
+                />
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
@@ -272,6 +289,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                   <td className='px-2 text-xxs'>{row.lg_lgid}</td>
                   <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
                   <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
+                  <td className='px-2 text-xxs'>{row.lg_dbkey}</td>
                   <td className='px-2 text-xxs'>{row.lg_table}</td>
                   <td className='px-2 text-center text-xxs'>{row.lg_isupdate ? 'Y' : 'N'}</td>
                   <td className='px-2 text-xxs'>{row.lg_caller}</td>
@@ -289,7 +307,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               ))
             ) : (
               <tr>
-                <td colSpan={10}>No data available</td>
+                <td colSpan={11}>No data available</td>
               </tr>
             )}
           </tbody>
@@ -348,6 +366,10 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         <div>
           <span className='font-medium text-gray-500'>Severity: </span>
           {row.lg_severity}
+        </div>
+        <div>
+          <span className='font-medium text-gray-500'>DbKey: </span>
+          {row.lg_dbkey || ''}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Table: </span>

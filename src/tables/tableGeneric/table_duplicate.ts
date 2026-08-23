@@ -3,6 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
+import { TableResult } from '../structures'
 
 interface Props {
   table_from: string
@@ -18,7 +19,7 @@ export async function table_duplicate({
   caller = '',
   level = 1,
   severity = 'I'
-}: Props): Promise<boolean> {
+}: Props): Promise<TableResult<boolean>> {
   const functionName = 'table_duplicate'
   const sqlQuery = `
         CREATE TABLE ${table_to}
@@ -56,12 +57,12 @@ export async function table_duplicate({
     //
     // All ok
     //
-    return true
+    return { ok: true, data: true, error: null }
     //
     // Errors
     //
   } catch (error) {
-    const errorMessage = (error as Error).message
+    const errorMessage = `Table(${table_to}) duplicate from ${table_from} FAILED`
     write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
@@ -74,6 +75,6 @@ export async function table_duplicate({
       lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
     console.error('Error:', errorMessage)
-    throw new Error(`${functionName}: Failed`)
+    return { ok: false, data: false, error: errorMessage }
   }
 }

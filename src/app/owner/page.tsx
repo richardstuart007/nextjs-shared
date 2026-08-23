@@ -7,6 +7,7 @@ import OwnerComponentTest from '../../UI/OwnerComponentTest'
 import OwnerGenerateData from './OwnerGenerateData'
 import OwnerBackNavDemo from '../../UI/OwnerBackNavDemo'
 import OwnerConstants from '../../UI/OwnerConstants'
+import OwnerDbRouting from '../../UI/OwnerDbRouting'
 
 export default function Page() {
   const envValues = {
@@ -26,7 +27,8 @@ export default function Page() {
         { label: 'Components', content: <OwnerComponentTest /> },
         { label: 'Constants', content: <OwnerConstants envValues={envValues} /> },
         { label: 'Generate Data', content: <OwnerGenerateData /> },
-        { label: 'Back Nav Demo', content: <OwnerBackNavDemo /> }
+        { label: 'Back Nav Demo', content: <OwnerBackNavDemo /> },
+        { label: 'DB Routing', content: <OwnerDbRouting /> }
       ]}
     />
   )

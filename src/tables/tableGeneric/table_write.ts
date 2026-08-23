@@ -3,7 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
-import { WriteColumnValuePair } from '../structures'
+import { WriteColumnValuePair, TableResult } from '../structures'
 import { buildSql_Readable } from './buildSql_Readable'
 //
 // Define the props interface for the insert function
@@ -28,7 +28,7 @@ export async function table_write({
   skipCache = false,
   level = 1,
   severity = 'I'
-}: Props): Promise<any[]> {
+}: Props): Promise<TableResult<any[]>> {
   const functionName = 'table_write'
   //
   // Prepare the columns and parameterized placeholders for the INSERT statement
@@ -82,7 +82,7 @@ export async function table_write({
     //
     // Return the inserted rows
     //
-    return data.rows
+    return { ok: true, data: data.rows, error: null }
     //
     //  Errors
     //
@@ -100,6 +100,6 @@ export async function table_write({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
-    throw new Error(`${functionName}, ${errorMessage}`)
+    return { ok: false, data: [], error: errorMessage }
   }
 }

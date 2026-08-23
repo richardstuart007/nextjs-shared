@@ -2,6 +2,7 @@ import { Client } from 'pg'
 import { Pool } from '@neondatabase/serverless'
 import { write_logging } from './tableGeneric/write_logging'
 import { buildSql_Readable } from './tableGeneric/buildSql_Readable'
+import { POSTGRES_URL_PREFIX } from '../constants'
 //
 // Placeholder for the `query` method
 //
@@ -23,133 +24,158 @@ let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
 // Export an async function named sql to initialize and return the sql handler
 //-------------------------------------------------------------------------
 export async function sql() {
-  await createDbQueryHandler()
+  createDbQueryHandler()
   return sqlHandler
 }
 //-------------------------------------------------------------------------
-// Choose between Neon's Postgres handler and local Postgres handler
+//  The routing table itself always lives on the primary database — a query has to know where
+//  to look up routing before it can route anything, so this lookup can never itself be routed.
+//  The "no routing row configured" sentinel is POSTGRES_URL_PREFIX itself (not a separate made-up
+//  label) so every dbKey — routed or not — is always the real env var name, everywhere it's used
+//  or logged.
+//-------------------------------------------------------------------------
+// Build the single, unified query entrypoint once per warm instance. Which physical database a
+// given call actually reaches is decided per-call inside sqlHandler.query, via resolveDbKey —
+// not here.
 //-------------------------------------------------------------------------
 let handlerInitialized = false
 
-async function createDbQueryHandler(): Promise<void> {
-  //
-  //  Build the handler (and, on the Neon branch, the Pool) once per warm instance
-  //
+function createDbQueryHandler(): void {
   if (handlerInitialized) return
   handlerInitialized = true
+
+  sqlHandler.query = async ({
+    query,
+    params = [],
+    functionName = 'Unknown',
+    caller = '',
+    noLog = false,
+    table = '',
+    level = 1,
+    isupdate = false,
+    severity = 'I'
+  }: QueryOptions) => {
+    //
+    // Remove redundant spaces
+    //
+    query = query.replace(/\s+/g, ' ').trim()
+    //
+    //  Resolve which database this table is routed to before logging, so both the trace log
+    //  and any failure log below already know it
+    //
+    const dbKey = await resolveDbKey(table)
+    //
+    //  Logging
+    //
+    if (!noLog) await log_query(functionName, query, params, caller, dbKey, table, level, isupdate, severity)
+    //
+    //  Run query against the resolved database
+    //
+    try {
+      const rawHandler = await getRawHandler(dbKey)
+      const result = await rawHandler.query(query, params)
+      return result
+    } catch (error) {
+      const errorMessage = (error as Error).message
+      if (functionName !== 'write_logging') {
+        write_logging({
+          lg_caller: caller,
+          lg_functionname: functionName,
+          lg_dbkey: dbKey,
+          lg_msg: errorMessage,
+          lg_severity: 'E',
+          lg_table: table,
+          lg_level: level,
+          lg_isupdate: isupdate,
+          lg_sql_raw: query,
+          lg_sql_params: params,
+          lg_sql_readable: buildSql_Readable(query, params)
+        })
+      }
+      console.error(`[db.ts] Query failed (table=${table || 'n/a'}, dbKey=${dbKey || 'n/a'}): ${errorMessage}`)
+      throw error
+    }
+  }
+}
+//-------------------------------------------------------------------------
+//  Raw per-database connection, keyed by dbKey — dbKey is always the literal env var name to
+//  read (e.g. dbKey 'POSTGRES_URL1' -> process.env.POSTGRES_URL1; dbKey POSTGRES_URL_PREFIX
+//  itself -> process.env.POSTGRES_URL). Lazily created and cached per dbKey, same lifecycle the
+//  original single-connection code used for the primary database.
+//-------------------------------------------------------------------------
+type RawHandler = { query: (query: string, params: any[]) => Promise<any> }
+const rawHandlers = new Map<string, RawHandler>()
+
+async function getRawHandler(dbKey: string): Promise<RawHandler> {
+  const cached = rawHandlers.get(dbKey)
+  if (cached) return cached
+
+  const connectionString = process.env[dbKey]
+
+  let rawHandler: RawHandler
   //.........................................................................
   // Use Neon Postgres handler (production on Vercel)
   //.........................................................................
   if (process.env.NEXT_PUBLIC_APPENV_DBHANDLER === 'VERCEL_PG') {
-    // Create a single pool for serverless environment
+    // Create a single pool per dbKey for serverless environment
     const pool = new Pool({
-      connectionString: process.env.POSTGRES_URL,
+      connectionString,
       max: 1 // Important for serverless
     })
-
-    sqlHandler.query = async ({
-      query,
-      params = [],
-      functionName = 'Neon_Unknown',
-      caller = '',
-      noLog = false,
-      table = '',
-      level = 1,
-      isupdate = false,
-      severity = 'I'
-    }: QueryOptions) => {
-      //
-      // Remove redundant spaces
-      //
-      query = query.replace(/\s+/g, ' ').trim()
-      //
-      //  Logging
-      //
-      if (!noLog) await log_query(functionName, query, params, caller, table, level, isupdate, severity)
-      //
-      //  Run query
-      //
-      try {
-        const result = await pool.query(query, params)
-        return result
-      } catch (error) {
-        const errorMessage = (error as Error).message
-        if (functionName !== 'write_logging') {
-          write_logging({
-            lg_caller: caller,
-            lg_functionname: functionName,
-            lg_msg: errorMessage,
-            lg_severity: 'E',
-            lg_table: table,
-            lg_level: level,
-            lg_isupdate: isupdate,
-            lg_sql_raw: query,
-            lg_sql_params: params,
-            lg_sql_readable: buildSql_Readable(query, params)
-          })
-        }
-        console.error('Error executing Neon query:', error)
-        throw error
-      }
+    rawHandler = {
+      query: (query, params) => pool.query(query, params)
     }
     //.........................................................................
     // Use local Postgres handler
     //.........................................................................
   } else {
-    // Use local Postgres handler
-    sqlHandler.query = async ({
-      query,
-      params = [],
-      functionName = 'localhost_Unknown',
-      caller = '',
-      noLog = false,
-      table = '',
-      level = 1,
-      isupdate = false,
-      severity = 'I'
-    }: QueryOptions) => {
-      const client = new Client({
-        connectionString: process.env.POSTGRES_URL
-      })
-
-      try {
-        //
-        // Remove redundant spaces
-        //
-        query = query.replace(/\s+/g, ' ').trim()
-        //
-        //  Logging
-        //
-        if (!noLog) await log_query(functionName, query, params, caller, table, level, isupdate, severity)
-        //
-        //  Run query
-        //
-        await client.connect()
-        const result = await client.query(query, params)
-        return result
-      } catch (error) {
-        const errorMessage = (error as Error).message
-        if (functionName !== 'write_logging') {
-          write_logging({
-            lg_caller: caller,
-            lg_functionname: functionName,
-            lg_msg: errorMessage,
-            lg_severity: 'E',
-            lg_table: table,
-            lg_level: level,
-            lg_isupdate: isupdate,
-            lg_sql_raw: query,
-            lg_sql_params: params,
-            lg_sql_readable: buildSql_Readable(query, params)
-          })
+    rawHandler = {
+      query: async (query, params) => {
+        const client = new Client({ connectionString })
+        try {
+          await client.connect()
+          const result = await client.query(query, params)
+          return result
+        } finally {
+          await client.end()
         }
-        console.error('Error:', errorMessage)
-        throw error
-      } finally {
-        await client.end()
       }
     }
   }
+  rawHandlers.set(dbKey, rawHandler)
+  return rawHandler
+}
+//-------------------------------------------------------------------------
+//  Table -> dbKey routing map, loaded once from xrtg_routing (on primary) per warm instance.
+//  Any failure (most commonly: xrtg_routing doesn't exist yet in this project) falls back to an
+//  empty map, so every table resolves to primary — identical to today's behavior.
+//-------------------------------------------------------------------------
+let routingMapPromise: Promise<Record<string, string>> | null = null
+
+async function getRoutingMap(): Promise<Record<string, string>> {
+  if (!routingMapPromise) routingMapPromise = loadRoutingMap()
+  return routingMapPromise
+}
+
+async function loadRoutingMap(): Promise<Record<string, string>> {
+  try {
+    const primaryHandler = await getRawHandler(POSTGRES_URL_PREFIX)
+    const result = await primaryHandler.query('SELECT rtg_table, rtg_dbkey FROM xrtg_routing', [])
+    const map: Record<string, string> = {}
+    for (const row of result.rows as { rtg_table: string; rtg_dbkey: string }[]) {
+      map[row.rtg_table] = row.rtg_dbkey
+    }
+    console.log('[db.ts] xrtg_routing loaded — routing map:', map)
+    return map
+  } catch {
+    return {}
+  }
+}
+
+export async function resolveDbKey(table: string): Promise<string> {
+  if (!table) return POSTGRES_URL_PREFIX
+  const map = await getRoutingMap()
+  return map[table] ?? POSTGRES_URL_PREFIX
 }
 //---------------------------------------------------------------------
 //  logging
@@ -159,6 +185,7 @@ async function log_query(
   query: string,
   params: any[],
   caller: string,
+  dbKey: string,
   table: string,
   level: number,
   isupdate: boolean,
@@ -176,6 +203,7 @@ async function log_query(
     lg_msg: 'DB_SQL',
     lg_severity: severity,
     lg_caller: caller,
+    lg_dbkey: dbKey,
     lg_table: table,
     lg_level: level,
     lg_isupdate: isupdate,

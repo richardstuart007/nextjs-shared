@@ -3,6 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
+import { TableResult } from '../structures'
 //
 //  Input values
 //
@@ -19,22 +20,20 @@ interface ReturnValues {
   columnName: string
   sequenceName: string
   maxValue: number
-  ok: boolean
 }
 //
 // Function to GET the sequence/column/maxvalue for a given table
 //
-export async function table_seqGet(Props: Props): Promise<ReturnValues> {
+export async function table_seqGet(Props: Props): Promise<TableResult<ReturnValues>> {
   const functionName = 'table_seqGet'
   const { tableName, caller = '', level = 1, severity = 'I' } = Props
   //
   // Initialisation
   //
-  const returnValues: ReturnValues = {
+  const emptyValues: ReturnValues = {
     columnName: '',
     sequenceName: '',
-    maxValue: 0,
-    ok: false
+    maxValue: 0
   }
   let lastSql = ''
   let lastValues: any[] = []
@@ -95,7 +94,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_sql_params: values,
         lg_sql_readable: buildSql_Readable(sqlQuery, values)
       })
-      return returnValues
+      return { ok: false, data: emptyValues, error: message }
     }
     //
     //  Sequence found - message
@@ -128,7 +127,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
     })
     const maxValue = maxValueResult.rows[0].coalesce
     //
-    //  No sequenceName returned
+    //  No maxValue returned
     //
     if (maxValue === null || maxValue === undefined) {
       const message = `No maxValue found for Table ${tableName} column ${columnName}`
@@ -143,7 +142,7 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
         lg_sql_params: [],
         lg_sql_readable: buildSql_Readable(sqlQueryMax, [])
       })
-      return returnValues
+      return { ok: false, data: emptyValues, error: message }
     }
     //
     //  maxValue found - message
@@ -161,13 +160,9 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_sql_readable: buildSql_Readable(sqlQueryMax, [])
     })
     //
-    //  Return the sequence with ok set to true
+    //  Return the sequence
     //
-    returnValues.columnName = columnName
-    returnValues.sequenceName = sequenceName
-    returnValues.maxValue = maxValue
-    returnValues.ok = true
-    return returnValues
+    return { ok: true, data: { columnName, sequenceName, maxValue }, error: null }
     //
     //  Errors
     //
@@ -185,6 +180,6 @@ export async function table_seqGet(Props: Props): Promise<ReturnValues> {
       lg_sql_params: lastValues,
       lg_sql_readable: buildSql_Readable(lastSql, lastValues)
     })
-    return returnValues
+    return { ok: false, data: emptyValues, error: errorMessage }
   }
 }

@@ -1,4 +1,13 @@
 //
+//  Uniform result shape for every tableGeneric function — never thrown, always returned, so a
+//  caller can check `ok`/`error` instead of wrapping every call in try/catch
+//
+export type TableResult<T> = {
+  ok: boolean
+  data: T
+  error: string | null
+}
+//
 // Comparison operators
 //
 export type Comparison_operator =
@@ -53,6 +62,7 @@ export type table_Logging = {
   lg_isupdate: boolean
   lg_caller: string
   lg_functionname: string
+  lg_dbkey: string | null
   lg_table: string
   lg_msg: string
   lg_datetime: Date
@@ -62,6 +72,7 @@ export type table_Logging = {
 }
 export type WriteLoggingProps = {
   lg_functionname: string
+  lg_dbkey?: string | null
   lg_table?: string
   lg_msg: string
   lg_severity?: string
@@ -71,4 +82,19 @@ export type WriteLoggingProps = {
   lg_sql_raw?: string
   lg_sql_params?: any[]
   lg_sql_readable?: string
+}
+//
+//  Routing control table structure — maps a table name to the dbKey it's routed to
+//
+export type table_Routing = {
+  rtg_rtgid: number
+  rtg_table: string
+  rtg_dbkey: string
+}
+//
+//  Multi-database routing test table structure
+//
+export type table_Test = {
+  tst_tstid: number
+  tst_note: string | null
 }

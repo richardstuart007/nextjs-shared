@@ -3,6 +3,7 @@
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, applyFetchSuffix } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
+import { TableResult } from '../../structures'
 import { table_fetch_pages_filtered } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
 
@@ -33,7 +34,7 @@ export async function fetchFiltered({
   skipCache?: boolean
   level?: number
   severity?: string
-}): Promise<any[]> {
+}): Promise<TableResult<any[]>> {
   const functionName = 'fetchFiltered'
 
   const { sqlQuery, queryValues } = buildSqlQuery({ table, joins, filters })
@@ -46,23 +47,27 @@ export async function fetchFiltered({
 
   if (!skipCache) {
     const cachedData = cache_get<any>(cacheKey, functionName, table, level, severity)
-    if (cachedData) return cachedData
+    if (cachedData) return { ok: true, data: cachedData, error: null }
   }
 
-  const data = await table_fetch_pages_filtered({
-    table,
-    joins,
-    filters,
-    orderBy,
-    limit,
-    offset,
-    distinctColumns,
-    caller,
-    level,
-    severity
-  })
-  if (!skipCache) {
-    cache_set(cacheKey, data, caller, table, level, severity)
+  try {
+    const data = await table_fetch_pages_filtered({
+      table,
+      joins,
+      filters,
+      orderBy,
+      limit,
+      offset,
+      distinctColumns,
+      caller,
+      level,
+      severity
+    })
+    if (!skipCache) {
+      cache_set(cacheKey, data, caller, table, level, severity)
+    }
+    return { ok: true, data, error: null }
+  } catch (error) {
+    return { ok: false, data: [], error: (error as Error).message }
   }
-  return data
 }

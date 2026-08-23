@@ -2,13 +2,14 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
+import { TableResult } from '../structures'
 
 export async function table_drop(
   table: string,
   caller: string = '',
   level: number = 1,
   severity: string = 'I'
-): Promise<boolean> {
+): Promise<TableResult<boolean>> {
   const functionName = 'table_drop'
   const sqlQuery = `DROP Table ${table}`
   try {
@@ -40,7 +41,7 @@ export async function table_drop(
       lg_sql_params: [],
       lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
-    return true
+    return { ok: true, data: true, error: null }
   } catch (error) {
     //
     // Logging
@@ -58,6 +59,6 @@ export async function table_drop(
       lg_sql_params: [],
       lg_sql_readable: buildSql_Readable(sqlQuery, [])
     })
-    throw new Error(`${functionName}, ${errorMessage}`)
+    return { ok: false, data: false, error: errorMessage }
   }
 }

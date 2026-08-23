@@ -2,7 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
-import { TableColumnValuePairs } from '../structures'
+import { TableColumnValuePairs, TableResult } from '../structures'
 import { buildSql_Readable } from './buildSql_Readable'
 
 export async function table_check(
@@ -10,7 +10,7 @@ export async function table_check(
   caller: string = '',
   level: number = 1,
   severity: string = 'I'
-): Promise<{ found: boolean; message: string }> {
+): Promise<TableResult<{ found: boolean; message: string }>> {
   const functionName = 'table_check'
   let currentTable = ''
   let currentSql = ''
@@ -71,18 +71,18 @@ export async function table_check(
           lg_sql_params: values,
           lg_sql_readable: buildSql_Readable(sqlQuery, values)
         })
-        return { found: true, message: errorMessage }
+        return { ok: true, data: { found: true, message: errorMessage }, error: null }
       }
     }
     //
     // If no matches were found
     //
-    return { found: false, message: '' }
+    return { ok: true, data: { found: false, message: '' }, error: null }
     //
     //  Errors
     //
   } catch (error) {
-    const errorMessage = (error as Error).message
+    const errorMessage = `Table(${currentTable}) check FAILED`
     write_logging({
       lg_caller: caller,
       lg_functionname: functionName,
@@ -95,6 +95,6 @@ export async function table_check(
       lg_sql_readable: buildSql_Readable(currentSql, currentValues)
     })
     console.error('Error:', errorMessage)
-    throw new Error(`${functionName}: Failed`)
+    return { ok: false, data: { found: false, message: '' }, error: errorMessage }
   }
 }

@@ -3,7 +3,7 @@
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'
-import { WriteColumnValuePair } from '../structures'
+import { WriteColumnValuePair, TableResult } from '../structures'
 import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
@@ -28,7 +28,7 @@ export async function table_update({
   skipCache = false,
   level = 1,
   severity = 'I'
-}: Props): Promise<any[]> {
+}: Props): Promise<TableResult<any[]>> {
   const functionName = 'table_update'
   //
   // Create the SET clause for the update statement
@@ -91,7 +91,7 @@ export async function table_update({
     //
     // Return rows updated
     //
-    return data.rows
+    return { ok: true, data: data.rows, error: null }
     //
     //  Errors
     //
@@ -109,6 +109,6 @@ export async function table_update({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQuery, values)
     })
-    throw new Error(`${functionName}: ${errorMessage}`)
+    return { ok: false, data: [], error: errorMessage }
   }
 }

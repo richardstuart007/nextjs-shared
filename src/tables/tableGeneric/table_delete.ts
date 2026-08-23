@@ -2,7 +2,7 @@
 
 import { sql } from '../db'
 import { write_logging } from './write_logging'
-import { ColumnValuePair } from '../structures'
+import { ColumnValuePair, TableResult } from '../structures'
 import { cache_clearTable } from '../cache/userCache_store'
 import { buildSql_Readable } from './buildSql_Readable'
 //
@@ -28,7 +28,7 @@ export async function table_delete({
   skipCache = false,
   level = 1,
   severity = 'I'
-}: Props): Promise<any[]> {
+}: Props): Promise<TableResult<any[]>> {
   const functionName = 'table_delete'
   //
   // Construct the SQL DELETE query
@@ -101,8 +101,7 @@ export async function table_delete({
     //
     // If RETURNING * is specified, return the deleted rows
     //
-    if (returning) return data.rows
-    return []
+    return { ok: true, data: returning ? data.rows : [], error: null }
   } catch (error) {
     // Logging
     const errorMessage = `Table(${table}) DELETE FAILED`
@@ -118,6 +117,6 @@ export async function table_delete({
       lg_sql_params: values,
       lg_sql_readable: buildSql_Readable(sqlQueryStatement, values)
     })
-    throw new Error(`${functionName}, ${errorMessage}`)
+    return { ok: false, data: [], error: errorMessage }
   }
 }
