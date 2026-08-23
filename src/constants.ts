@@ -278,7 +278,7 @@ export const OwnerTableLogging_msgTruncateLen = 200
 export const OwnerTableLogging_rowsOptions = [10, 20, 40, 100] as const
 
 //
-//  Multi-database routing (src/tables/db.ts, OwnerDbRouting) — every database connection string
+//  Multi-database routing (src/tables/db.ts, OwnerRoutingMaintenance) — every database connection string
 //  env var starts with this prefix: the primary database is the bare prefix itself
 //  (POSTGRES_URL), any additional database is the prefix plus a suffix (e.g. POSTGRES_URL1),
 //  used directly as the literal env var name / xrtg_routing.rtg_dbkey value.

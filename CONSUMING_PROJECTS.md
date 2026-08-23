@@ -111,6 +111,21 @@ needs to change, routing is resolved automatically inside `db.ts` based on the t
    none of the `table_` functions can copy data across two physical databases in one call, only
    within one database.
 
+**Managing routing rows:** `nextjs-shared` exports `OwnerRoutingMaintenance`
+(`./OwnerRoutingMaintenance` → `src/UI/OwnerRoutingMaintenance.tsx`) — a panel for writing, editing
+in place (via an Edit/Save/Cancel toggle per row), and deleting `xrtg_routing` rows, no manual SQL
+needed for day-to-day changes once the table exists. Any project that opts into multi-database
+routing should add it as a tab (e.g. "Routing Maintenance") on their own `/owner` page, the same
+way `OwnerTableLogging`/`OwnerTableCache` are added:
+```tsx
+import OwnerRoutingMaintenance from 'nextjs-shared/OwnerRoutingMaintenance'
+// ...
+{ label: 'Routing Maintenance', content: <OwnerRoutingMaintenance /> }
+```
+(`nextjs-shared`'s own `/owner` page also has a "Routing Test" tab, `OwnerRoutingTest.tsx`, that
+exercises `ttst_test` to verify routing actually reaches the right database — that one is
+internal-only and not exported, same as the Components tab.)
+
 **Behavior:** the `table → dbKey` map loads once from `xrtg_routing`, on the first query, and is
 cached in memory for the life of that server instance — a routing row added or changed while the
 server is already running won't take effect until the next restart/cold start. If `xrtg_routing`
@@ -1477,6 +1492,7 @@ wanted):
 | `nextjs-shared/OwnerTableLogging` | Yes | Paginated, filterable view of `xlg_logging` |
 | `nextjs-shared/OwnerTableCache` | Yes | Inspector for the server-side cache |
 | `nextjs-shared/OwnerTableSessionStorage` | No | Display + delete/clear-all for the current tab's `rs7_`-prefixed browser `sessionStorage` entries — see "Session Storage tab" below |
+| `nextjs-shared/OwnerRoutingMaintenance` | Yes | Write, edit-in-place, and delete `xrtg_routing` rows — see "Multi-Database Routing" above |
 | `nextjs-shared/DevLayoutHeader` | No | Dev-only top nav bar (Owner link + optional extra links + optional DB-location badge) — see below |
 
 ### DevLayoutHeader props

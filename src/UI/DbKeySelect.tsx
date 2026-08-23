@@ -17,8 +17,8 @@ type Props = {
 
 //----------------------------------------------------------------------------------------------
 //  DbKeySelect — dropdown of every configured database connection (env vars starting with
-//  POSTGRES_URL_PREFIX). Shared by the DB Routing tab's Add-row form and the Logging tab's
-//  DbKey filter, so the option list is fetched and defined in exactly one place.
+//  POSTGRES_URL_PREFIX). Shared by the Routing Maintenance tab's Add-row form and the Logging
+//  tab's DbKey filter, so the option list is fetched and defined in exactly one place.
 //----------------------------------------------------------------------------------------------
 export default function DbKeySelect({
   id,

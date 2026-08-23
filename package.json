@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.81",
+  "version": "2.1.82",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, and schema tools",
   "private": true,
   "scripts": {
@@ -71,6 +71,7 @@
     "./OwnerTableCache": "./src/UI/OwnerTableCache.tsx",
     "./OwnerTableLogging": "./src/UI/OwnerTableLogging.tsx",
     "./OwnerTableSessionStorage": "./src/UI/OwnerTableSessionStorage.tsx",
+    "./OwnerRoutingMaintenance": "./src/UI/OwnerRoutingMaintenance.tsx",
     "./widthUtils": "./src/components/widthUtils.ts",
     "./table_fetch": "./src/tables/tableGeneric/table_fetch.ts",
     "./table_fetch_join": "./src/tables/tableGeneric/table_fetch_join.ts",
