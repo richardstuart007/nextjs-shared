@@ -1,5 +1,21 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_count — COUNT(*) on table, with an optional WHERE filter
+//
+//    Parameters:
+//      table                 — table name
+//      whereColumnValuePairs — optional WHERE conditions (column/value/operator triples;
+//                              operator defaults to '='); IN/NOT IN expects an array value
+//      caller                — logging caller identity
+//      noLog                 — suppresses the query-level trace log; defaults to false
+//      level, severity       — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<number> — the row count, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { ColumnValuePair, TableResult } from '../structures'

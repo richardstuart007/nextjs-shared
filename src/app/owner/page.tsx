@@ -1,3 +1,8 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    Page — /owner dev app: Logging / Cache / Session Storage / Routing Maintenance tabs
+//==============================================================================================
+
 import OwnerPage from '../../UI/OwnerPage'
 import OwnerTableLogging from '../../UI/OwnerTableLogging'
 import OwnerTableCache from '../../UI/OwnerTableCache'

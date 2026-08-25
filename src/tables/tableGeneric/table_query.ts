@@ -1,16 +1,31 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_query — runs a raw parameterized SQL query, with logging and (for reads) caching
+//    keyed by the readable SQL. Use this when the query is too complex for table_fetch (e.g.
+//    multi-table JOINs with CASE WHEN expressions, subqueries, etc.).
+//
+//    Parameters:
+//      caller          — logging caller identity
+//      query           — raw SQL, using $1/$2/... placeholders
+//      params          — values for each placeholder, in order
+//      noLog           — suppresses the query-level trace log; defaults to false
+//      table           — table name, for logging/cache-scoping only
+//      level, severity — logging level/severity; default 1/'I'
+//      isupdate        — marks this as a write; always bypasses the cache; defaults to false
+//      skipCache       — bypasses the cache read/write for a read query; defaults to false
+//                        (ignored when isupdate is true)
+//
+//    Returns:
+//      a TableResult<any[]> — the result rows, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_get, cache_set } from '../cache/userCache_store'
 import { buildSql_Readable } from './buildSql_Readable'
 import { TableResult } from '../structures'
-
-//----------------------------------------------------------------------------------
-//  Execute a raw SQL query through the shared db connection with logging.
-//  Use this when the query is too complex for table_fetch (e.g. multi-table JOINs
-//  with CASE WHEN expressions, subqueries, etc.).
-//----------------------------------------------------------------------------------
 
 export type table_query_Props = {
   caller: string

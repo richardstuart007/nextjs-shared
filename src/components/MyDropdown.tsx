@@ -1,5 +1,31 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyDropdown — searchable dropdown with optional database fetch
+//
+//    Parameters:
+//      selectedOption, setSelectedOption — current value and its setter
+//      searchEnabled            — shows a filter box above the dropdown; defaults to false
+//      name                     — <select>/<label> id and form field name
+//      label                    — optional label text
+//      tableData                — pre-fetched rows to build options from (mutually
+//                                 exclusive with table — one of the two is required)
+//      table                    — source table name to fetch options from, if tableData
+//                                 is not supplied
+//      whereColumnValuePairs    — optional WHERE filter for the table fetch
+//      orderBy                  — ORDER BY column; defaults to optionLabel
+//      optionLabel, optionValue — columns/keys providing each option's display label / value
+//      defaultClass, defaultClass_Label, defaultClass_Search, overrideClass_Label,
+//      overrideClass_Search, overrideClass_Dropdown — style overrides for each sub-element
+//      includeBlank             — prepends a blank option; defaults to false
+//
+//  2) NOTES
+//    Auto-selects the single option when the (filtered) option list narrows to exactly one.
+//    Fetches from `table` on mount unless `tableData` is supplied, in which case those rows
+//    are used directly with no fetch.
+//==============================================================================================
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { table_fetch, table_fetch_Props } from '../tables/tableGeneric/table_fetch'
@@ -36,9 +62,6 @@ type DropdownProps<T extends string, U extends string> = {
 
 const functionName = 'MyDropdown'
 
-//----------------------------------------------------------------------------------
-//  MyDropdown — searchable dropdown with optional database fetch
-//----------------------------------------------------------------------------------
 export default function MyDropdown<T extends string, U extends string>({
   selectedOption,
   setSelectedOption,
@@ -108,6 +131,10 @@ export default function MyDropdown<T extends string, U extends string>({
   //  Fetch dropdown options
   //----------------------------------------------------------------------------------------------
   const fetchOptions = useCallback(async () => {
+    //
+    //  determineRows — returns tableData as-is if supplied, otherwise queries `table`
+    //  for the distinct optionLabel/optionValue columns
+    //
     async function determineRows(): Promise<Array<RowData<T, U>>> {
       //
       //  Passed data
@@ -191,21 +218,29 @@ export default function MyDropdown<T extends string, U extends string>({
   }, [dropdownOptions, setSelectedOption])
 
   //----------------------------------------------------------------------------------------------
-  //  Loading
+  //  Return based on state
+  //----------------------------------------------------------------------------------------------
+  if (loading) return renderLoadingState()
+  if (dropdownOptions.length === 0) return renderEmptyState()
+  if (dropdownOptions.length === 1) return renderSingleOption()
+  return renderDropdown()
+
+  //----------------------------------------------------------------------------------------------
+  //  renderLoadingState — shown while the options fetch is in flight
   //----------------------------------------------------------------------------------------------
   function renderLoadingState() {
     return <p className='font-medium'>Loading options...</p>
   }
 
   //----------------------------------------------------------------------------------------------
-  //  No options
+  //  renderEmptyState — shown when neither tableData nor the table query yielded rows
   //----------------------------------------------------------------------------------------------
   function renderEmptyState() {
     return <p className='font-medium'>No options available</p>
   }
 
   //----------------------------------------------------------------------------------------------
-  //  One option
+  //  renderSingleOption — shown as static text (no dropdown) when exactly one option exists
   //----------------------------------------------------------------------------------------------
   function renderSingleOption() {
     const singleOption = dropdownOptions[0]
@@ -222,7 +257,7 @@ export default function MyDropdown<T extends string, U extends string>({
   }
 
   //----------------------------------------------------------------------------------------------
-  //  Select option
+  //  renderDropdown — the normal case: label + optional search box + <select>
   //----------------------------------------------------------------------------------------------
   function renderDropdown() {
     return (
@@ -278,12 +313,4 @@ export default function MyDropdown<T extends string, U extends string>({
       </div>
     )
   }
-
-  //----------------------------------------------------------------------------------------------
-  //  Return based on state
-  //----------------------------------------------------------------------------------------------
-  if (loading) return renderLoadingState()
-  if (dropdownOptions.length === 0) return renderEmptyState()
-  if (dropdownOptions.length === 1) return renderSingleOption()
-  return renderDropdown()
 }

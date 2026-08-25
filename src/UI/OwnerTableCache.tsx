@@ -1,5 +1,11 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerTableCache — paginated, filterable inspector for the userCache_store, with
+//    per-row detail popup, delete, and clear-all
+//==============================================================================================
+
 import { useState, useEffect, useRef } from 'react'
 import {
   cacheAction_getEntries,
@@ -54,52 +60,6 @@ export default function OwnerTableCache() {
     }, timeout)
     return () => clearTimeout(handler)
   }, [keyFilter, tableFilter, callerFilter, currentPage, rowsPerPage])
-
-  async function fetchdata() {
-    setLoading(true)
-    try {
-      const data = await cacheAction_getEntries({
-        limit: rowsPerPage,
-        offset: (currentPage - 1) * rowsPerPage,
-        keyFilter,
-        tableFilter,
-        callerFilter
-      })
-      setEntries(data.entries)
-      setTotalCount(data.totalCount)
-      setOverallSize(data.overallSize)
-    } catch (error) {
-      console.error('Error fetching cache entries:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleClearAll() {
-    setMessage('Clearing all...')
-    try {
-      await cacheAction_clearAll(functionName)
-      await fetchdata()
-    } catch (error) {
-      console.error('Error clearing cache:', error)
-    } finally {
-      setMessage('')
-    }
-  }
-
-  async function handleDelete(sql: string) {
-    try {
-      await cacheAction_deleteEntry(sql, functionName)
-      await fetchdata()
-    } catch (error) {
-      console.error('Error deleting entry:', error)
-    }
-  }
-
-  async function handleRowClick(entry: CacheEntryInfo) {
-    const data = await cacheAction_getEntryData(entry.sql)
-    setPopup({ entry, data })
-  }
 
   return (
     <>
@@ -226,8 +186,78 @@ export default function OwnerTableCache() {
       </MyPopup>
     </>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  fetchdata — reloads entries for the current page/filters
+  //----------------------------------------------------------------------------------------------
+  async function fetchdata() {
+    setLoading(true)
+    try {
+      const data = await cacheAction_getEntries({
+        limit: rowsPerPage,
+        offset: (currentPage - 1) * rowsPerPage,
+        keyFilter,
+        tableFilter,
+        callerFilter
+      })
+      setEntries(data.entries)
+      setTotalCount(data.totalCount)
+      setOverallSize(data.overallSize)
+    } catch (error) {
+      console.error('Error fetching cache entries:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleClearAll — clears every cache entry, then refreshes
+  //----------------------------------------------------------------------------------------------
+  async function handleClearAll() {
+    setMessage('Clearing all...')
+    try {
+      await cacheAction_clearAll(functionName)
+      await fetchdata()
+    } catch (error) {
+      console.error('Error clearing cache:', error)
+    } finally {
+      setMessage('')
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleDelete — deletes one cache entry, then refreshes
+  //
+  //  Params:
+  //    sql — the entry's cache key (the SQL string)
+  //----------------------------------------------------------------------------------------------
+  async function handleDelete(sql: string) {
+    try {
+      await cacheAction_deleteEntry(sql, functionName)
+      await fetchdata()
+    } catch (error) {
+      console.error('Error deleting entry:', error)
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleRowClick — fetches the full cached data for one entry and opens the detail popup
+  //
+  //  Params:
+  //    entry — the clicked row's summary info
+  //----------------------------------------------------------------------------------------------
+  async function handleRowClick(entry: CacheEntryInfo) {
+    const data = await cacheAction_getEntryData(entry.sql)
+    setPopup({ entry, data })
+  }
 }
 
+//----------------------------------------------------------------------------------------------
+//  TablesBadge — comma-joined table list, truncated with a "+N" suffix past the visible count
+//
+//  Params:
+//    tables — the tables this cache entry touches
+//----------------------------------------------------------------------------------------------
 function TablesBadge({ tables }: { tables: string[] }) {
   if (tables.length === 0) return <span className='text-gray-400'>—</span>
   const visible = tables.slice(0, OwnerTableCache_tablesBadgeVisibleCount)
@@ -242,6 +272,15 @@ function TablesBadge({ tables }: { tables: string[] }) {
 
 const MAX_DISPLAY_ROWS = 100
 
+//----------------------------------------------------------------------------------------------
+//  CacheEntryDetail — full detail view for one cache entry: metadata, the cache key
+//  (SQL), and a row/column grid (with a per-row detail panel) if the cached data is an
+//  array, otherwise raw JSON
+//
+//  Params:
+//    entry — the entry's summary info (tables, caller, rowCount, hitCount, sql)
+//    data  — the entry's full cached value
+//----------------------------------------------------------------------------------------------
 function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const rows = Array.isArray(data) ? data : null
@@ -355,6 +394,16 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
   )
 }
 
+//----------------------------------------------------------------------------------------------
+//  fmtCellValue — formats one cell's raw value for display (Date -> 'YYYY-MM-DD HH:mm',
+//  everything else -> String(val))
+//
+//  Params:
+//    val — the raw cell value
+//
+//  Returns:
+//    the display string
+//----------------------------------------------------------------------------------------------
 function fmtCellValue(val: unknown): string {
   if (val instanceof Date) return val.toISOString().slice(0, 16).replace('T', ' ')
   return String(val)

@@ -11,6 +11,14 @@ import { write_logging } from '../tableGeneric/write_logging'
 
 const functionName = 'cache_actions'
 
+//----------------------------------------------------------------------------------
+//  cacheAction_clearAll — clears every entry from userCache_store and logs it
+//
+//  Params:
+//    caller   — logging caller identity; defaults to this module's own name
+//    level    — log level; defaults to 1
+//    severity — log severity; defaults to 'I'
+//----------------------------------------------------------------------------------
 export async function cacheAction_clearAll(
   caller: string = functionName,
   level: number = 1,
@@ -26,6 +34,16 @@ export async function cacheAction_clearAll(
   })
 }
 
+//----------------------------------------------------------------------------------
+//  cacheAction_getEntries — a filtered, paginated page of cache entry summaries
+//
+//  Params:
+//    limit, offset                        — pagination
+//    keyFilter, tableFilter, callerFilter — optional substring filters
+//
+//  Returns:
+//    the matching page of entries plus totalCount/overallSize (see CacheEntriesPage)
+//----------------------------------------------------------------------------------
 export async function cacheAction_getEntries({
   limit,
   offset,
@@ -42,10 +60,31 @@ export async function cacheAction_getEntries({
   return cache_getEntriesInfo({ limit, offset, keyFilter, tableFilter, callerFilter })
 }
 
+//----------------------------------------------------------------------------------
+//  cacheAction_getEntryData — the full cached value for one entry
+//
+//  Params:
+//    sql — the entry's cache key (the SQL string)
+//
+//  Returns:
+//    the cached value
+//----------------------------------------------------------------------------------
 export async function cacheAction_getEntryData(sql: string): Promise<any> {
   return cache_getEntryData(sql)
 }
 
+//----------------------------------------------------------------------------------
+//  cacheAction_deleteEntry — deletes one cache entry and logs it
+//
+//  Params:
+//    sql      — the entry's cache key (the SQL string)
+//    caller   — logging caller identity; defaults to this module's own name
+//    level    — log level; defaults to 1
+//    severity — log severity; defaults to 'I'
+//
+//  Returns:
+//    whether an entry was actually found and removed
+//----------------------------------------------------------------------------------
 export async function cacheAction_deleteEntry(
   sql: string,
   caller: string = functionName,

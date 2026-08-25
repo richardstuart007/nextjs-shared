@@ -1,5 +1,15 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerPage — tabbed page chrome; renders an underline tab bar and the active tab's content
+//
+//    Parameters:
+//      tabs       — the tab list, each with a label and its rendered content
+//      persistKey — when supplied, the active tab is saved to (and restored from)
+//                   sessionStorage under this key, surviving navigation away and back
+//==============================================================================================
+
 import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
 import { MyTab } from '../components/MyTab'
 import { SessionStorageKeyPrefixShared } from '../constants'

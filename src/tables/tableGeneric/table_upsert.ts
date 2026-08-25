@@ -1,5 +1,26 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_upsert — INSERTs a row, updating on conflict (or DO NOTHING if no non-conflict
+//    columns remain to update); clears the table's cache entries and logs the outcome
+//
+//    Parameters:
+//      table            — table name
+//      columnValuePairs — the columns/values to insert
+//      conflictColumns  — columns forming the ON CONFLICT target
+//      updateColumns    — when set, restricts the DO UPDATE SET to these non-conflict
+//                         columns; omitted updates every non-conflict column
+//      caller           — logging caller identity
+//      noLog            — suppresses the query-level trace log; defaults to false
+//      skipCache        — skips clearing this table's cache entries; defaults to false
+//      level, severity  — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<any[]> — the inserted/updated row(s) (via RETURNING *), or an error
+//      message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'

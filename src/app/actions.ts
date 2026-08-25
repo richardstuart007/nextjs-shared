@@ -7,6 +7,9 @@ import { table_fetch } from '../tables/tableGeneric/table_fetch'
 //  action_generateLogs — writes test log entries across D / E / W / I severities,
 //  varying level, isupdate and table, including some with very long messages to
 //  test table truncation behaviour
+//
+//  Returns:
+//    a summary message, e.g. '12 log entries written'
 //----------------------------------------------------------------------------------
 export async function action_generateLogs(): Promise<string> {
   const caller = 'test-app'
@@ -139,6 +142,9 @@ export async function action_generateLogs(): Promise<string> {
 //----------------------------------------------------------------------------------
 //  action_generateCache — runs varied queries to create cache entries with
 //  different SQL lengths, WHERE clauses, column lists and tables
+//
+//  Returns:
+//    a summary message, e.g. '10 cache entries created'
 //----------------------------------------------------------------------------------
 export async function action_generateCache(): Promise<string> {
   const queries: Parameters<typeof table_fetch>[0][] = [

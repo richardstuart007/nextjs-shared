@@ -1,5 +1,19 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_seqReset — resets tableName's identity sequence to its column's current MAX value
+//    (via table_seqGet), so future inserts don't collide with existing rows
+//
+//    Parameters:
+//      tableName       — table whose identity sequence to reset
+//      caller          — logging caller identity
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<boolean> — true on success, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { table_seqGet } from './table_seq_get'
@@ -12,9 +26,7 @@ interface Props {
   level?: number
   severity?: string
 }
-//
-// Function to update the sequence for a given table and column
-//
+
 export async function table_seqReset({
   tableName,
   caller = '',

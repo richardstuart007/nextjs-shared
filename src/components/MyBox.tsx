@@ -1,5 +1,24 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyBox — bordered box with optional title and class overrides; optionally collapsible
+//
+//    Parameters:
+//      title             — optional heading; required (alongside collapsible) to show the
+//                          collapse toggle
+//      children          — box content
+//      className         — box wrapper classes, merged over defaultClass
+//      defaultClass      — box wrapper base classes; defaults to MyBox_dftClass
+//      titleClass        — heading classes; defaults to MyBox_titleDftClass
+//      collapsible       — when true (with a title present), renders a click-to-collapse
+//                          toggle instead of a static heading; defaults to false
+//      defaultOpen       — initial open state when collapsible; defaults to true
+//      toggleButtonClass — collapse toggle button classes; defaults to
+//                          MyBox_toggleButtonDftClass
+//      chevronClass      — collapse chevron icon classes; defaults to MyBox_chevronDftClass
+//==============================================================================================
+
 import { useState } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { myMergeClasses } from './MyMergeClasses'
@@ -17,9 +36,6 @@ type Props = {
   chevronClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyBox — bordered box with optional title and class overrides; optionally collapsible
-//----------------------------------------------------------------------------------
 export default function MyBox({
   title,
   children,

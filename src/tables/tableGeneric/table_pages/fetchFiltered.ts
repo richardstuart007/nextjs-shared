@@ -1,5 +1,23 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    fetchFiltered — decides internally whether to cache
+//
+//    Parameters:
+//      table                     — table name
+//      joins                     — optional joins, merged into the base query
+//      filters                   — optional WHERE filters
+//      orderBy, limit, offset    — pagination/ordering
+//      distinctColumns           — optional DISTINCT columns
+//      caller                    — logging caller identity
+//      skipCache                 — bypasses the cache read/write; defaults to false
+//      level, severity           — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<any[]> — the matching rows for this page, or an error message
+//==============================================================================================
+
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, applyFetchSuffix } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
@@ -7,9 +25,6 @@ import { TableResult } from '../../structures'
 import { table_fetch_pages_filtered } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
 
-//---------------------------------------------------------------------
-// Fetch Filtered Function – decides internally whether to cache
-//---------------------------------------------------------------------
 export async function fetchFiltered({
   table,
   joins = [],

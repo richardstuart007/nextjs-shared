@@ -1,5 +1,11 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    Page — nextjs-shared's home/dev-index page: links to every /test/* page, plus the
+//    OwnerGenerateData test-data buttons. Renders a minimal page outside dev.
+//==============================================================================================
+
 import { MyLink } from '../components/MyLink'
 import OwnerGenerateData from './owner/OwnerGenerateData'
 

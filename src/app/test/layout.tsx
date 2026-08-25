@@ -1,5 +1,13 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    TestLayout — dev-only guard layout for /test/* routes, with a Home back-link
+//
+//    Parameters:
+//      children — the page content to render inside the dev guard
+//==============================================================================================
+
 import { useEffect } from 'react'
 import { MyBackHomeNav } from '../../components/MyBackHomeNav'
 

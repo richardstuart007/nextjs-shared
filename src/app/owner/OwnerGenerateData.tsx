@@ -1,23 +1,16 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerGenerateData — dev buttons to generate test logging/cache data
+//==============================================================================================
+
 import { useState } from 'react'
 import { action_generateLogs, action_generateCache } from '../actions'
 
 export default function OwnerGenerateData() {
   const [logMsg, setLogMsg] = useState('')
   const [cacheMsg, setCacheMsg] = useState('')
-
-  async function handleGenerateLogs() {
-    setLogMsg('Writing...')
-    const result = await action_generateLogs()
-    setLogMsg(result)
-  }
-
-  async function handleGenerateCache() {
-    setCacheMsg('Generating...')
-    const result = await action_generateCache()
-    setCacheMsg(result)
-  }
 
   return (
     <div className='p-4 flex gap-6'>
@@ -41,4 +34,22 @@ export default function OwnerGenerateData() {
       </div>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleGenerateLogs — runs action_generateLogs and shows its result message
+  //----------------------------------------------------------------------------------------------
+  async function handleGenerateLogs() {
+    setLogMsg('Writing...')
+    const result = await action_generateLogs()
+    setLogMsg(result)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleGenerateCache — runs action_generateCache and shows its result message
+  //----------------------------------------------------------------------------------------------
+  async function handleGenerateCache() {
+    setCacheMsg('Generating...')
+    const result = await action_generateCache()
+    setCacheMsg(result)
+  }
 }

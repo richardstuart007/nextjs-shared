@@ -1,5 +1,29 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MySelect — labelled select with optional string options or children
+//
+//    Parameters:
+//      label         — optional label text; also used to auto-derive id when id is omitted
+//      options       — flat string values, or {value,label} pairs when label !== value; when
+//                      empty, renders `children` as raw <option> elements instead
+//      searchEnabled — shows a search box above the select that filters options by label;
+//                      auto-selects the sole remaining match; defaults to false
+//      includeBlank  — prepends a blank {value:'',label:''} option; defaults to false
+//      defaultClass  — <select> base classes; defaults to MySelect_dftClass
+//      overrideClass — caller classes merged over defaultClass
+//      labelClass    — label classes; defaults to MySelect_labelDftClass
+//      containerClass — wrapper classes; defaults to MySelect_containerDftClass
+//      searchClass   — search input classes; defaults to MySelect_searchDftClass
+//      id, value, onChange, ...rest — standard <select> props, passed through
+//
+//  2) NOTES
+//    The auto-select-on-single-match behavior requires a controlled <select> — both value and
+//    onChange must be passed. An uncontrolled MySelect (no onChange) silently skips the
+//    auto-select, since there's no caller-owned state to update.
+//==============================================================================================
+
 import { useEffect, useMemo, useState } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
@@ -24,9 +48,6 @@ type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
   searchClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MySelect — labelled select with optional string options or children
-//----------------------------------------------------------------------------------
 export default function MySelect({
   label,
   options = [],
@@ -117,6 +138,16 @@ export default function MySelect({
   )
 }
 
+//----------------------------------------------------------------------------------
+//  normalizeOption — expands a plain string option to {value,label} (label === value);
+//  {value,label} pairs pass through unchanged
+//
+//  Params:
+//    opt — a raw MySelectOption (string or {value,label})
+//
+//  Returns:
+//    the normalized {value,label} pair
+//----------------------------------------------------------------------------------
 function normalizeOption(opt: MySelectOption): { value: string; label: string } {
   const result = typeof opt === 'string' ? { value: opt, label: opt } : opt
   return result

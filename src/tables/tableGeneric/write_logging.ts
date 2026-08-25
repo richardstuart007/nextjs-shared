@@ -1,5 +1,28 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    write_logging — inserts one row into xlg_logging (or falls back to console.log if
+//    POSTGRES_URL is unset). Never throws — logging failures must not break the caller.
+//    'I'/'D' severity entries can be globally suppressed via env vars.
+//
+//    Parameters:
+//      lg_functionname            — the function that generated this log entry
+//      lg_dbkey                   — explicit dbKey; auto-resolved from lg_table if omitted
+//      lg_table                   — table this entry relates to, if any
+//      lg_msg                     — the log message
+//      lg_severity                — 'E'/'W'/'I'/'D'; defaults to 'E'
+//      lg_level                   — log level; defaults to 1
+//      lg_isupdate                — whether this entry represents a write; defaults to false
+//      lg_caller                  — logging caller identity
+//      lg_sql_raw, lg_sql_params,
+//      lg_sql_readable            — optional SQL trace fields
+//
+//    Returns:
+//      true if the row was actually inserted, false if suppressed, skipped (no
+//      POSTGRES_URL), or the insert failed
+//==============================================================================================
+
 import { sql, resolveDbKey } from '../db'
 import { WriteLoggingProps } from '../structures'
 

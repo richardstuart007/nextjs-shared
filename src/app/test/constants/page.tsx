@@ -1,3 +1,9 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    Page — /test/constants: server-reads the tracked env vars and renders OwnerConstants
+//    standalone (outside /owner)
+//==============================================================================================
+
 import OwnerConstants from '../../../UI/OwnerConstants'
 
 export default function Page() {

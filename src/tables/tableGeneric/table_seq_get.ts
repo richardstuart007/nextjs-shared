@@ -1,5 +1,20 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_seqGet — finds tableName's identity column/sequence and that column's current MAX
+//    value
+//
+//    Parameters:
+//      tableName       — table to inspect
+//      caller          — logging caller identity
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<{columnName, sequenceName, maxValue}> — empty strings/0 and an error
+//      message if no sequence or no max value was found
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
@@ -21,9 +36,7 @@ interface ReturnValues {
   sequenceName: string
   maxValue: number
 }
-//
-// Function to GET the sequence/column/maxvalue for a given table
-//
+
 export async function table_seqGet(Props: Props): Promise<TableResult<ReturnValues>> {
   const functionName = 'table_seqGet'
   const { tableName, caller = '', level = 1, severity = 'I' } = Props

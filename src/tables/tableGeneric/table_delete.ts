@@ -1,5 +1,26 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_delete — DELETEs rows matching whereColumnValuePairs, clears the table's cache
+//    entries, and logs the outcome
+//
+//    Parameters:
+//      table                 — table name
+//      whereColumnValuePairs — WHERE conditions (column/value/operator triples; operator
+//                              defaults to '='); IN/NOT IN expects an array value;
+//                              omitted/empty deletes every row
+//      returning             — adds RETURNING * and returns the deleted rows; defaults to
+//                              false
+//      caller                — logging caller identity
+//      noLog                 — suppresses the query-level trace log; defaults to false
+//      skipCache             — skips clearing this table's cache entries; defaults to false
+//      level, severity       — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<any[]> — the deleted rows if returning, else [], or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { ColumnValuePair, TableResult } from '../structures'

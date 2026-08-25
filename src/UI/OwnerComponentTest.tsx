@@ -1,5 +1,10 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerComponentTest — one tab per component; props → display → returns
+//==============================================================================================
+
 import { useState, useEffect, useRef, useMemo } from 'react'
 import OwnerPage from './OwnerPage'
 import { MyButton } from '../components/MyButton'
@@ -93,9 +98,6 @@ const checkboxOptions = [
   { value: 'elderberries', label: 'Elderberries' },
 ]
 
-//----------------------------------------------------------------------------------
-//  OwnerComponentTest — one tab per component; props → display → returns
-//----------------------------------------------------------------------------------
 export default function OwnerComponentTest() {
   const tabs = [
     { label: 'MyButton', content: <MyButtonTab /> },
@@ -134,6 +136,10 @@ type ControlRowProps = { label: string; children: React.ReactNode }
 
 //----------------------------------------------------------------------------------
 //  ControlRow — prop label aligned with its control
+//
+//  Params:
+//    label    — the prop name
+//    children — the input control for that prop
 //----------------------------------------------------------------------------------
 function ControlRow({ label, children }: ControlRowProps) {
   return (
@@ -148,6 +154,10 @@ type ReturnRowProps = { label: string; value: string }
 
 //----------------------------------------------------------------------------------
 //  ReturnRow — key/value display for returned values
+//
+//  Params:
+//    label — the returned field's name
+//    value — its current display value
 //----------------------------------------------------------------------------------
 function ReturnRow({ label, value }: ReturnRowProps) {
   return (
@@ -166,6 +176,11 @@ type ThreeSectionProps = {
 
 //----------------------------------------------------------------------------------
 //  ThreeSection — Props | Display | Returns layout
+//
+//  Params:
+//    controls — the Props column's content (one ControlRow per demoed prop)
+//    preview  — the Display column's content (the live component instance)
+//    returns  — the Returns column's content (one ReturnRow per returned value)
 //----------------------------------------------------------------------------------
 function ThreeSection({ controls, preview, returns }: ThreeSectionProps) {
   return (
@@ -188,6 +203,12 @@ function ThreeSection({ controls, preview, returns }: ThreeSectionProps) {
 
 //----------------------------------------------------------------------------------
 //  parseNumberList — parses a comma-separated string into a number[]
+//
+//  Params:
+//    str — comma-separated numbers, e.g. '10,20,50'
+//
+//  Returns:
+//    the parsed numbers (non-numeric entries dropped)
 //----------------------------------------------------------------------------------
 function parseNumberList(str: string): number[] {
   const result = str.split(',').map(s => Number(s.trim())).filter(n => !Number.isNaN(n))
@@ -196,6 +217,14 @@ function parseNumberList(str: string): number[] {
 
 //----------------------------------------------------------------------------------
 //  parseTableData — parses "label,value" lines into row objects keyed by the given field names
+//
+//  Params:
+//    str              — newline-separated "label,value" lines
+//    optionLabelField — key to store each line's label under
+//    optionValueField — key to store each line's value under
+//
+//  Returns:
+//    one row object per non-blank line
 //----------------------------------------------------------------------------------
 function parseTableData(
   str: string,
@@ -215,6 +244,12 @@ function parseTableData(
 
 //----------------------------------------------------------------------------------
 //  parseLabelValueOptions — parses "Label,Value" lines into MySelect's {value,label}[] shape
+//
+//  Params:
+//    str — newline-separated "Label,Value" lines (Value optional; falls back to Label)
+//
+//  Returns:
+//    one {value,label} pair per non-blank line
 //----------------------------------------------------------------------------------
 function parseLabelValueOptions(str: string): { value: string; label: string }[] {
   const result = str
@@ -230,6 +265,12 @@ function parseLabelValueOptions(str: string): { value: string; label: string }[]
 
 //----------------------------------------------------------------------------------
 //  parseHelpItems — parses "Heading: Body" lines into HelpItem[]
+//
+//  Params:
+//    str — newline-separated "Heading: Body" lines
+//
+//  Returns:
+//    one {heading,body} pair per non-blank line
 //----------------------------------------------------------------------------------
 function parseHelpItems(str: string): HelpItem[] {
   const result = str
@@ -245,6 +286,12 @@ function parseHelpItems(str: string): HelpItem[] {
 
 //----------------------------------------------------------------------------------
 //  parseRestProps — parses key="value" pairs from a string into a props object
+//
+//  Params:
+//    str — a string containing key="value" pairs, e.g. 'aria-disabled="true"'
+//
+//  Returns:
+//    a {key: value} map of every matched pair
 //----------------------------------------------------------------------------------
 function parseRestProps(str: string): Record<string, string> {
   const result: Record<string, string> = {}
@@ -265,7 +312,7 @@ type BtnProps = { label: string; defaultClass: string; overrideClass: string; re
 const btnDefaults: BtnProps = { label: 'Click me', defaultClass: MyButton_dftClass, overrideClass: '', restProps: 'aria-disabled="true"' }
 
 //----------------------------------------------------------------------------------
-//  MyButtonTab
+//  MyButtonTab — interactive demo of MyButton: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyButtonTab() {
   const [draft, setDraft] = useState<BtnProps>(btnDefaults)
@@ -273,6 +320,9 @@ function MyButtonTab() {
   const [clickCount, setClickCount] = useState(0)
   const [lastClicked, setLastClicked] = useState('—')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -342,13 +392,16 @@ type InputProps = { placeholder: string; type: string; defaultClass: string; ove
 const inputDefaults: InputProps = { placeholder: 'Enter text', type: 'text', defaultClass: MyInput_dftClass, overrideClass: '', disabled: false, restProps: 'aria-disabled="true"' }
 
 //----------------------------------------------------------------------------------
-//  MyInputTab
+//  MyInputTab — interactive demo of MyInput: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyInputTab() {
   const [draft, setDraft] = useState<InputProps>(inputDefaults)
   const [applied, setApplied] = useState<InputProps>(inputDefaults)
   const [value, setValue] = useState('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -432,13 +485,16 @@ type TextareaProps = { placeholder: string; defaultClass: string; overrideClass:
 const textareaDefaults: TextareaProps = { placeholder: 'Enter text', defaultClass: MyTextarea_dftClass, overrideClass: '', disabled: false, restProps: 'aria-disabled="true"' }
 
 //----------------------------------------------------------------------------------
-//  MyTextareaTab
+//  MyTextareaTab — interactive demo of MyTextarea: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyTextareaTab() {
   const [draft, setDraft] = useState<TextareaProps>(textareaDefaults)
   const [applied, setApplied] = useState<TextareaProps>(textareaDefaults)
   const [value, setValue] = useState('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -530,12 +586,15 @@ const boxDefaults: BoxProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyBoxTab
+//  MyBoxTab — interactive demo of MyBox: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyBoxTab() {
   const [draft, setDraft] = useState<BoxProps>(boxDefaults)
   const [applied, setApplied] = useState<BoxProps>(boxDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -674,13 +733,16 @@ const dropdownDefaults: DropdownControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyDropdownTab
+//  MyDropdownTab — interactive demo of MyDropdown: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyDropdownTab() {
   const [draft, setDraft] = useState<DropdownControlProps>(dropdownDefaults)
   const [applied, setApplied] = useState<DropdownControlProps>(dropdownDefaults)
   const [selectedOption, setSelectedOption] = useState<string | number>('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -856,7 +918,7 @@ const checkboxDefaults: CheckBoxControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyCheckBoxTab
+//  MyCheckBoxTab — interactive demo of MyCheckBox: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyCheckBoxTab() {
   const [draft, setDraft] = useState<CheckBoxControlProps>(checkboxDefaults)
@@ -864,6 +926,9 @@ function MyCheckBoxTab() {
   const [selected, setSelected] = useState<Array<string | number>>([])
   const [errorMessage, setErrorMessage] = useState('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1008,13 +1073,16 @@ const paginationDefaults: PaginationControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyPaginationTab
+//  MyPaginationTab — interactive demo of MyPagination: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyPaginationTab() {
   const [draft, setDraft] = useState<PaginationControlProps>(paginationDefaults)
   const [applied, setApplied] = useState<PaginationControlProps>(paginationDefaults)
   const [currentPage, setCurrentPage] = useState(1)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1143,7 +1211,7 @@ const dialogDefaults: DialogControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyConfirmDialogTab
+//  MyConfirmDialogTab — interactive demo of MyConfirmDialog: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyConfirmDialogTab() {
   const [draft, setDraft] = useState<DialogControlProps>(dialogDefaults)
@@ -1165,11 +1233,17 @@ function MyConfirmDialogTab() {
     prevOpenRef.current = confirmDialog.isOpen
   }, [confirmDialog.isOpen])
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
   }
 
+  //----------------------------------------------------------------------------------------------
+  //  openDialog — opens the demo confirm dialog using the current applied props
+  //----------------------------------------------------------------------------------------------
   function openDialog() {
     setLastAction('opened')
     setConfirmDialog({
@@ -1276,12 +1350,15 @@ const linkDefaults: LinkControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyLinkTab
+//  MyLinkTab — interactive demo of MyLink: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyLinkTab() {
   const [draft, setDraft] = useState<LinkControlProps>(linkDefaults)
   const [applied, setApplied] = useState<LinkControlProps>(linkDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1372,13 +1449,16 @@ const selectDefaults: SelectControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MySelectTab
+//  MySelectTab — interactive demo of MySelect: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MySelectTab() {
   const [draft, setDraft] = useState<SelectControlProps>(selectDefaults)
   const [applied, setApplied] = useState<SelectControlProps>(selectDefaults)
   const [selected, setSelected] = useState('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1520,13 +1600,16 @@ const selectTableDefaults: SelectTableControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MySelectTableTab
+//  MySelectTableTab — interactive demo of MySelectTable: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MySelectTableTab() {
   const [draft, setDraft] = useState<SelectTableControlProps>(selectTableDefaults)
   const [applied, setApplied] = useState<SelectTableControlProps>(selectTableDefaults)
   const [selectedOption, setSelectedOption] = useState<string | number>('')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1665,12 +1748,15 @@ const loadingMessageDefaults: LoadingMessageControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyLoadingMessageTab
+//  MyLoadingMessageTab — interactive demo of MyLoadingMessage: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyLoadingMessageTab() {
   const [draft, setDraft] = useState<LoadingMessageControlProps>(loadingMessageDefaults)
   const [applied, setApplied] = useState<LoadingMessageControlProps>(loadingMessageDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1727,13 +1813,16 @@ const toggleDefaults: ToggleControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyToggleTab
+//  MyToggleTab — interactive demo of MyToggle: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyToggleTab() {
   const [draft, setDraft] = useState<ToggleControlProps>(toggleDefaults)
   const [applied, setApplied] = useState<ToggleControlProps>(toggleDefaults)
   const [value, setValue] = useState(false)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1796,13 +1885,16 @@ const popupDefaults: PopupControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyPopupTab
+//  MyPopupTab — interactive demo of MyPopup: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyPopupTab() {
   const [draft, setDraft] = useState<PopupControlProps>(popupDefaults)
   const [applied, setApplied] = useState<PopupControlProps>(popupDefaults)
   const [isOpen, setIsOpen] = useState(false)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1865,12 +1957,15 @@ type HourGlassControlProps = { defaultClass: string; overrideClass: string }
 const hourGlassDefaults: HourGlassControlProps = { defaultClass: MyHourGlass_dftClass, overrideClass: '' }
 
 //----------------------------------------------------------------------------------------------
-//  MyHourGlassTab
+//  MyHourGlassTab — interactive demo of MyHourGlass: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyHourGlassTab() {
   const [draft, setDraft] = useState<HourGlassControlProps>(hourGlassDefaults)
   const [applied, setApplied] = useState<HourGlassControlProps>(hourGlassDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1905,6 +2000,8 @@ type HelpControlProps = {
   mode: 'text' | 'items'
   text: string
   itemsText: string
+  showCloseButton: boolean
+  closeOnOutsideClick: boolean
   buttonClass: string
   panelClass: string
   closeButtonClass: string
@@ -1913,6 +2010,8 @@ const helpDefaults: HelpControlProps = {
   label: '?',
   title: 'Help title',
   mode: 'text',
+  showCloseButton: true,
+  closeOnOutsideClick: true,
   text: 'This is the help text explaining the field.',
   itemsText: 'First item: Details about the first item.\nSecond item: Details about the second item.',
   buttonClass: 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none',
@@ -1921,12 +2020,15 @@ const helpDefaults: HelpControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyHelpTab
+//  MyHelpTab — interactive demo of MyHelp: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyHelpTab() {
   const [draft, setDraft] = useState<HelpControlProps>(helpDefaults)
   const [applied, setApplied] = useState<HelpControlProps>(helpDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -1956,6 +2058,12 @@ function MyHelpTab() {
           <ControlRow label='items (mode=items, "Heading: Body" per line)'>
             <MyTextarea value={draft.itemsText} onChange={e => setDraft(d => ({ ...d, itemsText: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='showCloseButton'>
+            <input type='checkbox' checked={draft.showCloseButton} onChange={e => setDraft(d => ({ ...d, showCloseButton: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='closeOnOutsideClick'>
+            <input type='checkbox' checked={draft.closeOnOutsideClick} onChange={e => setDraft(d => ({ ...d, closeOnOutsideClick: e.target.checked }))} />
+          </ControlRow>
           <ControlRow label='buttonClass'>
             <MyTextarea value={draft.buttonClass} onChange={e => setDraft(d => ({ ...d, buttonClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
@@ -1977,6 +2085,8 @@ function MyHelpTab() {
             title={applied.title}
             text={applied.mode === 'text' ? applied.text : undefined}
             items={applied.mode === 'items' ? parseHelpItems(applied.itemsText) : undefined}
+            showCloseButton={applied.showCloseButton}
+            closeOnOutsideClick={applied.closeOnOutsideClick}
             buttonClass={applied.buttonClass}
             panelClass={applied.panelClass}
             closeButtonClass={applied.closeButtonClass}
@@ -1993,6 +2103,8 @@ function MyHelpTab() {
             label='items'
             value={applied.mode === 'items' ? JSON.stringify(parseHelpItems(applied.itemsText)) : '(unused)'}
           />
+          <ReturnRow label='showCloseButton' value={String(applied.showCloseButton)} />
+          <ReturnRow label='closeOnOutsideClick' value={String(applied.closeOnOutsideClick)} />
         </>
       }
     />
@@ -2008,12 +2120,15 @@ const helpFieldDefaults: HelpFieldControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyHelpFieldTab
+//  MyHelpFieldTab — interactive demo of MyHelpField: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyHelpFieldTab() {
   const [draft, setDraft] = useState<HelpFieldControlProps>(helpFieldDefaults)
   const [applied, setApplied] = useState<HelpFieldControlProps>(helpFieldDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -2063,6 +2178,8 @@ type HelpStepControlProps = {
   output: string
   consumers: string
   label: string
+  showCloseButton: boolean
+  closeOnOutsideClick: boolean
   buttonClass: string
   panelClass: string
   closeButtonClass: string
@@ -2074,23 +2191,37 @@ const helpStepDefaults: HelpStepControlProps = {
   output: 'Output A,Output B',
   consumers: '',
   label: 'Help',
+  showCloseButton: true,
+  closeOnOutsideClick: true,
   buttonClass: 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none',
   panelClass: 'absolute z-20 mt-1 p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs max-w-xl',
   closeButtonClass: MyHelpStep_closeButtonDftClass,
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyHelpStepTab
+//  MyHelpStepTab — interactive demo of MyHelpStep: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyHelpStepTab() {
   const [draft, setDraft] = useState<HelpStepControlProps>(helpStepDefaults)
   const [applied, setApplied] = useState<HelpStepControlProps>(helpStepDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
   }
 
+  //----------------------------------------------------------------------------------------------
+  //  parseList — splits a comma-separated string into trimmed, non-empty items
+  //
+  //  Params:
+  //    s — comma-separated text
+  //
+  //  Returns:
+  //    the trimmed, non-blank items
+  //----------------------------------------------------------------------------------------------
   function parseList(s: string): string[] {
     const result = s.split(',').map(x => x.trim()).filter(Boolean)
     return result
@@ -2118,6 +2249,12 @@ function MyHelpStepTab() {
           <ControlRow label='label'>
             <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
           </ControlRow>
+          <ControlRow label='showCloseButton'>
+            <input type='checkbox' checked={draft.showCloseButton} onChange={e => setDraft(d => ({ ...d, showCloseButton: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='closeOnOutsideClick'>
+            <input type='checkbox' checked={draft.closeOnOutsideClick} onChange={e => setDraft(d => ({ ...d, closeOnOutsideClick: e.target.checked }))} />
+          </ControlRow>
           <ControlRow label='buttonClass'>
             <MyTextarea value={draft.buttonClass} onChange={e => setDraft(d => ({ ...d, buttonClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
@@ -2141,6 +2278,8 @@ function MyHelpStepTab() {
             output={parseList(applied.output)}
             consumers={parseList(applied.consumers).length > 0 ? parseList(applied.consumers) : undefined}
             label={applied.label}
+            showCloseButton={applied.showCloseButton}
+            closeOnOutsideClick={applied.closeOnOutsideClick}
             buttonClass={applied.buttonClass}
             panelClass={applied.panelClass}
             closeButtonClass={applied.closeButtonClass}
@@ -2155,6 +2294,8 @@ function MyHelpStepTab() {
           <ReturnRow label='processing' value={applied.processing} />
           <ReturnRow label='output' value={parseList(applied.output).join(', ')} />
           <ReturnRow label='consumers' value={parseList(applied.consumers).length > 0 ? parseList(applied.consumers).join(', ') : '(none)'} />
+          <ReturnRow label='showCloseButton' value={String(applied.showCloseButton)} />
+          <ReturnRow label='closeOnOutsideClick' value={String(applied.closeOnOutsideClick)} />
         </>
       }
     />
@@ -2183,13 +2324,16 @@ const tabDefaults: TabControlProps = {
 }
 
 //----------------------------------------------------------------------------------
-//  MyTabTab
+//  MyTabTab — interactive demo of MyTab: props, live preview, and returns
 //----------------------------------------------------------------------------------
 function MyTabTab() {
   const [draft, setDraft] = useState<TabControlProps>(tabDefaults)
   const [applied, setApplied] = useState<TabControlProps>(tabDefaults)
   const [active, setActive] = useState(false)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -2332,13 +2476,16 @@ const selectMultiDefaults: SelectMultiControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MySelectMultiTab
+//  MySelectMultiTab — interactive demo of MySelectMulti: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MySelectMultiTab() {
   const [draft, setDraft] = useState<SelectMultiControlProps>(selectMultiDefaults)
   const [applied, setApplied] = useState<SelectMultiControlProps>(selectMultiDefaults)
   const [selected, setSelected] = useState<string[]>([])
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -2482,13 +2629,16 @@ const selectRowsDefaults: SelectRowsControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MySelectRowsTab
+//  MySelectRowsTab — interactive demo of MySelectRows: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MySelectRowsTab() {
   const [draft, setDraft] = useState<SelectRowsControlProps>(selectRowsDefaults)
   const [applied, setApplied] = useState<SelectRowsControlProps>(selectRowsDefaults)
   const [value, setValue] = useState(20)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -2576,7 +2726,7 @@ const paginationFooterDefaults: PaginationFooterControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyPaginationFooterTab
+//  MyPaginationFooterTab — interactive demo of MyPaginationFooter: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyPaginationFooterTab() {
   const [draft, setDraft] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
@@ -2584,6 +2734,9 @@ function MyPaginationFooterTab() {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(20)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
@@ -2675,12 +2828,15 @@ const backHomeNavDefaults: BackHomeNavControlProps = {
 }
 
 //----------------------------------------------------------------------------------------------
-//  MyBackHomeNavTab
+//  MyBackHomeNavTab — interactive demo of MyBackHomeNav: props, live preview, and returns
 //----------------------------------------------------------------------------------------------
 function MyBackHomeNavTab() {
   const [draft, setDraft] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
   const [applied, setApplied] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
 
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })

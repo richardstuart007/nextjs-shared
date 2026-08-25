@@ -1,5 +1,15 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyTextarea — textarea with Tailwind class overrides
+//
+//    Parameters:
+//      defaultClass  — base Tailwind classes; defaults to MyTextarea_dftClass
+//      overrideClass — caller classes merged over defaultClass via myMergeClasses
+//      ...rest       — all other standard <textarea> attributes, passed through
+//==============================================================================================
+
 import { myMergeClasses } from './MyMergeClasses'
 import { MyTextarea_dftClass } from '../constants'
 
@@ -8,9 +18,6 @@ type Props = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   overrideClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyTextarea — textarea with Tailwind class overrides
-//----------------------------------------------------------------------------------
 export function MyTextarea({ defaultClass = MyTextarea_dftClass, overrideClass = '', ...rest }: Props) {
   //
   // Use the mergeClasses function to combine the classes

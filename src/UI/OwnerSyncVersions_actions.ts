@@ -28,6 +28,9 @@ export type SectionMatrix = Record<string, Record<string, string | null>>
 
 //----------------------------------------------------------------------------------
 //  discoverProjects — scan GITHUB_DIR for subdirs that have a package.json
+//
+//  Returns:
+//    each project's directory name and absolute path
 //----------------------------------------------------------------------------------
 function discoverProjects(): { name: string; absPath: string }[] {
   return readdirSync(GITHUB_DIR, { withFileTypes: true })
@@ -37,6 +40,12 @@ function discoverProjects(): { name: string; absPath: string }[] {
 
 //----------------------------------------------------------------------------------
 //  readPkgFlat — merge dependencies + devDependencies + peerDependencies into one map
+//
+//  Params:
+//    pkgPath — absolute path to a package.json
+//
+//  Returns:
+//    the merged {package: versionSpec} map, or null if the file is missing/invalid
 //----------------------------------------------------------------------------------
 function readPkgFlat(pkgPath: string): Record<string, string> | null {
   if (!existsSync(pkgPath)) return null
@@ -55,6 +64,12 @@ function readPkgFlat(pkgPath: string): Record<string, string> | null {
 
 //----------------------------------------------------------------------------------
 //  collectPackages — union of all package names across all projects, sorted
+//
+//  Params:
+//    projects — projects to scan (each project's absPath)
+//
+//  Returns:
+//    every distinct package name referenced by any project, alphabetically sorted
 //----------------------------------------------------------------------------------
 function collectPackages(projects: { absPath: string }[]): string[] {
   const all = new Set<string>()
@@ -67,6 +82,10 @@ function collectPackages(projects: { absPath: string }[]): string[] {
 
 //----------------------------------------------------------------------------------
 //  action_readVersions — matrix of every package version per project
+//
+//  Returns:
+//    matrix       — [project][package] -> version spec from package.json, or null
+//    parseErrors  — project names whose package.json failed to parse
 //----------------------------------------------------------------------------------
 export async function action_readVersions(): Promise<VersionsResult> {
   const projects = discoverProjects()
@@ -93,6 +112,10 @@ export async function action_readVersions(): Promise<VersionsResult> {
 
 //----------------------------------------------------------------------------------
 //  action_readSections — per-project, per-package: which section(s) the package lives in
+//
+//  Returns:
+//    matrix — [project][package] -> a code string combining 'd'/'v'/'p'/'o' for
+//    dependencies/devDependencies/peerDependencies/overrides, or null if absent
 //----------------------------------------------------------------------------------
 export async function action_readSections(): Promise<SectionMatrix> {
   const projects = discoverProjects()
@@ -131,6 +154,9 @@ export async function action_readSections(): Promise<SectionMatrix> {
 
 //----------------------------------------------------------------------------------
 //  action_readInstalledVersions — read actual installed version from each project's node_modules
+//
+//  Returns:
+//    matrix — [project][package] -> the version actually installed, or null
 //----------------------------------------------------------------------------------
 export async function action_readInstalledVersions(): Promise<VersionMatrix> {
   const projects = discoverProjects()
@@ -158,6 +184,12 @@ export async function action_readInstalledVersions(): Promise<VersionMatrix> {
 
 //----------------------------------------------------------------------------------
 //  action_fetchLatestVersions — query npm registry for latest version of each package
+//
+//  Params:
+//    packages — package names to look up
+//
+//  Returns:
+//    a {package: latestVersion} map; a package whose lookup failed maps to '?'
 //----------------------------------------------------------------------------------
 export async function action_fetchLatestVersions(packages: string[]): Promise<Record<string, string>> {
   const entries = await Promise.all(
@@ -179,6 +211,13 @@ export async function action_fetchLatestVersions(packages: string[]): Promise<Re
 
 //----------------------------------------------------------------------------------
 //  bumpDownPatch — subtract 1 from the patch segment of a semver string
+//
+//  Params:
+//    version — a semver string, e.g. '1.2.3'
+//
+//  Returns:
+//    version with its patch segment decremented by 1, or unchanged if the patch is
+//    already 0 or the string doesn't have 3 dot-separated segments
 //----------------------------------------------------------------------------------
 function bumpDownPatch(version: string): string {
   const parts = version.split('.')
@@ -190,6 +229,13 @@ function bumpDownPatch(version: string): string {
 
 //----------------------------------------------------------------------------------
 //  action_readLocalPackageVersions — read version from local source for GitHub-referenced packages
+//
+//  Params:
+//    packages — package names to look up (matched against GITHUB_DIR/<pkg>/package.json)
+//
+//  Returns:
+//    a {package: version} map (bumped down one patch — see bumpDownPatch), including
+//    only packages whose local source was found
 //----------------------------------------------------------------------------------
 export async function action_readLocalPackageVersions(packages: string[]): Promise<Record<string, string>> {
   const result: Record<string, string> = {}
@@ -206,6 +252,9 @@ export async function action_readLocalPackageVersions(packages: string[]): Promi
 
 //----------------------------------------------------------------------------------
 //  action_readProjectVersions — read each project's own version from its package.json
+//
+//  Returns:
+//    a {project: version} map (bumped down one patch — see bumpDownPatch)
 //----------------------------------------------------------------------------------
 export async function action_readProjectVersions(): Promise<Record<string, string>> {
   const projects = discoverProjects()
@@ -223,6 +272,10 @@ export async function action_readProjectVersions(): Promise<Record<string, strin
 
 //----------------------------------------------------------------------------------
 //  action_readTargets — read saved targets from sync-targets.json (with migration from old flat format)
+//
+//  Returns:
+//    the current {deps, overrides} target maps (empty maps if the file is
+//    missing/invalid)
 //----------------------------------------------------------------------------------
 export async function action_readTargets(): Promise<SyncTargets> {
   try {
@@ -239,6 +292,11 @@ export async function action_readTargets(): Promise<SyncTargets> {
 
 //----------------------------------------------------------------------------------
 //  action_saveTarget — save or update a target version for a package in the given section
+//
+//  Params:
+//    pkg     — package name
+//    version — the target version to pin
+//    kind    — which target section to write into ('deps' or 'overrides')
 //----------------------------------------------------------------------------------
 export async function action_saveTarget(pkg: string, version: string, kind: 'deps' | 'overrides'): Promise<void> {
   const targets = await action_readTargets()
@@ -248,6 +306,10 @@ export async function action_saveTarget(pkg: string, version: string, kind: 'dep
 
 //----------------------------------------------------------------------------------
 //  action_deleteTarget — remove a target version for a package from the given section
+//
+//  Params:
+//    pkg  — package name
+//    kind — which target section to remove from ('deps' or 'overrides')
 //----------------------------------------------------------------------------------
 export async function action_deleteTarget(pkg: string, kind: 'deps' | 'overrides'): Promise<void> {
   const targets = await action_readTargets()
@@ -257,6 +319,10 @@ export async function action_deleteTarget(pkg: string, kind: 'deps' | 'overrides
 
 //----------------------------------------------------------------------------------
 //  action_syncVersions — update each project's packages to target or npm latest
+//
+//  Returns:
+//    one SyncResult per project — the human-readable list of changes made and the
+//    resulting .npmrc status ('already set' / 'created' / 'updated')
 //----------------------------------------------------------------------------------
 export async function action_syncVersions(): Promise<SyncResult[]> {
   const projects = discoverProjects()

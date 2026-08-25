@@ -1,5 +1,29 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyPopup — modal overlay panel with close button
+//
+//    Parameters:
+//      isOpen                — whether the popup renders at all
+//      onClose               — called when the close button (or, if enabled, the
+//                              backdrop) is clicked
+//      children              — popup body content
+//      closeOnBackdropClick  — when true, clicking the overlay outside the panel also
+//                              calls onClose; defaults to false
+//      defaultClass          — panel base classes; defaults to MyPopup_dftClass
+//      overrideClass         — caller classes merged over defaultClass
+//      overlayClass          — full-screen backdrop classes; defaults to
+//                              MyPopup_overlayDftClass
+//      closeButtonClass      — close button classes; defaults to
+//                              MyPopup_closeButtonDftClass
+//
+//  2) NOTES
+//    closeOnBackdropClick defaults false (not true) so every existing consumer —
+//    including MyConfirmDialog, which renders MyPopup internally — keeps its current
+//    behavior unchanged unless it explicitly opts in.
+//==============================================================================================
+
 import { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { MyButton } from './MyButton'
@@ -17,9 +41,6 @@ type Props = {
   closeButtonClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyPopup — modal overlay panel with close button
-//----------------------------------------------------------------------------------
 export default function MyPopup({
   isOpen,
   onClose,

@@ -1,5 +1,16 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerTableLogging — paginated, filterable view of xlg_logging, with per-row detail popup,
+//    SQL raw/readable/params toggle, and a Truncate action
+//
+//    Parameters:
+//      initialRows       — optional server-fetched first page, to avoid an initial client-side
+//                          loading flash
+//      initialTotalPages — page count matching initialRows
+//==============================================================================================
+
 import { useState, useEffect, useRef } from 'react'
 import { table_Logging } from '../tables/structures'
 import { fetchFiltered } from '../tables/tableGeneric/table_pages/fetchFiltered'
@@ -81,63 +92,6 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     }, timeout)
     return () => clearTimeout(handler)
   }, [msg, caller, functionname, severity, level, dbkey, table, isupdate, sqlfilter, sqlView, currentPage, rowsPerPage])
-
-  async function fetchdata() {
-    //
-    //  The SQL column's filter targets whichever field the header toggle has selected —
-    //  lg_sql_params is jsonb, so it's cast to text so LIKE can search inside it
-    //
-    const sqlFilterColumn =
-      sqlView === 'raw' ? 'lg_sql_raw' : sqlView === 'readable' ? 'lg_sql_readable' : 'lg_sql_params::text'
-    const filtersToUpdate: Filter[] = [
-      { column: 'lg_msg', value: msg, operator: 'LIKE' },
-      { column: 'lg_caller', value: caller, operator: 'LIKE' },
-      { column: 'lg_functionname', value: functionname, operator: 'LIKE' },
-      { column: 'lg_severity', value: severity, operator: '=' },
-      { column: 'lg_level', value: level, operator: '=' },
-      { column: 'lg_dbkey', value: dbkey, operator: '=' },
-      { column: 'lg_table', value: table, operator: 'LIKE' },
-      { column: 'lg_isupdate', value: isupdate, operator: '=' },
-      { column: sqlFilterColumn, value: sqlfilter, operator: 'LIKE' }
-    ]
-    const filters = filtersToUpdate.filter(filter => filter.value)
-    const tableName = 'xlg_logging'
-    const offset = (currentPage - 1) * rowsPerPage
-    const fetchResult = await fetchFiltered({
-      caller: functionName,
-      table: tableName,
-      filters,
-      orderBy: 'lg_lgid DESC',
-      limit: rowsPerPage,
-      offset,
-      skipCache: true
-    })
-    if (fetchResult.ok) settabledata(fetchResult.data)
-    else console.error('Error fetching logging:', fetchResult.error)
-
-    const totalRowsResult = await fetchTotalRows({
-      caller: functionName,
-      table: tableName,
-      filters,
-      skipCache: true
-    })
-    if (totalRowsResult.ok) {
-      setTotalRows(totalRowsResult.data)
-      setTotalPages(Math.max(1, Math.ceil(totalRowsResult.data / rowsPerPage)))
-    } else {
-      console.error('Error fetching logging total rows:', totalRowsResult.error)
-    }
-  }
-
-  async function handleTruncate() {
-    if (!confirm('Truncate logging table? This cannot be undone.')) return
-    setMessage('Truncating...')
-    await action_truncateLogging()
-    setPopup(null)
-    setcurrentPage(1)
-    await fetchdata()
-    setMessage('')
-  }
 
   return (
     <div className='bg-orange-50'>
@@ -331,24 +285,121 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       </MyPopup>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  fetchdata — reloads rows and total-row count for the current page/filters
+  //----------------------------------------------------------------------------------------------
+  async function fetchdata() {
+    //
+    //  The SQL column's filter targets whichever field the header toggle has selected —
+    //  lg_sql_params is jsonb, so it's cast to text so LIKE can search inside it
+    //
+    const sqlFilterColumn =
+      sqlView === 'raw' ? 'lg_sql_raw' : sqlView === 'readable' ? 'lg_sql_readable' : 'lg_sql_params::text'
+    const filtersToUpdate: Filter[] = [
+      { column: 'lg_msg', value: msg, operator: 'LIKE' },
+      { column: 'lg_caller', value: caller, operator: 'LIKE' },
+      { column: 'lg_functionname', value: functionname, operator: 'LIKE' },
+      { column: 'lg_severity', value: severity, operator: '=' },
+      { column: 'lg_level', value: level, operator: '=' },
+      { column: 'lg_dbkey', value: dbkey, operator: '=' },
+      { column: 'lg_table', value: table, operator: 'LIKE' },
+      { column: 'lg_isupdate', value: isupdate, operator: '=' },
+      { column: sqlFilterColumn, value: sqlfilter, operator: 'LIKE' }
+    ]
+    const filters = filtersToUpdate.filter(filter => filter.value)
+    const tableName = 'xlg_logging'
+    const offset = (currentPage - 1) * rowsPerPage
+    const fetchResult = await fetchFiltered({
+      caller: functionName,
+      table: tableName,
+      filters,
+      orderBy: 'lg_lgid DESC',
+      limit: rowsPerPage,
+      offset,
+      skipCache: true
+    })
+    if (fetchResult.ok) settabledata(fetchResult.data)
+    else console.error('Error fetching logging:', fetchResult.error)
+
+    const totalRowsResult = await fetchTotalRows({
+      caller: functionName,
+      table: tableName,
+      filters,
+      skipCache: true
+    })
+    if (totalRowsResult.ok) {
+      setTotalRows(totalRowsResult.data)
+      setTotalPages(Math.max(1, Math.ceil(totalRowsResult.data / rowsPerPage)))
+    } else {
+      console.error('Error fetching logging total rows:', totalRowsResult.error)
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleTruncate — truncates xlg_logging (after confirmation), then reloads page 1
+  //----------------------------------------------------------------------------------------------
+  async function handleTruncate() {
+    if (!confirm('Truncate logging table? This cannot be undone.')) return
+    setMessage('Truncating...')
+    await action_truncateLogging()
+    setPopup(null)
+    setcurrentPage(1)
+    await fetchdata()
+    setMessage('')
+  }
 }
 
+//----------------------------------------------------------------------------------------------
+//  fmtDate — formats a log timestamp as 'YYYY-MM-DD HH:mm'
+//
+//  Params:
+//    val — a Date or date string
+//
+//  Returns:
+//    the formatted display string
+//----------------------------------------------------------------------------------------------
 function fmtDate(val: Date | string): string {
   const d = val instanceof Date ? val : new Date(val)
   return d.toISOString().slice(0, 16).replace('T', ' ')
 }
 
+//----------------------------------------------------------------------------------------------
+//  truncateDisplay — shortens a string to OwnerTableLogging_msgTruncateLen with a trailing …
+//
+//  Params:
+//    val — the string to truncate, or null
+//
+//  Returns:
+//    the truncated string, or '' if val is null
+//----------------------------------------------------------------------------------------------
 function truncateDisplay(val: string | null): string {
   if (!val) return ''
   return val.length > OwnerTableLogging_msgTruncateLen ? val.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : val
 }
 
+//----------------------------------------------------------------------------------------------
+//  sqlViewValue — extracts the SQL field matching the header's raw/readable/params toggle
+//
+//  Params:
+//    row  — a logging row
+//    view — which SQL field to return
+//
+//  Returns:
+//    the raw/readable SQL string, the params object as JSON text, or null if absent
+//----------------------------------------------------------------------------------------------
 function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): string | null {
   if (view === 'raw') return row.lg_sql_raw
   if (view === 'readable') return row.lg_sql_readable
   return row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
 }
 
+//----------------------------------------------------------------------------------------------
+//  LoggingDetail — full detail view for one logging row
+//
+//  Params:
+//    row — the logging row to display
+//----------------------------------------------------------------------------------------------
 function LoggingDetail({ row }: { row: table_Logging }) {
   return (
     <div>

@@ -1,5 +1,23 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyTab — single tab button, two visual variants (underline / pill). Active state
+//    and click handling are owned by the caller — same pattern as MyButton, not a
+//    self-managing tab group.
+//
+//    Parameters:
+//      children               — tab label content
+//      active                 — whether this tab is the currently-selected one
+//      variant                — 'underline' (default) or 'pill'
+//      underlineActiveClass   — underline-variant active classes
+//      underlineInactiveClass — underline-variant inactive classes
+//      pillActiveClass        — pill-variant active classes
+//      pillInactiveClass      — pill-variant inactive classes
+//      overrideClass          — caller classes merged over the resolved variant/state class
+//      ...rest                — all other standard <button> attributes, passed through
+//==============================================================================================
+
 import { myMergeClasses } from './MyMergeClasses'
 import {
   MyTab_underlineActiveClass,
@@ -19,11 +37,6 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   overrideClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyTab — single tab button, two visual variants (underline / pill). Active state
-//  and click handling are owned by the caller — same pattern as MyButton, not a
-//  self-managing tab group.
-//----------------------------------------------------------------------------------
 export function MyTab({
   children,
   active = false,

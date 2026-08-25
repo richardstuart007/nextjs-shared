@@ -1,5 +1,11 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    Page — dev-only detail route for OwnerBackNavDemo, verifying useBackNav restores the
+//    originating tab via its Back link
+//==============================================================================================
+
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useBackNav } from '../../../components/useBackNav'

@@ -1,3 +1,22 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    myMergeClasses — merges default Tailwind classes with caller overrides
+//
+//    Output order: unmatched layout/structural classes (flex, grid, relative…) → Sizing &
+//    Spacing → Typography → Visual → Effects → unmatched new overrides
+//
+//    Responsive variants (md:, sm:) stay adjacent to their base class within each group — not
+//    sorted to the end.
+//
+//    Parameters:
+//      defaultClass  — space-separated default Tailwind classes
+//      overrideClass — space-separated caller classes; replaces matching-group defaults,
+//                      appends anything unmatched
+//
+//    Returns:
+//      the merged, deduplicated class string
+//==============================================================================================
+
 import clsx from 'clsx'
 
 //
@@ -32,15 +51,6 @@ const CLASS_GROUPS: Group[] = [
   { patterns: ['cursor-'] },
 ]
 
-//----------------------------------------------------------------------------------
-//  myMergeClasses — merges default Tailwind classes with caller overrides
-//
-//  Output order: unmatched layout/structural classes (flex, grid, relative…) →
-//  Sizing & Spacing → Typography → Visual → Effects → unmatched new overrides
-//
-//  Responsive variants (md:, sm:) stay adjacent to their base class within each
-//  group — not sorted to the end.
-//----------------------------------------------------------------------------------
 export function myMergeClasses(defaultClass: string, overrideClass: string): string {
   const defaultArr  = defaultClass.split(' ').filter(Boolean)
   const overrideArr = overrideClass.split(' ').filter(Boolean)
@@ -48,7 +58,8 @@ export function myMergeClasses(defaultClass: string, overrideClass: string): str
   const allPatterns = CLASS_GROUPS.flatMap(g => g.patterns)
 
   //
-  //  A class belongs to a group if its core (variant-stripped) starts with any pattern
+  //  inAnyGroup — true if cls's core (variant-stripped) starts with any known group
+  //  pattern. Params: cls — the raw class to check. Returns: whether it's grouped.
   //
   function inAnyGroup(cls: string): boolean {
     const core = getCoreClass(cls)
@@ -80,6 +91,14 @@ export function myMergeClasses(defaultClass: string, overrideClass: string): str
 //----------------------------------------------------------------------------------
 //  mergeGroup — merges one group: replaces defaults with overrides where matched;
 //               new overrides (no replacement target) are appended at end of group
+//
+//  Params:
+//    defaultClasses  — this group's classes from defaultClass
+//    overrideClasses — this group's classes from overrideClass
+//    group           — the group definition (patterns + optional canReplaceCheck guard)
+//
+//  Returns:
+//    the merged classes for this group, defaults-then-unmatched-overrides order
 //----------------------------------------------------------------------------------
 function mergeGroup(defaultClasses: string[], overrideClasses: string[], group: Group): string[] {
   const { patterns, canReplaceCheck } = group
@@ -102,6 +121,12 @@ function mergeGroup(defaultClasses: string[], overrideClasses: string[], group: 
 
 //----------------------------------------------------------------------------------
 //  getVariantPrefix — extracts variant prefix e.g. "hover:" from "hover:bg-blue-600"
+//
+//  Params:
+//    cls — a single Tailwind class
+//
+//  Returns:
+//    the variant prefix (incl. trailing colon), or '' if none
 //----------------------------------------------------------------------------------
 function getVariantPrefix(cls: string): string {
   const match = cls.match(/^([a-z][a-z0-9-]*:)+/)
@@ -110,6 +135,12 @@ function getVariantPrefix(cls: string): string {
 
 //----------------------------------------------------------------------------------
 //  getCoreClass — strips variant/responsive prefixes e.g. "md:h-8" → "h-8"
+//
+//  Params:
+//    cls — a single Tailwind class
+//
+//  Returns:
+//    cls with any variant/responsive prefix removed
 //----------------------------------------------------------------------------------
 function getCoreClass(cls: string): string {
   const result = cls.replace(/^([a-z][a-z0-9-]*:)+/, '')
@@ -118,6 +149,12 @@ function getCoreClass(cls: string): string {
 
 //----------------------------------------------------------------------------------
 //  isTextSizeClass — true if cls is a text SIZE class (text-xs etc.), not a colour
+//
+//  Params:
+//    cls — a single Tailwind class
+//
+//  Returns:
+//    whether cls's core is a known text-size suffix
 //----------------------------------------------------------------------------------
 const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
 
@@ -132,6 +169,12 @@ function isTextSizeClass(cls: string): boolean {
 //----------------------------------------------------------------------------------
 //  isBorderColorClass — true if cls is a border COLOUR class (e.g. border-pink-600)
 //  Border colour has a dash in its suffix; border width (border-4) and bare (border) do not
+//
+//  Params:
+//    cls — a single Tailwind class
+//
+//  Returns:
+//    whether cls is a border-colour class
 //----------------------------------------------------------------------------------
 function isBorderColorClass(cls: string): boolean {
   if (!cls.startsWith('border-')) return false
@@ -142,6 +185,12 @@ function isBorderColorClass(cls: string): boolean {
 
 //----------------------------------------------------------------------------------
 //  sameTextType — guard for text- group: size class must replace size, colour replace colour
+//
+//  Params:
+//    defaultCls, overrideCls — the two classes being considered for replacement
+//
+//  Returns:
+//    whether both are the same kind (both size, or both colour)
 //----------------------------------------------------------------------------------
 function sameTextType(defaultCls: string, overrideCls: string): boolean {
   const result = isTextSizeClass(defaultCls) === isTextSizeClass(overrideCls)
@@ -150,6 +199,12 @@ function sameTextType(defaultCls: string, overrideCls: string): boolean {
 
 //----------------------------------------------------------------------------------
 //  sameBorderType — guard for border group: width must replace width, colour replace colour
+//
+//  Params:
+//    defaultCls, overrideCls — the two classes being considered for replacement
+//
+//  Returns:
+//    whether both are the same kind (both colour, or both non-colour)
 //----------------------------------------------------------------------------------
 function sameBorderType(defaultCls: string, overrideCls: string): boolean {
   const result = isBorderColorClass(defaultCls) === isBorderColorClass(overrideCls)

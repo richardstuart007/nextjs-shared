@@ -1,5 +1,17 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyLoadingMessage — hourglass spinner with two optional message lines
+//
+//    Parameters:
+//      message1       — first line, above the spinner; defaults to 'Please wait...'
+//      message2       — second line, below the spinner; defaults to empty
+//      containerClass — wrapper div classes; defaults to MyLoadingMessage_containerDftClass
+//      messageClass   — classes applied to both message lines; defaults to
+//                       MyLoadingMessage_messageDftClass
+//==============================================================================================
+
 import { MyHourGlass } from './MyHourGlass'
 import { MyLoadingMessage_containerDftClass, MyLoadingMessage_messageDftClass } from '../constants'
 
@@ -10,9 +22,6 @@ type Props = {
   messageClass?: string
 }
 
-//----------------------------------------------------------------------------------------------
-//  MyLoadingMessage — hourglass spinner with two optional message lines
-//----------------------------------------------------------------------------------------------
 export function MyLoadingMessage({
   message1 = 'Please wait...',
   message2 = '',

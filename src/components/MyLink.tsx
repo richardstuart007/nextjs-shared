@@ -1,4 +1,18 @@
 'use client'
+
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyLink — styled Next.js Link with Tailwind class merging
+//
+//    Parameters:
+//      children      — link contents
+//      defaultClass  — base Tailwind classes; defaults to MyLink_dftClass
+//      overrideClass — caller classes merged over defaultClass via myMergeClasses
+//      href          — pathname + optional segment/query object, built into the final URL
+//      caller        — accepted but unused (kept for call-site compatibility)
+//      ...rest       — all other Next.js <Link> props, passed through
+//==============================================================================================
+
 import { myMergeClasses } from './MyMergeClasses'
 import Link from 'next/link'
 import { MyLink_dftClass } from '../constants'
@@ -19,9 +33,6 @@ type Props = {
   [rest: string]: any
 }
 
-//----------------------------------------------------------------------------------------------
-//  MyLink — styled Next.js Link with Tailwind class merging
-//----------------------------------------------------------------------------------------------
 export function MyLink({
   children,
   defaultClass = MyLink_dftClass,

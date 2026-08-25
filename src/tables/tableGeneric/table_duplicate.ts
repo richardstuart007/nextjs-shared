@@ -1,5 +1,20 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_duplicate — creates table_to as a structural copy of table_from (CREATE TABLE ...
+//    LIKE ... INCLUDING ALL), with logging on both outcomes
+//
+//    Parameters:
+//      table_from      — source table to copy the structure of
+//      table_to        — new table name to create
+//      caller          — logging caller identity
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<boolean> — true on success, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'

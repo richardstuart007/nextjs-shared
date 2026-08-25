@@ -1,5 +1,20 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_copy_data — copies every row from table_from into table_to across their common
+//    columns, then resets table_to's identity sequences to match its new data
+//
+//    Parameters:
+//      table_from      — source table to copy rows from
+//      table_to        — destination table to copy rows into
+//      caller          — logging caller identity
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<boolean> — true on success, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
@@ -13,6 +28,7 @@ interface Props {
   severity?: string
 }
 const functionName = 'table_copy_data'
+
 export async function table_copy_data({
   table_from,
   table_to,
@@ -135,7 +151,15 @@ export async function table_copy_data({
   }
 }
 //----------------------------------------------------------------------------------------------
-//  Get columns
+//  getColumns — lists a table's column names
+//
+//  Params:
+//    db              — an open db connection (from sql())
+//    table           — table name
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the table's column names
 //----------------------------------------------------------------------------------------------
 async function getColumns(
   db: any,

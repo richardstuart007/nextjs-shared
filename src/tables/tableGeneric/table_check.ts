@@ -1,5 +1,21 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_check — checks whether any row matching each given table/WHERE pair exists,
+//    stopping at the first match found
+//
+//    Parameters:
+//      tableColumnValuePairs — one or more {table, whereColumnValuePairs} checks, evaluated
+//                              in order (equality only)
+//      caller                — logging caller identity
+//      level, severity       — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<{found, message}> — found is true if any pair matched, with a
+//      description in message; on error, found is false and error carries the message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { TableColumnValuePairs, TableResult } from '../structures'

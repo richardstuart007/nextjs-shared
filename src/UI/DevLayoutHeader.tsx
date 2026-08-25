@@ -1,5 +1,17 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    DevLayoutHeader — dev-only header bar with an Owner link (remembering the originating path
+//    for OwnerLayout's Back link) plus optional extra links and a database-location badge
+//
+//    Parameters:
+//      dbLocation — badge text; defaults to process.env.POSTGRES_DATABASE_LOCATION when
+//                   omitted (only readable client-side in this package's own next.config.mjs —
+//                   pass explicitly from a consuming project)
+//      extraLinks — additional header links, rendered after the Owner link
+//==============================================================================================
+
 import { usePathname } from 'next/navigation'
 import { SessionStorageKeyPrefixShared } from '../constants'
 
@@ -24,12 +36,6 @@ export function DevLayoutHeader({ dbLocation, extraLinks = [] }: Props = {}) {
   //
   const resolvedDbLocation = dbLocation ?? process.env.POSTGRES_DATABASE_LOCATION
 
-  function handleOwnerClick() {
-    if (!pathname.startsWith('/owner')) {
-      sessionStorage.setItem(SessionStorageKeyPrefixShared + 'ownerFrom', pathname)
-    }
-  }
-
   return (
     <header className='flex items-center justify-between border-b border-gray-200 px-4 py-2 text-sm'>
       <div className='flex items-center gap-4'>
@@ -49,4 +55,14 @@ export function DevLayoutHeader({ dbLocation, extraLinks = [] }: Props = {}) {
       )}
     </header>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleOwnerClick — remembers the current path (unless already on /owner) so
+  //  OwnerLayout can restore it as the Back target
+  //----------------------------------------------------------------------------------------------
+  function handleOwnerClick() {
+    if (!pathname.startsWith('/owner')) {
+      sessionStorage.setItem(SessionStorageKeyPrefixShared + 'ownerFrom', pathname)
+    }
+  }
 }

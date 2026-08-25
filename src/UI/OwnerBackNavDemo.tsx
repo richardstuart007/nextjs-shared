@@ -1,5 +1,11 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerBackNavDemo — demonstrates useBackNav + OwnerPage's persistKey: click a row, land on
+//    a detail route, click Back, and confirm this tab is still active on return
+//==============================================================================================
+
 import { useRouter } from 'next/navigation'
 import { saveBackNav } from '../components/useBackNav'
 import { MyButton } from '../components/MyButton'
@@ -12,17 +18,8 @@ const demoRows = [
 
 export const BACKNAV_DEMO_KEY = 'backnav-demo'
 
-//----------------------------------------------------------------------------------
-//  OwnerBackNavDemo — demonstrates useBackNav + OwnerPage's persistKey: click a row,
-//  land on a detail route, click Back, and confirm this tab is still active on return
-//----------------------------------------------------------------------------------
 export default function OwnerBackNavDemo() {
   const router = useRouter()
-
-  function openRow(id: number) {
-    saveBackNav(BACKNAV_DEMO_KEY)
-    router.push(`/backnav-test/${id}`)
-  }
 
   return (
     <div className='p-4 space-y-3'>
@@ -38,4 +35,16 @@ export default function OwnerBackNavDemo() {
       </div>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  openRow — saves the current path under BACKNAV_DEMO_KEY, then navigates to the
+  //  demo detail route for the clicked row
+  //
+  //  Params:
+  //    id — the clicked row's id
+  //----------------------------------------------------------------------------------------------
+  function openRow(id: number) {
+    saveBackNav(BACKNAV_DEMO_KEY)
+    router.push(`/backnav-test/${id}`)
+  }
 }

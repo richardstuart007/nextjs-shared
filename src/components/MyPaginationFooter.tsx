@@ -1,5 +1,33 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyPaginationFooter — MySelectRows (rows-per-page, left) + MyPagination (right) combined
+//    in one row, for use instead of placing the two components separately
+//
+//    Parameters:
+//      totalPages              — total page count, passed through to MyPagination
+//      statecurrentPage        — current page (1-based), passed through to MyPagination
+//      setStateCurrentPage     — page-change handler, passed through to MyPagination
+//      rowsPerPage             — current rows-per-page value, passed through to MySelectRows
+//      setRowsPerPage          — rows-per-page change handler, passed through to MySelectRows
+//      rowsOptions             — rows-per-page choices; defaults to MySelectRows_optionsDftShared
+//      totalRows               — exact row count to display; when omitted, estimated as
+//                                totalPages * rowsPerPage
+//      defaultClass            — row wrapper base classes; defaults to
+//                                MyPaginationFooter_dftClass
+//      overrideClass           — caller classes merged over defaultClass
+//      paginationOverrideClass — forwarded to MyPagination's overrideClass
+//      selectRowsOverrideClass — forwarded to MySelectRows's overrideClass
+//      totalRowsClass          — "N rows" label classes; defaults to
+//                                MyPaginationFooter_totalRowsClass
+//
+//  2) NOTES
+//    defaultClass lays out a 3-column grid (rows-select | pagination | total-rows), so
+//    MyPagination sits centered relative to the whole row rather than just the leftover
+//    space after the rows-per-page dropdown.
+//==============================================================================================
+
 import MyPagination from './MyPagination'
 import MySelectRows from './MySelectRows'
 import { myMergeClasses } from './MyMergeClasses'
@@ -24,10 +52,6 @@ type Props = {
   totalRowsClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyPaginationFooter — MySelectRows (rows-per-page, left) + MyPagination (right) combined
-//  in one row, for use instead of placing the two components separately
-//----------------------------------------------------------------------------------
 export default function MyPaginationFooter({
   totalPages,
   statecurrentPage,

@@ -1,5 +1,24 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    fetchTotalRows — actual row count (no page-size division), also supports caching
+//    internally. Cache key is ROWS::-prefixed so it can't collide with fetchTotalPages's cache
+//    entry for the same SQL.
+//
+//    Parameters:
+//      table           — table name
+//      joins           — optional joins, merged into the base query
+//      filters         — optional WHERE filters
+//      distinctColumns — optional DISTINCT columns for the count
+//      caller          — logging caller identity
+//      skipCache       — bypasses the cache read/write; defaults to false
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<number> — the total row count, or an error message
+//==============================================================================================
+
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
@@ -7,11 +26,6 @@ import { TableResult } from '../../structures'
 import { table_fetch_rows_total } from './tableFetchUtils'
 import { buildSql_Readable } from '../buildSql_Readable'
 
-//---------------------------------------------------------------------
-// Fetch Total Rows Function – actual row count (no page-size division),
-// also supports caching internally. Cache key is ROWS::-prefixed so it
-// can't collide with fetchTotalPages's cache entry for the same SQL.
-//---------------------------------------------------------------------
 export async function fetchTotalRows({
   table,
   joins = [],

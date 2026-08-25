@@ -1,5 +1,13 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerConstants — Constants / .env sub-tabs for the nextjs-shared dev app
+//
+//    Parameters:
+//      envValues — the tracked env var values (see ENV_VARS), keyed by name
+//==============================================================================================
+
 import { useState } from 'react'
 import { MyTab } from '../components/MyTab'
 import * as Constants from '../constants'
@@ -17,23 +25,6 @@ type Props = {
   envValues: Record<string, string | undefined>
 }
 
-//----------------------------------------------------------------------------------------------
-//  groupConstants — groups every constants.ts export by its component-name prefix
-//----------------------------------------------------------------------------------------------
-function groupConstants(): Record<string, { name: string; value: string }[]> {
-  const groups: Record<string, { name: string; value: string }[]> = {}
-  for (const [name, value] of Object.entries(Constants)) {
-    const group = name.split('_')[0]
-    const displayValue = Array.isArray(value) ? JSON.stringify(value) : String(value)
-    if (!groups[group]) groups[group] = []
-    groups[group].push({ name, value: displayValue })
-  }
-  return groups
-}
-
-//----------------------------------------------------------------------------------------------
-//  OwnerConstants — Constants / .env sub-tabs for the nextjs-shared dev app
-//----------------------------------------------------------------------------------------------
 export default function OwnerConstants({ envValues }: Props) {
   const [subTab, setSubTab] = useState<'constants' | 'env'>('constants')
   const constantGroups = groupConstants()
@@ -90,4 +81,21 @@ export default function OwnerConstants({ envValues }: Props) {
       )}
     </div>
   )
+}
+
+//----------------------------------------------------------------------------------------------
+//  groupConstants — groups every constants.ts export by its component-name prefix
+//
+//  Returns:
+//    a map of group name (e.g. 'MyButton') to its {name,value} entries
+//----------------------------------------------------------------------------------------------
+function groupConstants(): Record<string, { name: string; value: string }[]> {
+  const groups: Record<string, { name: string; value: string }[]> = {}
+  for (const [name, value] of Object.entries(Constants)) {
+    const group = name.split('_')[0]
+    const displayValue = Array.isArray(value) ? JSON.stringify(value) : String(value)
+    if (!groups[group]) groups[group] = []
+    groups[group].push({ name, value: displayValue })
+  }
+  return groups
 }

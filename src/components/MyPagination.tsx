@@ -1,5 +1,24 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyPagination — page-number pagination controls with left/right arrows
+//
+//    Parameters:
+//      totalPages          — total page count
+//      statecurrentPage    — current page (1-based)
+//      setStateCurrentPage — called with the newly-selected page
+//      defaultClass, overrideClass, numbersContainerClass, ellipsisClass, numberClass,
+//      numberActiveClass, numberInactiveClass, arrowClass, arrowDisabledClass,
+//      arrowEnabledClass, arrowIconClass — style overrides for each sub-element, merged over
+//        their MyPagination_*Class defaults
+//
+//  2) NOTES
+//    The first/last page-number cell's rounded-l-md/rounded-r-md corner rounding, and the
+//    arrow buttons' direction-based mr-2 md:mr-4/ml-2 md:ml-4 margins, are not exposed as
+//    props — they're structural positioning, not a style choice.
+//==============================================================================================
+
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { myMergeClasses } from './MyMergeClasses'
 import {
@@ -117,6 +136,14 @@ export default function MyPagination({
 
 //----------------------------------------------------------------------------------
 //  PaginationNumber — single clickable (or active) page number cell
+//
+//  Params:
+//    page                — the page number (or '...', handled by the caller instead)
+//    position             —'first'/'last'/'single' to round the outer corner; undefined
+//                           for interior numbers
+//    isActive             — whether this is the current page
+//    setStateCurrentPage — called with page when clicked (numeric pages only)
+//    numberClass, numberActiveClass, numberInactiveClass — style classes
 //----------------------------------------------------------------------------------
 function PaginationNumber({
   page,
@@ -158,6 +185,12 @@ function PaginationNumber({
 
 //----------------------------------------------------------------------------------
 //  PaginationArrow — left or right navigation arrow
+//
+//  Params:
+//    direction           — 'left' or 'right'
+//    isDisabled           — disables the arrow (e.g. already on the first/last page)
+//    onClick              — click handler
+//    arrowClass, arrowDisabledClass, arrowEnabledClass, arrowIconClass — style classes
 //----------------------------------------------------------------------------------
 function PaginationArrow({
   direction,
@@ -196,6 +229,15 @@ function PaginationArrow({
 
 //----------------------------------------------------------------------------------
 //  generatePagination — builds the page number / ellipsis array for display
+//
+//  Params:
+//    currentPage — current page (1-based)
+//    totalPages  — total page count
+//
+//  Returns:
+//    an array of page numbers and, when there are more pages than fit, '...'
+//    placeholders — full list when totalPages <= 7, otherwise a windowed view
+//    around currentPage with the first/last page always included
 //----------------------------------------------------------------------------------
 function generatePagination(currentPage: number, totalPages: number): (number | string)[] {
   if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)

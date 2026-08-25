@@ -109,6 +109,128 @@ src/
 ### Coding conventions
 - All exports resolve directly to `src/` TypeScript files. There is no compiled `dist/` output — the main `tsconfig.json` has `noEmit: true`.
 
+### Function header comments — numbered main header, top-down order
+
+Every source file with a main/exported function or component gets **one unified header block**,
+positioned between the `'use client'`/`'use server'` directive and the imports (i.e. the very
+first thing after the mandatory directive — before imports, before any `type Props = {...}` or
+other declarations), so a reader sees what the file does before anything else, including import
+clutter. Bordered top and bottom with a double-equals rule (`//===...===//`) — visually distinct
+from the single-dash headers used elsewhere in the file (helper functions, section comments), so
+the one header that matters most for a consuming project stands out immediately.
+
+The block has up to three numbered sections — `1)` is mandatory, `2)`/`3)` only when there's
+real content (never an empty section added just for symmetry):
+
+1. **`1) DESCRIPTION`** — mandatory. The function/component name, a one-line-or-so summary, then
+   two sub-sections:
+   - `Parameters:` — every parameter/prop, one line each (name — meaning; note the default if
+     not obvious from the signature).
+   - `Returns:` — every returned field, one line each. Omit this sub-section entirely for a
+     component/function with no meaningful return value (e.g. a component returning JSX with
+     nothing else to say, or a `void` function).
+2. **`2) NOTES`** — optional, only when there's real behavioral depth beyond what `Parameters:`/
+   `Returns:` can hold: edge cases, non-obvious interactions between props, gotchas a caller needs
+   before writing code against it. Most functions never have this section.
+3. **`3) CHANGE HISTORY`** — optional, only once the function has an actual entry to record. See
+   the dedicated subsection below for format and scope.
+
+```ts
+'use client'
+
+//==============================================================================================
+//  1) DESCRIPTION
+//    useLazyFetch — fetches on mount (or on demand via `load()`), tracking
+//    data/loaded/loading/error state, re-fetching whenever `deps` changes.
+//
+//    Parameters:
+//      fetchFn — the async function to call; its resolved value becomes `data`
+//      deps    — like useEffect's dependency array; changing any value resets
+//                state and triggers a re-fetch (unless autoFetch is false)
+//      options.autoFetch — defaults to true; pass false to defer the first fetch
+//                          until `load()` is called manually
+//
+//    Returns:
+//      data    — the last successfully fetched value, or null before any fetch
+//                has succeeded
+//      loaded  — true once a fetch has completed successfully; reset to false
+//                on every deps change
+//      loading — true while a fetch is in flight
+//      error   — the caught error from the most recent failed fetch, or null
+//      load    — re-runs fetchFn on demand (e.g. a "Refresh" button); also used
+//                internally to drive the automatic fetch
+//
+//  2) NOTES
+//    Guards against a stale in-flight fetch overwriting state from a newer
+//    `deps` value — see the requestIdRef inline comments below for how.
+//
+//  3) CHANGE HISTORY
+//    2026-08-25 — new hook: fetches on mount/deps-change; tracks
+//                 data/loaded/loading/error; discards a stale in-flight
+//                 request's result if a newer one has since started
+//==============================================================================================
+
+import { useEffect, useRef, useState } from 'react'
+
+export function useLazyFetch<T>(...
+```
+
+**Helper functions keep the existing plain style** — a single-dash `//----...----//` title
+comment (82-dash non-indented for top-level, 94-dash indented for nested-in-component), with a
+plain `Params:`/`Returns:` breakdown when warranted, positioned directly above that helper's own
+declaration. Not numbered, not double-equals-bordered — that treatment is reserved for the one
+main header per file, so it's the thing that visually stands out. Function declarations still go
+in top-down order — main logic first, nested/local helpers declared below it (function
+declarations hoist, so a helper being called above its own declaration is unaffected). This
+matches `useLazyFetch.ts`'s own body structure: `useEffect` first, then the `return` statement,
+then the `load` helper declared last.
+
+Applies going forward to new/changed functions automatically — no need to ask before adding one.
+Retroactively reformatting every existing header across `src/` to this final shape is a separate,
+large task and goes through the normal `#plan`/`#code` gate like any other code change, since it
+touches real source files beyond this project's own working documents.
+
+`CONSUMING_PROJECTS.md` documents each function/component with only a one-line description and a
+pointer to its source file — including dropping any prop table that just reformats the header's
+`Parameters:` list; that's exactly the duplication this rule exists to avoid. Genuinely
+cross-cutting content that spans more than one function (e.g. how two components relate, a
+constraint spanning a whole family of functions) still belongs in `CONSUMING_PROJECTS.md`, same as
+already established for §5's Generic Table Operations.
+
+### Change History section — `3) CHANGE HISTORY`, tracking consumer-relevant changes over time
+
+Every main header (see above) can carry a `3) CHANGE HISTORY` section once it has at least one
+real entry. Purpose: a consuming project reading the source of a function it imports can see, at a
+glance, what actually changed and when — useful for spotting a breaking change without diffing git
+history across two `nextjs-shared` versions.
+
+Format — one line per entry, dated, newest at the bottom (chronological, matching how the file
+itself accumulates history):
+```ts
+//  3) CHANGE HISTORY
+//    2026-08-25 — added showCloseButton/closeOnOutsideClick props (both default true)
+```
+Date only, no package version number — the version is only known at the `#commit` version-bump
+step, not at the moment the code changes, so stamping a version here would require changing the
+`#commit` skill to backfill it; date-only avoids that entanglement (evaluated and declined this
+session — not worth the added fragility for the marginal precision gained).
+
+**Only when there's a real entry to add** — same "no useless documentation" principle as `2)
+NOTES`: never add an empty `3) CHANGE HISTORY` placeholder to a function that hasn't changed yet.
+The section appears for the first time alongside that function's first actual change, and grows
+an entry each time something changes after that.
+
+**What counts as an entry** — the change itself, one line, summary only (not a full changelog
+paragraph): a new/removed/renamed prop, a changed default, a behavior change a caller could
+observe. Comment-only edits, reordering, or documentation-only passes (like the retroactive header
+rollout itself) do **not** get an entry — they're not something a consuming project would ever
+need to know about.
+
+**Retroactive scope: forward-only.** This convention starts now — existing functions do not get
+entries backfilled for changes that already happened before this convention existed (that history
+already lives in git log / PLAN archive / commit messages). The first entry any given function
+gets is for the next real change made to it *after* this convention was adopted.
+
 ---
 
 ## Component authoring rules

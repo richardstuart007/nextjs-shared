@@ -1,5 +1,33 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyCheckBox — multi-select checkbox group with search, sort, and min/max validation
+//
+//    Parameters:
+//      selectedOptions, setSelectedOptions — current selection and its setter
+//      options                   — the full {value,label} option list
+//      searchEnabled             — shows a filter box above the group; defaults to false
+//      name                      — form field name (hidden inputs use `${name}[]`)
+//      label                     — optional label text
+//      defaultClass_Label, defaultClass_Search, defaultClass_Container,
+//      defaultClass_CheckboxItem, overrideClass_Label, overrideClass_Search,
+//      overrideClass_Container, overrideClass_CheckboxItem — style overrides
+//      showSelectedCount         — shows an "N items selected" summary; defaults to true
+//      maxSelections, minSelections — optional selection-count bounds; a violating
+//                                    change is rejected and reported via onError
+//      showResortButton          — shows the "Show Selected First" toggle; defaults to true
+//      sortBy                    — 'value' or 'label' (default); sort key for both the
+//                                    option list and the selected values written back out
+//      onError                   — called whenever the validation error message changes
+//
+//  2) NOTES
+//    Values written back to setSelectedOptions (via sortSelected) are always kept sorted by
+//    sortBy, regardless of check/uncheck order. Hitting minSelections/maxSelections shows an
+//    inline error message below the group (cleared on the next valid change) rather than
+//    blocking silently.
+//==============================================================================================
+
 import { useState, useMemo, useEffect } from 'react'
 import { myMergeClasses } from './MyMergeClasses'
 import { MyInput } from './MyInput'
@@ -151,7 +179,21 @@ export default function MyCheckBox({
   )
 
   //----------------------------------------------------------------------------------------------
-  //  sortSelected - Sorts selected options by their labels
+  //  RETURN
+  //----------------------------------------------------------------------------------------------
+  if (options.length === 0) return <p className='font-medium text-xs'>No options available</p>
+  const checkboxes = renderCheckboxes()
+  return checkboxes
+
+  //----------------------------------------------------------------------------------------------
+  //  sortSelected — sorts a selected-values array by its options' labels
+  //
+  //  Params:
+  //    selected — the values to sort
+  //
+  //  Returns:
+  //    a new array, sorted by each value's label (falling back to String(value) if
+  //    no matching option is found)
   //----------------------------------------------------------------------------------------------
   function sortSelected(selected: Array<string | number>): Array<string | number> {
     //
@@ -172,6 +214,10 @@ export default function MyCheckBox({
 
   //----------------------------------------------------------------------------------------------
   //  handleCheckboxChange - Handles checkbox selection with min/max validation
+  //
+  //  Params:
+  //    value   — the option value being checked/unchecked
+  //    checked — the checkbox's new checked state
   //----------------------------------------------------------------------------------------------
   function handleCheckboxChange(value: string | number, checked: boolean) {
     //
@@ -208,6 +254,12 @@ export default function MyCheckBox({
 
   //----------------------------------------------------------------------------------------------
   //  isSelected - Checks if a value is in the selectedOptions array
+  //
+  //  Params:
+  //    value — the option value to check
+  //
+  //  Returns:
+  //    whether value is currently selected
   //----------------------------------------------------------------------------------------------
   function isSelected(value: string | number): boolean {
     const result = selectedOptions.includes(value)
@@ -216,6 +268,9 @@ export default function MyCheckBox({
 
   //----------------------------------------------------------------------------------------------
   //  renderHiddenInputs - Renders hidden inputs for form submission
+  //
+  //  Returns:
+  //    one hidden <input name={`${name}[]`}> per currently-selected value
   //----------------------------------------------------------------------------------------------
   function renderHiddenInputs() {
     const result = selectedOptions.map((value, index) => (
@@ -304,11 +359,4 @@ export default function MyCheckBox({
       </div>
     )
   }
-
-  //----------------------------------------------------------------------------------------------
-  //  RETURN
-  //----------------------------------------------------------------------------------------------
-  if (options.length === 0) return <p className='font-medium text-xs'>No options available</p>
-  const checkboxes = renderCheckboxes()
-  return checkboxes
 }

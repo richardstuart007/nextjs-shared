@@ -1,5 +1,12 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    FunctionTestPage — /owner/functiontest dev page. Exercises every tableGeneric function's
+//    TableResult<T> contract, both the success path and an induced-failure path, so a change to
+//    that contract can be verified end to end in one place instead of spot-checked per caller.
+//==============================================================================================
+
 import { useState } from 'react'
 import { table_fetch } from '../../../tables/tableGeneric/table_fetch'
 import { table_fetch_join } from '../../../tables/tableGeneric/table_fetch_join'
@@ -33,33 +40,10 @@ type TestOutcome = {
   detail: string
 }
 
-//----------------------------------------------------------------------------------------------
-//  /owner/functiontest — exercises every tableGeneric function's TableResult<T> contract, both
-//  the success path and an induced-failure path, so a change to that contract can be verified
-//  end to end in one place instead of spot-checked per caller.
-//----------------------------------------------------------------------------------------------
 export default function FunctionTestPage() {
   const functionName = 'FunctionTestPage'
   const [results, setResults] = useState<TestOutcome[]>([])
   const [running, setRunning] = useState(false)
-
-  //----------------------------------------------------------------------------------------------
-  //  record — build one TestOutcome from a TableResult and the expected ok value
-  //----------------------------------------------------------------------------------------------
-  function record(
-    list: TestOutcome[],
-    name: string,
-    expectedOk: boolean,
-    result: { ok: boolean; error: string | null }
-  ) {
-    list.push({
-      name,
-      expectedOk,
-      actualOk: result.ok,
-      pass: result.ok === expectedOk,
-      detail: result.error ?? 'OK'
-    })
-  }
 
   //----------------------------------------------------------------------------------------------
   //  runTests — sequential run: a scratch table is duplicated from xrtg_routing, exercised by
@@ -279,4 +263,28 @@ export default function FunctionTestPage() {
       </table>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  record — build one TestOutcome from a TableResult and the expected ok value
+  //
+  //  Params:
+  //    list       — the results array to push onto
+  //    name       — the test's display name
+  //    expectedOk — whether this call was expected to succeed
+  //    result     — the TableResult returned by the call under test
+  //----------------------------------------------------------------------------------------------
+  function record(
+    list: TestOutcome[],
+    name: string,
+    expectedOk: boolean,
+    result: { ok: boolean; error: string | null }
+  ) {
+    list.push({
+      name,
+      expectedOk,
+      actualOk: result.ok,
+      pass: result.ok === expectedOk,
+      detail: result.error ?? 'OK'
+    })
+  }
 }

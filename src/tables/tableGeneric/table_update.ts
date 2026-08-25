@@ -1,5 +1,23 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_update — UPDATEs rows matching whereColumnValuePairs, clears the table's cache
+//    entries, and logs the outcome
+//
+//    Parameters:
+//      table                 — table name
+//      columnValuePairs      — the columns/values to SET (equality only)
+//      whereColumnValuePairs — the WHERE conditions (equality only)
+//      caller                — logging caller identity
+//      noLog                 — suppresses the query-level trace log; defaults to false
+//      skipCache             — skips clearing this table's cache entries; defaults to false
+//      level, severity       — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<any[]> — the updated row(s) (via RETURNING *), or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { cache_clearTable } from '../cache/userCache_store'

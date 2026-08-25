@@ -1,5 +1,15 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerLayout — dev-only guard layout for /owner routes; redirects away entirely in
+//    non-dev environments, and shows a Back link restored from sessionStorage (or a static
+//    '/owner' Back link on any nested /owner/* route)
+//
+//    Parameters:
+//      children — the page content to render inside the dev guard
+//==============================================================================================
+
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'

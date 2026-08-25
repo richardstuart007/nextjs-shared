@@ -1,5 +1,12 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerSyncVersions — cross-project package-version matrix, with per-package target pinning
+//    (deps/overrides) and a one-click Sync that applies targets/npm-latest to every project's
+//    package.json + .npmrc
+//==============================================================================================
+
 import { useState, useEffect, useMemo } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
@@ -20,29 +27,6 @@ import {
   type SectionMatrix,
 } from './OwnerSyncVersions_actions'
 import sectionExceptions from './section-exceptions.json'
-
-function semverCompare(a: string, b: string): number {
-  const pa = a.replace(/-.*$/, '').split('.').map(Number)
-  const pb = b.replace(/-.*$/, '').split('.').map(Number)
-  for (let i = 0; i < 3; i++) {
-    const diff = (pa[i] ?? 0) - (pb[i] ?? 0)
-    if (diff !== 0) return diff
-  }
-  return 0
-}
-
-function extractBaseVersion(value: string): string {
-  return value.replace(/^[>=<^~\s]+/, '')
-}
-
-function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same' {
-  const pa = extractBaseVersion(a).split('.').map(Number)
-  const pb = extractBaseVersion(b).split('.').map(Number)
-  if ((pa[0] ?? 0) !== (pb[0] ?? 0)) return 'major'
-  if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
-  if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
-  return 'same'
-}
 
 const SECTION_ORDER: Record<string, number> = { d: 0, v: 1, p: 2, o: 3 }
 const SECTION_LABELS: Record<string, string> = {
@@ -68,75 +52,9 @@ export default function OwnerSyncVersions() {
   const [filterMinor, setFilterMinor] = useState(true)
   const [filterPatch, setFilterPatch] = useState(true)
 
-  async function handleRefresh() {
-    setRefreshing(true)
-    const [vr, t, ins, pv, sec] = await Promise.all([action_readVersions(), action_readTargets(), action_readInstalledVersions(), action_readProjectVersions(), action_readSections()])
-    const { matrix: m, parseErrors: pe } = vr
-    setMatrix(m)
-    setParseErrors(pe)
-    setTargets(t)
-    setInstalled(ins)
-    setProjectVersions(pv)
-    setSections(sec)
-    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
-    const urlPackages = packages.filter(pkg =>
-      Object.values(m).some(row => row[pkg]?.includes(':'))
-    )
-    const [l, lv] = await Promise.all([
-      action_fetchLatestVersions(packages),
-      action_readLocalPackageVersions(urlPackages),
-    ])
-    setLatest(l)
-    setLocalVersions(lv)
-    setRefreshing(false)
-  }
-
   useEffect(() => {
     handleRefresh()
   }, [])
-
-  async function handleSync() {
-    setSyncing(true)
-    setSyncResults(null)
-    const results = await action_syncVersions()
-    setSyncResults(results)
-    const [vr, ins, sec] = await Promise.all([action_readVersions(), action_readInstalledVersions(), action_readSections()])
-    const { matrix: m, parseErrors: pe } = vr
-    setMatrix(m)
-    setParseErrors(pe)
-    setInstalled(ins)
-    setSections(sec)
-    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
-    const urlPackages = packages.filter(pkg =>
-      Object.values(m).some(row => row[pkg]?.includes(':'))
-    )
-    const [l, lv] = await Promise.all([
-      action_fetchLatestVersions(packages),
-      action_readLocalPackageVersions(urlPackages),
-    ])
-    setLatest(l)
-    setLocalVersions(lv)
-    setSyncing(false)
-  }
-
-  async function handleTargetBlur(pkg: string, value: string, kind: 'deps' | 'overrides') {
-    const trimmed = value.trim()
-
-    if (trimmed === '') {
-      await action_deleteTarget(pkg, kind)
-      setTargets(prev => {
-        const next = { deps: { ...prev.deps }, overrides: { ...prev.overrides } }
-        delete next[kind][pkg]
-        return next
-      })
-      return
-    }
-
-    if (trimmed !== targets[kind][pkg]) {
-      await action_saveTarget(pkg, trimmed, kind)
-      setTargets(prev => ({ ...prev, [kind]: { ...prev[kind], [pkg]: trimmed } }))
-    }
-  }
 
   const projects = matrix ? Object.keys(matrix) : []
   const packages = matrix
@@ -405,4 +323,136 @@ export default function OwnerSyncVersions() {
       </div>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleRefresh — reloads the full version matrix, targets, installed versions,
+  //  project versions, sections, npm-latest, and local (GitHub-referenced) versions
+  //----------------------------------------------------------------------------------------------
+  async function handleRefresh() {
+    setRefreshing(true)
+    const [vr, t, ins, pv, sec] = await Promise.all([action_readVersions(), action_readTargets(), action_readInstalledVersions(), action_readProjectVersions(), action_readSections()])
+    const { matrix: m, parseErrors: pe } = vr
+    setMatrix(m)
+    setParseErrors(pe)
+    setTargets(t)
+    setInstalled(ins)
+    setProjectVersions(pv)
+    setSections(sec)
+    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
+    const urlPackages = packages.filter(pkg =>
+      Object.values(m).some(row => row[pkg]?.includes(':'))
+    )
+    const [l, lv] = await Promise.all([
+      action_fetchLatestVersions(packages),
+      action_readLocalPackageVersions(urlPackages),
+    ])
+    setLatest(l)
+    setLocalVersions(lv)
+    setRefreshing(false)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleSync — runs action_syncVersions, then reloads the same data as handleRefresh
+  //  (minus targets/project versions/local versions, which sync doesn't change)
+  //----------------------------------------------------------------------------------------------
+  async function handleSync() {
+    setSyncing(true)
+    setSyncResults(null)
+    const results = await action_syncVersions()
+    setSyncResults(results)
+    const [vr, ins, sec] = await Promise.all([action_readVersions(), action_readInstalledVersions(), action_readSections()])
+    const { matrix: m, parseErrors: pe } = vr
+    setMatrix(m)
+    setParseErrors(pe)
+    setInstalled(ins)
+    setSections(sec)
+    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
+    const urlPackages = packages.filter(pkg =>
+      Object.values(m).some(row => row[pkg]?.includes(':'))
+    )
+    const [l, lv] = await Promise.all([
+      action_fetchLatestVersions(packages),
+      action_readLocalPackageVersions(urlPackages),
+    ])
+    setLatest(l)
+    setLocalVersions(lv)
+    setSyncing(false)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleTargetBlur — saves (or, if cleared, deletes) one package's target version
+  //
+  //  Params:
+  //    pkg   — package name
+  //    value — the input's current value
+  //    kind  — which target section this input edits ('deps' or 'overrides')
+  //----------------------------------------------------------------------------------------------
+  async function handleTargetBlur(pkg: string, value: string, kind: 'deps' | 'overrides') {
+    const trimmed = value.trim()
+
+    if (trimmed === '') {
+      await action_deleteTarget(pkg, kind)
+      setTargets(prev => {
+        const next = { deps: { ...prev.deps }, overrides: { ...prev.overrides } }
+        delete next[kind][pkg]
+        return next
+      })
+      return
+    }
+
+    if (trimmed !== targets[kind][pkg]) {
+      await action_saveTarget(pkg, trimmed, kind)
+      setTargets(prev => ({ ...prev, [kind]: { ...prev[kind], [pkg]: trimmed } }))
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------------
+//  semverCompare — compares two semver strings' major.minor.patch segments
+//
+//  Params:
+//    a, b — semver strings (a pre-release suffix, if any, is ignored)
+//
+//  Returns:
+//    negative if a < b, positive if a > b, 0 if equal
+//----------------------------------------------------------------------------------------------
+function semverCompare(a: string, b: string): number {
+  const pa = a.replace(/-.*$/, '').split('.').map(Number)
+  const pb = b.replace(/-.*$/, '').split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0)
+    if (diff !== 0) return diff
+  }
+  return 0
+}
+
+//----------------------------------------------------------------------------------------------
+//  extractBaseVersion — strips a leading range operator (>=, ^, ~, etc.) from a version spec
+//
+//  Params:
+//    value — a version spec, e.g. '^1.2.3'
+//
+//  Returns:
+//    the bare version, e.g. '1.2.3'
+//----------------------------------------------------------------------------------------------
+function extractBaseVersion(value: string): string {
+  return value.replace(/^[>=<^~\s]+/, '')
+}
+
+//----------------------------------------------------------------------------------------------
+//  versionDiff — classifies how two versions differ
+//
+//  Params:
+//    a, b — version specs to compare (range operators stripped via extractBaseVersion)
+//
+//  Returns:
+//    'major' | 'minor' | 'patch' | 'same', for the highest-order segment that differs
+//----------------------------------------------------------------------------------------------
+function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same' {
+  const pa = extractBaseVersion(a).split('.').map(Number)
+  const pb = extractBaseVersion(b).split('.').map(Number)
+  if ((pa[0] ?? 0) !== (pb[0] ?? 0)) return 'major'
+  if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
+  if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
+  return 'same'
 }

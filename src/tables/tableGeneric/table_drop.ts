@@ -1,4 +1,18 @@
 'use server'
+
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_drop — DROPs a table, with logging on both success and failure
+//
+//    Parameters:
+//      table           — table name to drop
+//      caller          — logging caller identity
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<boolean> — true on success, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'

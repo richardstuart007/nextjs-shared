@@ -1,5 +1,11 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerTableSessionStorage — lists, deletes, or clears the current tab's
+//    SessionStorageKeyPrefix-prefixed sessionStorage entries
+//==============================================================================================
+
 import { useState, useEffect } from 'react'
 import { MyButton } from '../components/MyButton'
 import { SessionStorageKeyPrefix } from '../constants'
@@ -12,32 +18,6 @@ export default function OwnerTableSessionStorage() {
   useEffect(() => {
     refresh()
   }, [])
-
-  function refresh() {
-    const nextEntries: SessionStorageEntry[] = []
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i)
-      if (key === null || !key.startsWith(SessionStorageKeyPrefix)) continue
-      nextEntries.push({ key, value: sessionStorage.getItem(key) ?? '' })
-    }
-    nextEntries.sort((a, b) => a.key.localeCompare(b.key))
-    setEntries(nextEntries)
-  }
-
-  function handleDelete(key: string) {
-    sessionStorage.removeItem(key)
-    refresh()
-  }
-
-  function handleClearAll() {
-    //
-    //  Only clear the rs7_-prefixed entries this table actually displays — a bare
-    //  sessionStorage.clear() would also wipe unrelated, unfiltered entries the user
-    //  never saw listed here
-    //
-    entries.forEach(entry => sessionStorage.removeItem(entry.key))
-    refresh()
-  }
 
   return (
     <>
@@ -90,4 +70,43 @@ export default function OwnerTableSessionStorage() {
       </div>
     </>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  refresh — reloads entries from sessionStorage, filtered to SessionStorageKeyPrefix
+  //  and sorted by key
+  //----------------------------------------------------------------------------------------------
+  function refresh() {
+    const nextEntries: SessionStorageEntry[] = []
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i)
+      if (key === null || !key.startsWith(SessionStorageKeyPrefix)) continue
+      nextEntries.push({ key, value: sessionStorage.getItem(key) ?? '' })
+    }
+    nextEntries.sort((a, b) => a.key.localeCompare(b.key))
+    setEntries(nextEntries)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleDelete — removes one entry and refreshes
+  //
+  //  Params:
+  //    key — the sessionStorage key to remove
+  //----------------------------------------------------------------------------------------------
+  function handleDelete(key: string) {
+    sessionStorage.removeItem(key)
+    refresh()
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleClearAll — removes every currently-listed entry and refreshes
+  //----------------------------------------------------------------------------------------------
+  function handleClearAll() {
+    //
+    //  Only clear the rs7_-prefixed entries this table actually displays — a bare
+    //  sessionStorage.clear() would also wipe unrelated, unfiltered entries the user
+    //  never saw listed here
+    //
+    entries.forEach(entry => sessionStorage.removeItem(entry.key))
+    refresh()
+  }
 }

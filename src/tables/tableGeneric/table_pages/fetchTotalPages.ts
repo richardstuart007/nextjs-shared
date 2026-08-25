@@ -1,5 +1,23 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    fetchTotalPages — page count for pagination, also supports caching internally
+//
+//    Parameters:
+//      table           — table name
+//      joins           — optional joins, merged into the base query
+//      filters         — optional WHERE filters
+//      items_per_page  — page size; defaults to ITEMS_PER_PAGE
+//      distinctColumns — optional DISTINCT columns for the count
+//      caller          — logging caller identity
+//      skipCache       — bypasses the cache read/write; defaults to false
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<number> — the total page count, or an error message
+//==============================================================================================
+
 import { cache_get, cache_set } from '../../cache/userCache_store'
 import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
@@ -8,9 +26,6 @@ import { table_fetch_pages_total } from './tableFetchUtils'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
 
-//---------------------------------------------------------------------
-// Fetch Total Pages Function – also supports caching internally
-//---------------------------------------------------------------------
 export async function fetchTotalPages({
   table,
   joins = [],

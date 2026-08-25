@@ -1,3 +1,11 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    RootLayout — app root, wrapping every page in DevLayoutHeader
+//
+//    Parameters:
+//      children — the page content to render below the dev header
+//==============================================================================================
+
 import type { Metadata } from 'next'
 import './globals.css'
 import { DevLayoutHeader } from '../UI/DevLayoutHeader'

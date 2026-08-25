@@ -1,5 +1,27 @@
 'use server'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_fetch — SELECTs rows from table, with optional WHERE/ORDER BY/LIMIT, caching
+//    successful results by their readable SQL
+//
+//    Parameters:
+//      table                 — table name
+//      whereColumnValuePairs — optional WHERE conditions (column/value/operator triples;
+//                              operator defaults to '='); IN/NOT IN expects an array value
+//      orderBy               — optional ORDER BY clause
+//      distinct              — adds SELECT DISTINCT; defaults to false
+//      columns               — columns to select; defaults to '*'
+//      limit                 — optional LIMIT
+//      caller                — logging caller identity
+//      skipCache             — bypasses the cache read/write; defaults to false
+//      noLog                 — suppresses the query-level trace log; defaults to false
+//      level, severity       — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<any[]> — the matching rows, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { ColumnValuePair, TableResult } from '../structures'
@@ -7,9 +29,6 @@ import { cache_get, cache_set } from '../cache/userCache_store'
 import { buildSql_Placeholders } from './buildSql_Placeholders'
 import { buildSql_Readable } from './buildSql_Readable'
 
-//----------------------------------------------------------------------------------
-//  Main function
-//----------------------------------------------------------------------------------
 //
 // Props
 //
@@ -86,7 +105,13 @@ export async function table_fetch({
 }
 
 //----------------------------------------------------------------------------------
-// Run the query
+//  table_fetch_query — runs the actual SELECT (no cache involvement), logging on
+//  failure
+//
+//  Params: same as table_fetch (minus skipCache)
+//
+//  Returns:
+//    the matching rows (throws on failure, after logging)
 //----------------------------------------------------------------------------------
 async function table_fetch_query({
   caller,

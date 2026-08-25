@@ -16,6 +16,12 @@ const cache = globalForCache._Cache
 
 //---------------------------------------------------------------------
 //  normalizeSql - Remove extra whitespace from SQL for cleaner cache keys
+//
+//  Params:
+//    sql — the SQL string to normalize
+//
+//  Returns:
+//    sql with runs of whitespace collapsed to a single space, trimmed
 //---------------------------------------------------------------------
 function normalizeSql(sql: string): string {
   return sql
@@ -25,6 +31,12 @@ function normalizeSql(sql: string): string {
 
 //---------------------------------------------------------------------
 //  extractTables - Extract all table names from FROM and JOIN clauses
+//
+//  Params:
+//    sql — the SQL string to scan
+//
+//  Returns:
+//    every table name found after a FROM or JOIN keyword
 //---------------------------------------------------------------------
 function extractTables(sql: string): string[] {
   return [...sql.matchAll(/\b(?:FROM|JOIN)\s+(\w+)/gi)].map(m => m[1])
@@ -32,6 +44,15 @@ function extractTables(sql: string): string[] {
 
 //---------------------------------------------------------------------
 //  cache_get - Get cached data by SQL key
+//
+//  Params:
+//    sql             — the SQL string used as the cache key (normalized internally)
+//    caller          — logging caller identity
+//    table           — table name, for logging only
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the cached value, or null on a miss
 //---------------------------------------------------------------------
 export function cache_get<T>(
   sql: string,
@@ -72,6 +93,13 @@ export function cache_get<T>(
 
 //---------------------------------------------------------------------
 //  cache_set - Store data in cache with SQL key
+//
+//  Params:
+//    sql             — the SQL string used as the cache key (normalized internally)
+//    data            — the value to cache
+//    caller          — logging caller identity
+//    table           — table name, for logging only
+//    level, severity — logging level/severity; default 1/'I'
 //---------------------------------------------------------------------
 export function cache_set<T>(
   sql: string,
@@ -113,6 +141,14 @@ export function cache_set<T>(
 //  Not currently a problem: the only consumer (next-bridgeschool's userCache_purge) always
 //  clears one user at a time after that user's own record changed, so every affected query
 //  filters by plain equality. Revisit if a batched per-user IN-list query is ever added.
+//
+//  Params:
+//    userId          — the user id to search for (as a plain equality match)
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the number of entries cleared
 //---------------------------------------------------------------------
 export function cache_clearUser(
   userId: number,
@@ -157,6 +193,14 @@ export function cache_clearUser(
 
 //---------------------------------------------------------------------
 //  cache_clearTable - Clear all entries referencing a table (uses stored tables array)
+//
+//  Params:
+//    tableName       — table name to clear entries for (case-insensitive)
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the number of entries cleared
 //---------------------------------------------------------------------
 export function cache_clearTable(
   tableName: string,
@@ -205,6 +249,10 @@ export function cache_clearTable(
 
 //---------------------------------------------------------------------
 //  cache_clearAll - Clear entire cache
+//
+//  Params:
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
 //---------------------------------------------------------------------
 export function cache_clearAll(
   caller: string = '',
@@ -227,6 +275,14 @@ export function cache_clearAll(
 
 //---------------------------------------------------------------------
 //  cache_getStats - Get cache statistics
+//
+//  Params:
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    size — total entry count
+//    sqls — every cached SQL key
 //---------------------------------------------------------------------
 export function cache_getStats(caller: string = '', level: number = 1, severity: string = 'I') {
   const functionName = 'cache_getStats'
@@ -259,6 +315,16 @@ export function cache_getStats(caller: string = '', level: number = 1, severity:
 //---------------------------------------------------------------------
 //  cache_getEntriesInfo - Return a page of cache entries matching the given filters, simulating
 //  SQL LIMIT/OFFSET over the in-memory cache (there is no table behind this data)
+//
+//  Params:
+//    limit, offset                        — pagination over the filtered result
+//    keyFilter, tableFilter, callerFilter — optional case-insensitive substring
+//                                           filters, applied together (AND)
+//
+//  Returns:
+//    entries     — the page of matching entries
+//    totalCount  — total matching entries (before pagination)
+//    overallSize — total entries in the cache (before filtering)
 //---------------------------------------------------------------------
 export type CacheEntryInfo = {
   sql: string
@@ -318,6 +384,12 @@ export function cache_getEntriesInfo({
 
 //---------------------------------------------------------------------
 //  cache_getEntryData - Return the raw data stored for a cache entry
+//
+//  Params:
+//    sql — the SQL string used as the cache key (normalized internally)
+//
+//  Returns:
+//    the cached value, or null if not found
 //---------------------------------------------------------------------
 export function cache_getEntryData(sql: string): any | null {
   const normalizedSql = normalizeSql(sql)
@@ -327,6 +399,14 @@ export function cache_getEntryData(sql: string): any | null {
 
 //---------------------------------------------------------------------
 //  cache_deleteEntry - Delete a single cache entry by SQL key
+//
+//  Params:
+//    sql             — the SQL string used as the cache key (normalized internally)
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    whether an entry was actually found and removed
 //---------------------------------------------------------------------
 export function cache_deleteEntry(
   sql: string,
@@ -351,6 +431,9 @@ export function cache_deleteEntry(
 
 //---------------------------------------------------------------------
 //  cache_getEntries - Return all cached SQL strings for display
+//
+//  Returns:
+//    every cached SQL key
 //---------------------------------------------------------------------
 export function cache_getEntries(): string[] {
   return Array.from(cache.keys())
@@ -358,6 +441,13 @@ export function cache_getEntries(): string[] {
 
 //---------------------------------------------------------------------
 //  getDataInfo - Helper to get data info for logging
+//
+//  Params:
+//    data — the cached value
+//
+//  Returns:
+//    'empty' for null/undefined, 'N rows' for an array, 'object' for a plain
+//    object, or 'type: value' for a primitive
 //---------------------------------------------------------------------
 function getDataInfo(data: any): string {
   if (data === null || data === undefined) {

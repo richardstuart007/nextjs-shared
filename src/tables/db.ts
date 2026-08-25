@@ -22,6 +22,9 @@ let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
 }
 //-------------------------------------------------------------------------
 // Export an async function named sql to initialize and return the sql handler
+//
+//  Returns:
+//    the shared query handler ({ query }), lazily initializing it on first call
 //-------------------------------------------------------------------------
 export async function sql() {
   createDbQueryHandler()
@@ -40,6 +43,11 @@ export async function sql() {
 //-------------------------------------------------------------------------
 let handlerInitialized = false
 
+//-------------------------------------------------------------------------
+//  createDbQueryHandler — installs sqlHandler.query (once per warm instance):
+//  strips redundant whitespace, resolves the target dbKey, logs the query trace
+//  (unless noLog), runs it against that database, and logs any failure
+//-------------------------------------------------------------------------
 function createDbQueryHandler(): void {
   if (handlerInitialized) return
   handlerInitialized = true
@@ -106,6 +114,17 @@ function createDbQueryHandler(): void {
 type RawHandler = { query: (query: string, params: any[]) => Promise<any> }
 const rawHandlers = new Map<string, RawHandler>()
 
+//-------------------------------------------------------------------------
+//  getRawHandler — the raw query function for one database, cached per dbKey.
+//  Uses Neon's serverless Pool when NEXT_PUBLIC_APPENV_DBHANDLER='VERCEL_PG',
+//  otherwise a plain pg Client connect/query/end per call.
+//
+//  Params:
+//    dbKey — env var name to read the connection string from
+//
+//  Returns:
+//    a { query } handler for that database
+//-------------------------------------------------------------------------
 async function getRawHandler(dbKey: string): Promise<RawHandler> {
   const cached = rawHandlers.get(dbKey)
   if (cached) return cached
@@ -146,17 +165,32 @@ async function getRawHandler(dbKey: string): Promise<RawHandler> {
   return rawHandler
 }
 //-------------------------------------------------------------------------
-//  Table -> dbKey routing map, loaded once from xrtg_routing (on primary) per warm instance.
+//  Table -> dbKey routing map, loaded once from xrtg_routing (on primary) per warm instance,
+//  then cached in memory for that instance's whole lifetime — a routing row added or changed
+//  while the server is already running has no effect until the next restart/cold start.
 //  Any failure (most commonly: xrtg_routing doesn't exist yet in this project) falls back to an
-//  empty map, so every table resolves to primary — identical to today's behavior.
+//  empty map, so every table resolves to primary — non-breaking by design, no project is forced
+//  to opt into multi-database routing.
 //-------------------------------------------------------------------------
 let routingMapPromise: Promise<Record<string, string>> | null = null
 
+//-------------------------------------------------------------------------
+//  getRoutingMap — the cached routing map, loading it on first call
+//
+//  Returns:
+//    the table -> dbKey map
+//-------------------------------------------------------------------------
 async function getRoutingMap(): Promise<Record<string, string>> {
   if (!routingMapPromise) routingMapPromise = loadRoutingMap()
   return routingMapPromise
 }
 
+//-------------------------------------------------------------------------
+//  loadRoutingMap — reads every xrtg_routing row from the primary database
+//
+//  Returns:
+//    the table -> dbKey map, or {} if xrtg_routing doesn't exist yet/query fails
+//-------------------------------------------------------------------------
 async function loadRoutingMap(): Promise<Record<string, string>> {
   try {
     const primaryHandler = await getRawHandler(POSTGRES_URL_PREFIX)
@@ -172,13 +206,32 @@ async function loadRoutingMap(): Promise<Record<string, string>> {
   }
 }
 
+//-------------------------------------------------------------------------
+//  resolveDbKey — the dbKey a table is routed to
+//
+//  Params:
+//    table — table name to look up; '' (no table) always resolves to primary
+//
+//  Returns:
+//    the routed dbKey, or POSTGRES_URL_PREFIX (primary) if no routing row exists
+//-------------------------------------------------------------------------
 export async function resolveDbKey(table: string): Promise<string> {
   if (!table) return POSTGRES_URL_PREFIX
   const map = await getRoutingMap()
   return map[table] ?? POSTGRES_URL_PREFIX
 }
 //---------------------------------------------------------------------
-//  logging
+//  log_query — writes the query-level trace log entry for one query (skipped for
+//  write_logging itself, to avoid infinite recursion)
+//
+//  Params:
+//    functionName    — the calling function's name (used as lg_functionname)
+//    query, params    — the SQL and its bound values
+//    caller           — logging caller identity
+//    dbKey            — the resolved database this query ran against
+//    table            — table name, if any
+//    level, severity  — logging level/severity
+//    isupdate         — whether this query is a write
 //---------------------------------------------------------------------
 async function log_query(
   functionName: string,

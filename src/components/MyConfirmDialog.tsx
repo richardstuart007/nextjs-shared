@@ -1,5 +1,23 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    MyConfirmDialog — modal confirmation dialog with optional detail lines
+//
+//    Parameters:
+//      confirmDialog      — dialog content/state (isOpen, title, subTitle, up to 6 optional
+//                           detail lines, and the onConfirm callback for "Yes")
+//      setConfirmDialog   — setter used internally to close the dialog on "No"/backdrop
+//      iconContainerClass — warning-icon wrapper classes; defaults to
+//                           MyConfirmDialog_iconContainerDftClass
+//      titleClass         — title classes; defaults to MyConfirmDialog_titleDftClass
+//      subTitleClass      — subtitle classes; defaults to MyConfirmDialog_subTitleDftClass
+//      lineClass          — detail-line classes; defaults to MyConfirmDialog_lineDftClass
+//      noButtonClass      — "No" button classes; defaults to MyConfirmDialog_noButtonDftClass
+//      yesButtonClass     — "Yes" button classes; defaults to
+//                           MyConfirmDialog_yesButtonDftClass
+//==============================================================================================
+
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid'
 import MyPopup from './MyPopup'
 import { MyButton } from './MyButton'
@@ -36,9 +54,6 @@ type Props = {
   yesButtonClass?: string
 }
 
-//----------------------------------------------------------------------------------
-//  MyConfirmDialog — modal confirmation dialog with optional detail lines
-//----------------------------------------------------------------------------------
 export function MyConfirmDialog({
   confirmDialog,
   setConfirmDialog,

@@ -9,6 +9,18 @@ import type { JoinParams, Filter } from '../../structures'
 
 //---------------------------------------------------------------------
 // Shared private function – builds and executes the query
+//
+//  Params:
+//    table                  — table name
+//    joins                  — optional joins, merged into the base query
+//    filters                — optional WHERE filters
+//    orderBy, limit, offset — pagination/ordering
+//    distinctColumns        — optional DISTINCT columns
+//    caller                 — logging caller identity
+//    level, severity        — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the matching rows for this page (throws on failure, after logging)
 //---------------------------------------------------------------------
 export async function table_fetch_pages_filtered({
   table,
@@ -78,6 +90,18 @@ export async function table_fetch_pages_filtered({
 
 //---------------------------------------------------------------------
 // Shared logic for total pages
+//
+//  Params:
+//    table           — table name
+//    joins           — optional joins, merged into the base query
+//    filters         — optional WHERE filters
+//    items_per_page  — page size; defaults to ITEMS_PER_PAGE
+//    distinctColumns — optional DISTINCT columns for the count
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the total page count (throws on failure, after logging)
 //---------------------------------------------------------------------
 export async function table_fetch_pages_total({
   table,
@@ -143,6 +167,17 @@ export async function table_fetch_pages_total({
 
 //---------------------------------------------------------------------
 // Shared logic for the actual total row count (no page-size division)
+//
+//  Params:
+//    table           — table name
+//    joins           — optional joins, merged into the base query
+//    filters         — optional WHERE filters
+//    distinctColumns — optional DISTINCT columns for the count
+//    caller          — logging caller identity
+//    level, severity — logging level/severity; default 1/'I'
+//
+//  Returns:
+//    the total row count (throws on failure, after logging)
 //---------------------------------------------------------------------
 export async function table_fetch_rows_total({
   table,

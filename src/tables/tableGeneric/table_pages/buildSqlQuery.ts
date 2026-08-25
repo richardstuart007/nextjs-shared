@@ -2,6 +2,17 @@ import type { JoinParams, Filter } from '../../structures'
 
 //---------------------------------------------------------------------
 // Helper to build SQL query and WHERE clause
+//
+//  Params:
+//    table   — table name
+//    joins   — optional LEFT JOINs to append
+//    filters — optional WHERE filters (IN/NOT IN/ARRAY_OVERLAP expect an array
+//             value; LIKE/NOT LIKE lower-cases both sides for a case-insensitive
+//             substring match)
+//
+//  Returns:
+//    sqlQuery    — the built 'SELECT * FROM ...' string
+//    queryValues — the values for each placeholder, in order
 //---------------------------------------------------------------------
 export function buildSqlQuery({
   table,
@@ -85,6 +96,17 @@ export function buildSqlQuery({
 // fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build.
 // LIMIT/OFFSET are bound as $N params (they're values); ORDER BY/DISTINCT ON stay
 // string-interpolated since they're column names/expressions, not bindable values.
+//
+//  Params:
+//    sqlQuery        — a base 'SELECT * FROM ...' query (from buildSqlQuery)
+//    queryValues     — that query's existing placeholder values
+//    distinctColumns — optional columns for SELECT DISTINCT ON
+//    orderBy         — optional ORDER BY clause
+//    limit, offset   — optional pagination
+//
+//  Returns:
+//    finalQuery  — the query with DISTINCT ON/ORDER BY/LIMIT/OFFSET applied
+//    queryValues — queryValues with limit/offset appended, if supplied
 //---------------------------------------------------------------------
 export function applyFetchSuffix(
   sqlQuery: string,
@@ -125,6 +147,14 @@ export function applyFetchSuffix(
 // Build a COUNT(*) version of a base SELECT * query, wrapping in a subquery when
 // DISTINCT ON is needed for an accurate count — shared by fetchTotalPages's cache-key
 // build and table_fetch_pages_total's actual query build
+//
+//  Params:
+//    sqlQuery        — a base 'SELECT * FROM ...' query (from buildSqlQuery)
+//    distinctColumns — when non-empty, wraps sqlQuery in a DISTINCT ON subquery so
+//                     the count reflects distinct rows, not raw matches
+//
+//  Returns:
+//    the COUNT(*) query
 //---------------------------------------------------------------------
 export function buildCountQuery(sqlQuery: string, distinctColumns: string[] = []): string {
   if (distinctColumns.length > 0) {

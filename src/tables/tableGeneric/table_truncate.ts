@@ -1,4 +1,19 @@
 'use server'
+
+//==============================================================================================
+//  1) DESCRIPTION
+//    table_truncate — TRUNCATEs a table, with logging on both success and failure
+//
+//    Parameters:
+//      table           — table name to truncate
+//      caller          — logging caller identity
+//      restartIdentity — adds RESTART IDENTITY; defaults to true
+//      level, severity — logging level/severity; default 1/'I'
+//
+//    Returns:
+//      a TableResult<boolean> — true on success, or an error message
+//==============================================================================================
+
 import { sql } from '../db'
 import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'

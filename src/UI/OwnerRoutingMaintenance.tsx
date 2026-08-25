@@ -1,5 +1,12 @@
 'use client'
 
+//==============================================================================================
+//  1) DESCRIPTION
+//    OwnerRoutingMaintenance — write, edit-in-place, and delete xrtg_routing rows. Exported so
+//    any consuming project can add it to their own /owner page to maintain their own routing
+//    table.
+//==============================================================================================
+
 import { useEffect, useState } from 'react'
 import { table_fetch } from '../tables/tableGeneric/table_fetch'
 import { table_write } from '../tables/tableGeneric/table_write'
@@ -13,10 +20,6 @@ import { POSTGRES_URL_PREFIX } from '../constants'
 
 const ROUTING_TABLE = 'xrtg_routing'
 
-//----------------------------------------------------------------------------------------------
-//  OwnerRoutingMaintenance — write, edit-in-place, and delete xrtg_routing rows. Exported so any
-//  consuming project can add it to their own /owner page to maintain their own routing table.
-//----------------------------------------------------------------------------------------------
 export default function OwnerRoutingMaintenance() {
   const functionName = 'OwnerRoutingMaintenance'
 
@@ -31,107 +34,6 @@ export default function OwnerRoutingMaintenance() {
   useEffect(() => {
     fetchRouting()
   }, [])
-
-  //----------------------------------------------------------------------------------------------
-  //  fetchRouting — reload xrtg_routing rows
-  //----------------------------------------------------------------------------------------------
-  async function fetchRouting() {
-    const result = await table_fetch({
-      caller: functionName,
-      table: ROUTING_TABLE,
-      orderBy: 'rtg_rtgid',
-      skipCache: true
-    })
-    if (result.ok) setRoutingRows(result.data as table_Routing[])
-    else setRoutingMessage(`Error: ${result.error}`)
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleAddRouting — insert a new table -> dbKey routing row
-  //----------------------------------------------------------------------------------------------
-  async function handleAddRouting() {
-    if (!newTable || !newDbKey) return
-    setRoutingMessage('Adding...')
-    const result = await table_write({
-      caller: functionName,
-      table: ROUTING_TABLE,
-      columnValuePairs: [
-        { column: 'rtg_table', value: newTable },
-        { column: 'rtg_dbkey', value: newDbKey }
-      ]
-    })
-    if (!result.ok) {
-      setRoutingMessage(`Error: ${result.error}`)
-      return
-    }
-    setNewTable('')
-    setNewDbKey('')
-    setRoutingMessage('')
-    await fetchRouting()
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleDeleteRouting — remove a routing row (the table falls back to primary)
-  //----------------------------------------------------------------------------------------------
-  async function handleDeleteRouting(row: table_Routing) {
-    if (!confirm(`Remove routing for "${row.rtg_table}"? It will fall back to primary.`)) return
-    const result = await table_delete({
-      caller: functionName,
-      table: ROUTING_TABLE,
-      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: row.rtg_rtgid }]
-    })
-    if (!result.ok) {
-      setRoutingMessage(`Error: ${result.error}`)
-      return
-    }
-    await fetchRouting()
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleEditRouting — enter edit mode for a routing row
-  //----------------------------------------------------------------------------------------------
-  function handleEditRouting(row: table_Routing) {
-    setEditRtgid(row.rtg_rtgid)
-    setEditTable(row.rtg_table)
-    setEditDbKey(row.rtg_dbkey)
-    setRoutingMessage('')
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleCancelEditRouting — discard in-progress edits and exit edit mode
-  //----------------------------------------------------------------------------------------------
-  function handleCancelEditRouting() {
-    setEditRtgid(null)
-    setEditTable('')
-    setEditDbKey('')
-    setRoutingMessage('')
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleSaveEditRouting — persist the in-progress edit for a routing row
-  //----------------------------------------------------------------------------------------------
-  async function handleSaveEditRouting() {
-    if (editRtgid === null || !editTable || !editDbKey) return
-    setRoutingMessage('Saving...')
-    const result = await table_update({
-      caller: functionName,
-      table: ROUTING_TABLE,
-      columnValuePairs: [
-        { column: 'rtg_table', value: editTable },
-        { column: 'rtg_dbkey', value: editDbKey }
-      ],
-      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: editRtgid }]
-    })
-    if (!result.ok) {
-      setRoutingMessage(`Error: ${result.error}`)
-      return
-    }
-    setEditRtgid(null)
-    setEditTable('')
-    setEditDbKey('')
-    setRoutingMessage('')
-    await fetchRouting()
-  }
 
   return (
     <div className='p-4'>
@@ -225,4 +127,111 @@ export default function OwnerRoutingMaintenance() {
       </table>
     </div>
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  fetchRouting — reload xrtg_routing rows
+  //----------------------------------------------------------------------------------------------
+  async function fetchRouting() {
+    const result = await table_fetch({
+      caller: functionName,
+      table: ROUTING_TABLE,
+      orderBy: 'rtg_rtgid',
+      skipCache: true
+    })
+    if (result.ok) setRoutingRows(result.data as table_Routing[])
+    else setRoutingMessage(`Error: ${result.error}`)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleAddRouting — insert a new table -> dbKey routing row
+  //----------------------------------------------------------------------------------------------
+  async function handleAddRouting() {
+    if (!newTable || !newDbKey) return
+    setRoutingMessage('Adding...')
+    const result = await table_write({
+      caller: functionName,
+      table: ROUTING_TABLE,
+      columnValuePairs: [
+        { column: 'rtg_table', value: newTable },
+        { column: 'rtg_dbkey', value: newDbKey }
+      ]
+    })
+    if (!result.ok) {
+      setRoutingMessage(`Error: ${result.error}`)
+      return
+    }
+    setNewTable('')
+    setNewDbKey('')
+    setRoutingMessage('')
+    await fetchRouting()
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleDeleteRouting — remove a routing row (the table falls back to primary)
+  //
+  //  Params:
+  //    row — the row to remove
+  //----------------------------------------------------------------------------------------------
+  async function handleDeleteRouting(row: table_Routing) {
+    if (!confirm(`Remove routing for "${row.rtg_table}"? It will fall back to primary.`)) return
+    const result = await table_delete({
+      caller: functionName,
+      table: ROUTING_TABLE,
+      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: row.rtg_rtgid }]
+    })
+    if (!result.ok) {
+      setRoutingMessage(`Error: ${result.error}`)
+      return
+    }
+    await fetchRouting()
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleEditRouting — enter edit mode for a routing row
+  //
+  //  Params:
+  //    row — the row to edit
+  //----------------------------------------------------------------------------------------------
+  function handleEditRouting(row: table_Routing) {
+    setEditRtgid(row.rtg_rtgid)
+    setEditTable(row.rtg_table)
+    setEditDbKey(row.rtg_dbkey)
+    setRoutingMessage('')
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleCancelEditRouting — discard in-progress edits and exit edit mode
+  //----------------------------------------------------------------------------------------------
+  function handleCancelEditRouting() {
+    setEditRtgid(null)
+    setEditTable('')
+    setEditDbKey('')
+    setRoutingMessage('')
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleSaveEditRouting — persist the in-progress edit for a routing row
+  //----------------------------------------------------------------------------------------------
+  async function handleSaveEditRouting() {
+    if (editRtgid === null || !editTable || !editDbKey) return
+    setRoutingMessage('Saving...')
+    const result = await table_update({
+      caller: functionName,
+      table: ROUTING_TABLE,
+      columnValuePairs: [
+        { column: 'rtg_table', value: editTable },
+        { column: 'rtg_dbkey', value: editDbKey }
+      ],
+      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: editRtgid }]
+    })
+    if (!result.ok) {
+      setRoutingMessage(`Error: ${result.error}`)
+      return
+    }
+    setEditRtgid(null)
+    setEditTable('')
+    setEditDbKey('')
+    setRoutingMessage('')
+    await fetchRouting()
+  }
 }
