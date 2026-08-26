@@ -186,100 +186,6 @@ export default function MyCheckBox({
   return checkboxes
 
   //----------------------------------------------------------------------------------------------
-  //  sortSelected — sorts a selected-values array by its options' labels
-  //
-  //  Params:
-  //    selected — the values to sort
-  //
-  //  Returns:
-  //    a new array, sorted by each value's label (falling back to String(value) if
-  //    no matching option is found)
-  //----------------------------------------------------------------------------------------------
-  function sortSelected(selected: Array<string | number>): Array<string | number> {
-    //
-    //  Create a map of value to label for quick lookup
-    //
-    const valueToLabel = new Map<string | number, string>()
-    options.forEach(option => {
-      valueToLabel.set(option.value, option.label)
-    })
-
-    const result = [...selected].sort((a, b) => {
-      const labelA = valueToLabel.get(a) || String(a)
-      const labelB = valueToLabel.get(b) || String(b)
-      return labelA.localeCompare(labelB)
-    })
-    return result
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleCheckboxChange - Handles checkbox selection with min/max validation
-  //
-  //  Params:
-  //    value   — the option value being checked/unchecked
-  //    checked — the checkbox's new checked state
-  //----------------------------------------------------------------------------------------------
-  function handleCheckboxChange(value: string | number, checked: boolean) {
-    //
-    //  Clear previous errors
-    //
-    setError('')
-
-    if (checked) {
-      //
-      //  Check max selection limit
-      //
-      if (maxSelections !== undefined && selectedOptions.length >= maxSelections) {
-        setError(`Maximum ${maxSelections} selection${maxSelections !== 1 ? 's' : ''} allowed`)
-        return
-      }
-      const newSelection = [...selectedOptions, value]
-      setSelectedOptions(sortSelected(newSelection))
-    }
-    //
-    //  Check min selection limit before removing
-    //
-    else {
-      if (minSelections !== undefined && selectedOptions.length <= minSelections) {
-        setError(`Minimum ${minSelections} selection${minSelections !== 1 ? 's' : ''} required`)
-        return
-      }
-      //
-      //  Save the changes
-      //
-      const newSelection = selectedOptions.filter(item => item !== value)
-      setSelectedOptions(sortSelected(newSelection))
-    }
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  isSelected - Checks if a value is in the selectedOptions array
-  //
-  //  Params:
-  //    value — the option value to check
-  //
-  //  Returns:
-  //    whether value is currently selected
-  //----------------------------------------------------------------------------------------------
-  function isSelected(value: string | number): boolean {
-    const result = selectedOptions.includes(value)
-    return result
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  renderHiddenInputs - Renders hidden inputs for form submission
-  //
-  //  Returns:
-  //    one hidden <input name={`${name}[]`}> per currently-selected value
-  //----------------------------------------------------------------------------------------------
-  function renderHiddenInputs() {
-    const result = selectedOptions.map((value, index) => (
-      <input key={`${name}_${index}`} type='hidden' name={`${name}[]`} value={value} />
-    ))
-    return result
-  }
-
-  //----------------------------------------------------------------------------------------------
   //  renderCheckboxes - Main render function for checkbox group
   //----------------------------------------------------------------------------------------------
   function renderCheckboxes() {
@@ -358,5 +264,99 @@ export default function MyCheckBox({
         )}
       </div>
     )
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  renderHiddenInputs - Renders hidden inputs for form submission
+  //
+  //  Returns:
+  //    one hidden <input name={`${name}[]`}> per currently-selected value
+  //----------------------------------------------------------------------------------------------
+  function renderHiddenInputs() {
+    const result = selectedOptions.map((value, index) => (
+      <input key={`${name}_${index}`} type='hidden' name={`${name}[]`} value={value} />
+    ))
+    return result
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  isSelected - Checks if a value is in the selectedOptions array
+  //
+  //  Params:
+  //    value — the option value to check
+  //
+  //  Returns:
+  //    whether value is currently selected
+  //----------------------------------------------------------------------------------------------
+  function isSelected(value: string | number): boolean {
+    const result = selectedOptions.includes(value)
+    return result
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleCheckboxChange - Handles checkbox selection with min/max validation
+  //
+  //  Params:
+  //    value   — the option value being checked/unchecked
+  //    checked — the checkbox's new checked state
+  //----------------------------------------------------------------------------------------------
+  function handleCheckboxChange(value: string | number, checked: boolean) {
+    //
+    //  Clear previous errors
+    //
+    setError('')
+
+    if (checked) {
+      //
+      //  Check max selection limit
+      //
+      if (maxSelections !== undefined && selectedOptions.length >= maxSelections) {
+        setError(`Maximum ${maxSelections} selection${maxSelections !== 1 ? 's' : ''} allowed`)
+        return
+      }
+      const newSelection = [...selectedOptions, value]
+      setSelectedOptions(sortSelected(newSelection))
+    }
+    //
+    //  Check min selection limit before removing
+    //
+    else {
+      if (minSelections !== undefined && selectedOptions.length <= minSelections) {
+        setError(`Minimum ${minSelections} selection${minSelections !== 1 ? 's' : ''} required`)
+        return
+      }
+      //
+      //  Save the changes
+      //
+      const newSelection = selectedOptions.filter(item => item !== value)
+      setSelectedOptions(sortSelected(newSelection))
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  sortSelected — sorts a selected-values array by its options' labels
+  //
+  //  Params:
+  //    selected — the values to sort
+  //
+  //  Returns:
+  //    a new array, sorted by each value's label (falling back to String(value) if
+  //    no matching option is found)
+  //----------------------------------------------------------------------------------------------
+  function sortSelected(selected: Array<string | number>): Array<string | number> {
+    //
+    //  Create a map of value to label for quick lookup
+    //
+    const valueToLabel = new Map<string | number, string>()
+    options.forEach(option => {
+      valueToLabel.set(option.value, option.label)
+    })
+
+    const result = [...selected].sort((a, b) => {
+      const labelA = valueToLabel.get(a) || String(a)
+      const labelB = valueToLabel.get(b) || String(b)
+      return labelA.localeCompare(labelB)
+    })
+    return result
   }
 }

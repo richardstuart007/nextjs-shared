@@ -45,6 +45,50 @@ export default function FunctionTestPage() {
   const [results, setResults] = useState<TestOutcome[]>([])
   const [running, setRunning] = useState(false)
 
+  const failCount = results.filter(r => !r.pass).length
+
+  return (
+    <div className='p-4'>
+      <h2 className='text-lg font-semibold text-gray-800 mb-2'>Table Function Test</h2>
+      <p className='text-xs text-gray-600 mb-3'>
+        Exercises every tableGeneric function's TableResult&lt;T&gt; contract (success + induced
+        failure) against a scratch table duplicated from xrtg_routing, then drops it.
+      </p>
+      <div className='flex items-center gap-3 mb-4'>
+        <MyButton onClick={runTests} disabled={running}>
+          {running ? 'Running...' : 'Run Tests'}
+        </MyButton>
+        {results.length > 0 && (
+          <span className={failCount === 0 ? 'text-green-700 text-xs' : 'text-red-700 text-xs font-semibold'}>
+            {results.length} tests, {failCount} failed
+          </span>
+        )}
+      </div>
+      <table className='text-xs'>
+        <thead>
+          <tr className='text-left'>
+            <th className='px-2'>Function</th>
+            <th className='px-2'>Expected</th>
+            <th className='px-2'>Actual</th>
+            <th className='px-2'>Pass</th>
+            <th className='px-2'>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          {results.map((r, i) => (
+            <tr key={i} className={`border-b border-gray-100 ${r.pass ? '' : 'bg-red-50'}`}>
+              <td className='px-2'>{r.name}</td>
+              <td className='px-2'>{r.expectedOk ? 'ok' : 'fail'}</td>
+              <td className='px-2'>{r.actualOk ? 'ok' : 'fail'}</td>
+              <td className='px-2'>{r.pass ? 'PASS' : 'FAIL'}</td>
+              <td className='px-2'>{r.detail}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+
   //----------------------------------------------------------------------------------------------
   //  runTests — sequential run: a scratch table is duplicated from xrtg_routing, exercised by
   //  every write/read function, then dropped — so no permanent data is touched
@@ -219,50 +263,6 @@ export default function FunctionTestPage() {
     setResults(list)
     setRunning(false)
   }
-
-  const failCount = results.filter(r => !r.pass).length
-
-  return (
-    <div className='p-4'>
-      <h2 className='text-lg font-semibold text-gray-800 mb-2'>Table Function Test</h2>
-      <p className='text-xs text-gray-600 mb-3'>
-        Exercises every tableGeneric function's TableResult&lt;T&gt; contract (success + induced
-        failure) against a scratch table duplicated from xrtg_routing, then drops it.
-      </p>
-      <div className='flex items-center gap-3 mb-4'>
-        <MyButton onClick={runTests} disabled={running}>
-          {running ? 'Running...' : 'Run Tests'}
-        </MyButton>
-        {results.length > 0 && (
-          <span className={failCount === 0 ? 'text-green-700 text-xs' : 'text-red-700 text-xs font-semibold'}>
-            {results.length} tests, {failCount} failed
-          </span>
-        )}
-      </div>
-      <table className='text-xs'>
-        <thead>
-          <tr className='text-left'>
-            <th className='px-2'>Function</th>
-            <th className='px-2'>Expected</th>
-            <th className='px-2'>Actual</th>
-            <th className='px-2'>Pass</th>
-            <th className='px-2'>Detail</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.map((r, i) => (
-            <tr key={i} className={`border-b border-gray-100 ${r.pass ? '' : 'bg-red-50'}`}>
-              <td className='px-2'>{r.name}</td>
-              <td className='px-2'>{r.expectedOk ? 'ok' : 'fail'}</td>
-              <td className='px-2'>{r.actualOk ? 'ok' : 'fail'}</td>
-              <td className='px-2'>{r.pass ? 'PASS' : 'FAIL'}</td>
-              <td className='px-2'>{r.detail}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
 
   //----------------------------------------------------------------------------------------------
   //  record — build one TestOutcome from a TableResult and the expected ok value

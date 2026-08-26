@@ -114,6 +114,24 @@ export async function table_fetch_join({
 }
 
 //----------------------------------------------------------------------------------
+//  Inject LEFT JOIN clauses immediately after "FROM ${table}" — shared by the cache-key
+//  build above and the actual query build in table_fetch_join_query, so the two can't diverge
+//
+//  Params:
+//    sqlQuery — a base 'SELECT ... FROM table' query
+//    table    — the table name (must match the FROM clause exactly, for the replace)
+//    joins    — the joins to inject
+//
+//  Returns:
+//    sqlQuery with 'FROM table LEFT JOIN ... LEFT JOIN ...' in place of 'FROM table'
+//----------------------------------------------------------------------------------
+function injectJoins(sqlQuery: string, table: string, joins: JoinParams[]): string {
+  if (joins.length === 0) return sqlQuery
+  const joinSql = joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
+  return sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
+}
+
+//----------------------------------------------------------------------------------
 //  table_fetch_join_query — runs the actual SELECT (no cache involvement), logging
 //  on failure
 //
@@ -190,22 +208,4 @@ async function table_fetch_join_query({
     })
     throw error
   }
-}
-
-//----------------------------------------------------------------------------------
-//  Inject LEFT JOIN clauses immediately after "FROM ${table}" — shared by the cache-key
-//  build above and the actual query build in table_fetch_join_query, so the two can't diverge
-//
-//  Params:
-//    sqlQuery — a base 'SELECT ... FROM table' query
-//    table    — the table name (must match the FROM clause exactly, for the replace)
-//    joins    — the joins to inject
-//
-//  Returns:
-//    sqlQuery with 'FROM table LEFT JOIN ... LEFT JOIN ...' in place of 'FROM table'
-//----------------------------------------------------------------------------------
-function injectJoins(sqlQuery: string, table: string, joins: JoinParams[]): string {
-  if (joins.length === 0) return sqlQuery
-  const joinSql = joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
-  return sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
 }

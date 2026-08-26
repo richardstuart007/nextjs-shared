@@ -427,19 +427,6 @@ function semverCompare(a: string, b: string): number {
 }
 
 //----------------------------------------------------------------------------------------------
-//  extractBaseVersion — strips a leading range operator (>=, ^, ~, etc.) from a version spec
-//
-//  Params:
-//    value — a version spec, e.g. '^1.2.3'
-//
-//  Returns:
-//    the bare version, e.g. '1.2.3'
-//----------------------------------------------------------------------------------------------
-function extractBaseVersion(value: string): string {
-  return value.replace(/^[>=<^~\s]+/, '')
-}
-
-//----------------------------------------------------------------------------------------------
 //  versionDiff — classifies how two versions differ
 //
 //  Params:
@@ -455,4 +442,17 @@ function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same'
   if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
   if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
   return 'same'
+}
+
+//----------------------------------------------------------------------------------------------
+//  extractBaseVersion — strips a leading range operator (>=, ^, ~, etc.) from a version spec
+//
+//  Params:
+//    value — a version spec, e.g. '^1.2.3'
+//
+//  Returns:
+//    the bare version, e.g. '1.2.3'
+//----------------------------------------------------------------------------------------------
+function extractBaseVersion(value: string): string {
+  return value.replace(/^[>=<^~\s]+/, '')
 }

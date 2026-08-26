@@ -226,6 +226,17 @@ export default function OwnerTableCache() {
   }
 
   //----------------------------------------------------------------------------------------------
+  //  handleRowClick — fetches the full cached data for one entry and opens the detail popup
+  //
+  //  Params:
+  //    entry — the clicked row's summary info
+  //----------------------------------------------------------------------------------------------
+  async function handleRowClick(entry: CacheEntryInfo) {
+    const data = await cacheAction_getEntryData(entry.sql)
+    setPopup({ entry, data })
+  }
+
+  //----------------------------------------------------------------------------------------------
   //  handleDelete — deletes one cache entry, then refreshes
   //
   //  Params:
@@ -238,17 +249,6 @@ export default function OwnerTableCache() {
     } catch (error) {
       console.error('Error deleting entry:', error)
     }
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleRowClick — fetches the full cached data for one entry and opens the detail popup
-  //
-  //  Params:
-  //    entry — the clicked row's summary info
-  //----------------------------------------------------------------------------------------------
-  async function handleRowClick(entry: CacheEntryInfo) {
-    const data = await cacheAction_getEntryData(entry.sql)
-    setPopup({ entry, data })
   }
 }
 

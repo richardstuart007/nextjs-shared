@@ -241,6 +241,14 @@ export default function MySelectMulti({
   )
 
   //----------------------------------------------------------------------------------------------
+  //  selectAll — selects every option, unless maxSelected is below the option count
+  //----------------------------------------------------------------------------------------------
+  function selectAll() {
+    if (!canSelectAll) return
+    onChange(normalized.map(opt => opt.value))
+  }
+
+  //----------------------------------------------------------------------------------------------
   //  toggle — flips one option's selected state, respecting minSelected/maxSelected.
   //  Toggling off the last item while "all" is showing collapses to just that one item
   //  (since allSelected renders every checkbox as unchecked); a toggle-on that would
@@ -273,14 +281,6 @@ export default function MySelectMulti({
       return
     }
     onChange([...selected, value])
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  selectAll — selects every option, unless maxSelected is below the option count
-  //----------------------------------------------------------------------------------------------
-  function selectAll() {
-    if (!canSelectAll) return
-    onChange(normalized.map(opt => opt.value))
   }
 }
 

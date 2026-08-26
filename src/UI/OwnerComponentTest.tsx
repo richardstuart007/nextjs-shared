@@ -320,14 +320,6 @@ function MyButtonTab() {
   const [clickCount, setClickCount] = useState(0)
   const [lastClicked, setLastClicked] = useState('—')
 
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
-
   return (
     <ThreeSection
       controls={
@@ -386,6 +378,14 @@ function MyButtonTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type InputProps = { placeholder: string; type: string; defaultClass: string; overrideClass: string; disabled: boolean; restProps: string }
@@ -398,14 +398,6 @@ function MyInputTab() {
   const [draft, setDraft] = useState<InputProps>(inputDefaults)
   const [applied, setApplied] = useState<InputProps>(inputDefaults)
   const [value, setValue] = useState('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -479,6 +471,14 @@ function MyInputTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type TextareaProps = { placeholder: string; defaultClass: string; overrideClass: string; disabled: boolean; restProps: string }
@@ -491,14 +491,6 @@ function MyTextareaTab() {
   const [draft, setDraft] = useState<TextareaProps>(textareaDefaults)
   const [applied, setApplied] = useState<TextareaProps>(textareaDefaults)
   const [value, setValue] = useState('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -560,6 +552,14 @@ function MyTextareaTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type BoxProps = {
@@ -591,14 +591,6 @@ const boxDefaults: BoxProps = {
 function MyBoxTab() {
   const [draft, setDraft] = useState<BoxProps>(boxDefaults)
   const [applied, setApplied] = useState<BoxProps>(boxDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -685,6 +677,14 @@ function MyBoxTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type DropdownControlProps = {
@@ -739,15 +739,6 @@ function MyDropdownTab() {
   const [draft, setDraft] = useState<DropdownControlProps>(dropdownDefaults)
   const [applied, setApplied] = useState<DropdownControlProps>(dropdownDefaults)
   const [selectedOption, setSelectedOption] = useState<string | number>('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelectedOption('')
-  }
 
   const whereColumnValuePairs = useMemo(() => {
     const pairs = [
@@ -880,6 +871,15 @@ function MyDropdownTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelectedOption('')
+  }
 }
 
 type CheckBoxControlProps = {
@@ -925,15 +925,6 @@ function MyCheckBoxTab() {
   const [applied, setApplied] = useState<CheckBoxControlProps>(checkboxDefaults)
   const [selected, setSelected] = useState<Array<string | number>>([])
   const [errorMessage, setErrorMessage] = useState('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelected([])
-  }
 
   return (
     <ThreeSection
@@ -1041,6 +1032,15 @@ function MyCheckBoxTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelected([])
+  }
 }
 
 type PaginationControlProps = {
@@ -1079,15 +1079,6 @@ function MyPaginationTab() {
   const [draft, setDraft] = useState<PaginationControlProps>(paginationDefaults)
   const [applied, setApplied] = useState<PaginationControlProps>(paginationDefaults)
   const [currentPage, setCurrentPage] = useState(1)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setCurrentPage(1)
-  }
 
   return (
     <ThreeSection
@@ -1175,6 +1166,15 @@ function MyPaginationTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setCurrentPage(1)
+  }
 }
 
 type DialogControlProps = {
@@ -1232,36 +1232,6 @@ function MyConfirmDialogTab() {
     }
     prevOpenRef.current = confirmDialog.isOpen
   }, [confirmDialog.isOpen])
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  openDialog — opens the demo confirm dialog using the current applied props
-  //----------------------------------------------------------------------------------------------
-  function openDialog() {
-    setLastAction('opened')
-    setConfirmDialog({
-      isOpen: true,
-      title: applied.title,
-      subTitle: applied.subTitle,
-      line1: applied.line1 || undefined,
-      line2: applied.line2 || undefined,
-      line3: applied.line3 || undefined,
-      line4: applied.line4 || undefined,
-      line5: applied.line5 || undefined,
-      line6: applied.line6 || undefined,
-      onConfirm: () => {
-        setLastAction('confirmed at ' + new Date().toLocaleTimeString())
-        setConfirmDialog(d => ({ ...d, isOpen: false }))
-      },
-    })
-  }
 
   return (
     <ThreeSection
@@ -1337,6 +1307,36 @@ function MyConfirmDialogTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  openDialog — opens the demo confirm dialog using the current applied props
+  //----------------------------------------------------------------------------------------------
+  function openDialog() {
+    setLastAction('opened')
+    setConfirmDialog({
+      isOpen: true,
+      title: applied.title,
+      subTitle: applied.subTitle,
+      line1: applied.line1 || undefined,
+      line2: applied.line2 || undefined,
+      line3: applied.line3 || undefined,
+      line4: applied.line4 || undefined,
+      line5: applied.line5 || undefined,
+      line6: applied.line6 || undefined,
+      onConfirm: () => {
+        setLastAction('confirmed at ' + new Date().toLocaleTimeString())
+        setConfirmDialog(d => ({ ...d, isOpen: false }))
+      },
+    })
+  }
 }
 
 type LinkControlProps = { label: string; pathname: string; defaultClass: string; overrideClass: string; caller: string; restProps: string }
@@ -1355,14 +1355,6 @@ const linkDefaults: LinkControlProps = {
 function MyLinkTab() {
   const [draft, setDraft] = useState<LinkControlProps>(linkDefaults)
   const [applied, setApplied] = useState<LinkControlProps>(linkDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
 
@@ -1419,6 +1411,14 @@ function MyLinkTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type SelectControlProps = {
@@ -1455,15 +1455,6 @@ function MySelectTab() {
   const [draft, setDraft] = useState<SelectControlProps>(selectDefaults)
   const [applied, setApplied] = useState<SelectControlProps>(selectDefaults)
   const [selected, setSelected] = useState('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelected('')
-  }
 
   const parsedOptions =
     applied.optionsMode === 'labelValue'
@@ -1556,6 +1547,15 @@ function MySelectTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelected('')
+  }
 }
 
 type SelectTableControlProps = {
@@ -1606,15 +1606,6 @@ function MySelectTableTab() {
   const [draft, setDraft] = useState<SelectTableControlProps>(selectTableDefaults)
   const [applied, setApplied] = useState<SelectTableControlProps>(selectTableDefaults)
   const [selectedOption, setSelectedOption] = useState<string | number>('')
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelectedOption('')
-  }
 
   const whereColumnValuePairs = useMemo(() => {
     const pairs = [
@@ -1737,6 +1728,15 @@ function MySelectTableTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelectedOption('')
+  }
 }
 
 type LoadingMessageControlProps = { message1: string; message2: string; containerClass: string; messageClass: string }
@@ -1753,14 +1753,6 @@ const loadingMessageDefaults: LoadingMessageControlProps = {
 function MyLoadingMessageTab() {
   const [draft, setDraft] = useState<LoadingMessageControlProps>(loadingMessageDefaults)
   const [applied, setApplied] = useState<LoadingMessageControlProps>(loadingMessageDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -1801,6 +1793,14 @@ function MyLoadingMessageTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type ToggleControlProps = { inputName: string; inputValue: boolean; defaultClass: string; overrideClass: string; labelClass: string }
@@ -1819,15 +1819,6 @@ function MyToggleTab() {
   const [draft, setDraft] = useState<ToggleControlProps>(toggleDefaults)
   const [applied, setApplied] = useState<ToggleControlProps>(toggleDefaults)
   const [value, setValue] = useState(false)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setValue(draft.inputValue)
-  }
 
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
 
@@ -1873,6 +1864,15 @@ function MyToggleTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setValue(draft.inputValue)
+  }
 }
 
 type PopupControlProps = { defaultClass: string; overrideClass: string; overlayClass: string; closeButtonClass: string; closeOnBackdropClick: boolean }
@@ -1891,14 +1891,6 @@ function MyPopupTab() {
   const [draft, setDraft] = useState<PopupControlProps>(popupDefaults)
   const [applied, setApplied] = useState<PopupControlProps>(popupDefaults)
   const [isOpen, setIsOpen] = useState(false)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   const computedPanelClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
 
@@ -1951,6 +1943,14 @@ function MyPopupTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type HourGlassControlProps = { defaultClass: string; overrideClass: string }
@@ -1962,14 +1962,6 @@ const hourGlassDefaults: HourGlassControlProps = { defaultClass: MyHourGlass_dft
 function MyHourGlassTab() {
   const [draft, setDraft] = useState<HourGlassControlProps>(hourGlassDefaults)
   const [applied, setApplied] = useState<HourGlassControlProps>(hourGlassDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   const computedHourClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
 
@@ -1992,6 +1984,14 @@ function MyHourGlassTab() {
       returns={<ReturnRow label='className' value={computedHourClass} />}
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type HelpControlProps = {
@@ -2025,14 +2025,6 @@ const helpDefaults: HelpControlProps = {
 function MyHelpTab() {
   const [draft, setDraft] = useState<HelpControlProps>(helpDefaults)
   const [applied, setApplied] = useState<HelpControlProps>(helpDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -2109,6 +2101,14 @@ function MyHelpTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type HelpFieldControlProps = { text: string; className: string; triggerClass: string; tooltipClass: string }
@@ -2125,14 +2125,6 @@ const helpFieldDefaults: HelpFieldControlProps = {
 function MyHelpFieldTab() {
   const [draft, setDraft] = useState<HelpFieldControlProps>(helpFieldDefaults)
   const [applied, setApplied] = useState<HelpFieldControlProps>(helpFieldDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -2169,6 +2161,14 @@ function MyHelpFieldTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type HelpStepControlProps = {
@@ -2204,28 +2204,6 @@ const helpStepDefaults: HelpStepControlProps = {
 function MyHelpStepTab() {
   const [draft, setDraft] = useState<HelpStepControlProps>(helpStepDefaults)
   const [applied, setApplied] = useState<HelpStepControlProps>(helpStepDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  parseList — splits a comma-separated string into trimmed, non-empty items
-  //
-  //  Params:
-  //    s — comma-separated text
-  //
-  //  Returns:
-  //    the trimmed, non-blank items
-  //----------------------------------------------------------------------------------------------
-  function parseList(s: string): string[] {
-    const result = s.split(',').map(x => x.trim()).filter(Boolean)
-    return result
-  }
 
   return (
     <ThreeSection
@@ -2300,6 +2278,28 @@ function MyHelpStepTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  parseList — splits a comma-separated string into trimmed, non-empty items
+  //
+  //  Params:
+  //    s — comma-separated text
+  //
+  //  Returns:
+  //    the trimmed, non-blank items
+  //----------------------------------------------------------------------------------------------
+  function parseList(s: string): string[] {
+    const result = s.split(',').map(x => x.trim()).filter(Boolean)
+    return result
+  }
 }
 
 type TabControlProps = {
@@ -2330,14 +2330,6 @@ function MyTabTab() {
   const [draft, setDraft] = useState<TabControlProps>(tabDefaults)
   const [applied, setApplied] = useState<TabControlProps>(tabDefaults)
   const [active, setActive] = useState(false)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   const dftClass = applied.variant === 'pill'
     ? (active ? applied.pillActiveClass : applied.pillInactiveClass)
@@ -2419,6 +2411,14 @@ function MyTabTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 //
@@ -2482,15 +2482,6 @@ function MySelectMultiTab() {
   const [draft, setDraft] = useState<SelectMultiControlProps>(selectMultiDefaults)
   const [applied, setApplied] = useState<SelectMultiControlProps>(selectMultiDefaults)
   const [selected, setSelected] = useState<string[]>([])
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelected([])
-  }
 
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
   const appliedOptions = applied.optionSet === '20 fruits' ? selectMultiFruitOptions20 : selectMultiFruitOptions6
@@ -2607,6 +2598,15 @@ function MySelectMultiTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelected([])
+  }
 }
 
 type SelectRowsControlProps = {
@@ -2635,14 +2635,6 @@ function MySelectRowsTab() {
   const [draft, setDraft] = useState<SelectRowsControlProps>(selectRowsDefaults)
   const [applied, setApplied] = useState<SelectRowsControlProps>(selectRowsDefaults)
   const [value, setValue] = useState(20)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   const parsedOptions = parseNumberList(applied.options)
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
@@ -2702,6 +2694,14 @@ function MySelectRowsTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }
 
 type PaginationFooterControlProps = {
@@ -2733,15 +2733,6 @@ function MyPaginationFooterTab() {
   const [applied, setApplied] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(20)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setCurrentPage(1)
-  }
 
   const parsedRowsOptions = parseNumberList(applied.rowsOptions)
   const computedClass = myMergeClasses(applied.defaultClass, applied.overrideClass)
@@ -2816,6 +2807,15 @@ function MyPaginationFooterTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setCurrentPage(1)
+  }
 }
 
 type BackHomeNavControlProps = { backPath: string; backLabel: string; homePath: string; containerClass: string; linkClass: string }
@@ -2833,14 +2833,6 @@ const backHomeNavDefaults: BackHomeNavControlProps = {
 function MyBackHomeNavTab() {
   const [draft, setDraft] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
   const [applied, setApplied] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 
   return (
     <ThreeSection
@@ -2888,4 +2880,12 @@ function MyBackHomeNavTab() {
       }
     />
   )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
 }

@@ -351,20 +351,6 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
 }
 
 //----------------------------------------------------------------------------------------------
-//  fmtDate — formats a log timestamp as 'YYYY-MM-DD HH:mm'
-//
-//  Params:
-//    val — a Date or date string
-//
-//  Returns:
-//    the formatted display string
-//----------------------------------------------------------------------------------------------
-function fmtDate(val: Date | string): string {
-  const d = val instanceof Date ? val : new Date(val)
-  return d.toISOString().slice(0, 16).replace('T', ' ')
-}
-
-//----------------------------------------------------------------------------------------------
 //  truncateDisplay — shortens a string to OwnerTableLogging_msgTruncateLen with a trailing …
 //
 //  Params:
@@ -392,6 +378,20 @@ function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): 
   if (view === 'raw') return row.lg_sql_raw
   if (view === 'readable') return row.lg_sql_readable
   return row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
+}
+
+//----------------------------------------------------------------------------------------------
+//  fmtDate — formats a log timestamp as 'YYYY-MM-DD HH:mm'
+//
+//  Params:
+//    val — a Date or date string
+//
+//  Returns:
+//    the formatted display string
+//----------------------------------------------------------------------------------------------
+function fmtDate(val: Date | string): string {
+  const d = val instanceof Date ? val : new Date(val)
+  return d.toISOString().slice(0, 16).replace('T', ' ')
 }
 
 //----------------------------------------------------------------------------------------------

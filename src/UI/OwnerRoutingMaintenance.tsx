@@ -167,49 +167,6 @@ export default function OwnerRoutingMaintenance() {
   }
 
   //----------------------------------------------------------------------------------------------
-  //  handleDeleteRouting — remove a routing row (the table falls back to primary)
-  //
-  //  Params:
-  //    row — the row to remove
-  //----------------------------------------------------------------------------------------------
-  async function handleDeleteRouting(row: table_Routing) {
-    if (!confirm(`Remove routing for "${row.rtg_table}"? It will fall back to primary.`)) return
-    const result = await table_delete({
-      caller: functionName,
-      table: ROUTING_TABLE,
-      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: row.rtg_rtgid }]
-    })
-    if (!result.ok) {
-      setRoutingMessage(`Error: ${result.error}`)
-      return
-    }
-    await fetchRouting()
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleEditRouting — enter edit mode for a routing row
-  //
-  //  Params:
-  //    row — the row to edit
-  //----------------------------------------------------------------------------------------------
-  function handleEditRouting(row: table_Routing) {
-    setEditRtgid(row.rtg_rtgid)
-    setEditTable(row.rtg_table)
-    setEditDbKey(row.rtg_dbkey)
-    setRoutingMessage('')
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleCancelEditRouting — discard in-progress edits and exit edit mode
-  //----------------------------------------------------------------------------------------------
-  function handleCancelEditRouting() {
-    setEditRtgid(null)
-    setEditTable('')
-    setEditDbKey('')
-    setRoutingMessage('')
-  }
-
-  //----------------------------------------------------------------------------------------------
   //  handleSaveEditRouting — persist the in-progress edit for a routing row
   //----------------------------------------------------------------------------------------------
   async function handleSaveEditRouting() {
@@ -232,6 +189,49 @@ export default function OwnerRoutingMaintenance() {
     setEditTable('')
     setEditDbKey('')
     setRoutingMessage('')
+    await fetchRouting()
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleCancelEditRouting — discard in-progress edits and exit edit mode
+  //----------------------------------------------------------------------------------------------
+  function handleCancelEditRouting() {
+    setEditRtgid(null)
+    setEditTable('')
+    setEditDbKey('')
+    setRoutingMessage('')
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleEditRouting — enter edit mode for a routing row
+  //
+  //  Params:
+  //    row — the row to edit
+  //----------------------------------------------------------------------------------------------
+  function handleEditRouting(row: table_Routing) {
+    setEditRtgid(row.rtg_rtgid)
+    setEditTable(row.rtg_table)
+    setEditDbKey(row.rtg_dbkey)
+    setRoutingMessage('')
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleDeleteRouting — remove a routing row (the table falls back to primary)
+  //
+  //  Params:
+  //    row — the row to remove
+  //----------------------------------------------------------------------------------------------
+  async function handleDeleteRouting(row: table_Routing) {
+    if (!confirm(`Remove routing for "${row.rtg_table}"? It will fall back to primary.`)) return
+    const result = await table_delete({
+      caller: functionName,
+      table: ROUTING_TABLE,
+      whereColumnValuePairs: [{ column: 'rtg_rtgid', value: row.rtg_rtgid }]
+    })
+    if (!result.ok) {
+      setRoutingMessage(`Error: ${result.error}`)
+      return
+    }
     await fetchRouting()
   }
 }

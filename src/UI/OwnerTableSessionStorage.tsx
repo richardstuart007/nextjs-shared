@@ -87,17 +87,6 @@ export default function OwnerTableSessionStorage() {
   }
 
   //----------------------------------------------------------------------------------------------
-  //  handleDelete — removes one entry and refreshes
-  //
-  //  Params:
-  //    key — the sessionStorage key to remove
-  //----------------------------------------------------------------------------------------------
-  function handleDelete(key: string) {
-    sessionStorage.removeItem(key)
-    refresh()
-  }
-
-  //----------------------------------------------------------------------------------------------
   //  handleClearAll — removes every currently-listed entry and refreshes
   //----------------------------------------------------------------------------------------------
   function handleClearAll() {
@@ -107,6 +96,17 @@ export default function OwnerTableSessionStorage() {
     //  never saw listed here
     //
     entries.forEach(entry => sessionStorage.removeItem(entry.key))
+    refresh()
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleDelete — removes one entry and refreshes
+  //
+  //  Params:
+  //    key — the sessionStorage key to remove
+  //----------------------------------------------------------------------------------------------
+  function handleDelete(key: string) {
+    sessionStorage.removeItem(key)
     refresh()
   }
 }

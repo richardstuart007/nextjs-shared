@@ -135,52 +135,23 @@ export default function MyPagination({
 }
 
 //----------------------------------------------------------------------------------
-//  PaginationNumber — single clickable (or active) page number cell
+//  generatePagination — builds the page number / ellipsis array for display
 //
 //  Params:
-//    page                — the page number (or '...', handled by the caller instead)
-//    position             —'first'/'last'/'single' to round the outer corner; undefined
-//                           for interior numbers
-//    isActive             — whether this is the current page
-//    setStateCurrentPage — called with page when clicked (numeric pages only)
-//    numberClass, numberActiveClass, numberInactiveClass — style classes
+//    currentPage — current page (1-based)
+//    totalPages  — total page count
+//
+//  Returns:
+//    an array of page numbers and, when there are more pages than fit, '...'
+//    placeholders — full list when totalPages <= 7, otherwise a windowed view
+//    around currentPage with the first/last page always included
 //----------------------------------------------------------------------------------
-function PaginationNumber({
-  page,
-  isActive,
-  position,
-  setStateCurrentPage,
-  numberClass,
-  numberActiveClass,
-  numberInactiveClass
-}: {
-  page: number | string
-  position?: 'first' | 'last' | 'single'
-  isActive: boolean
-  setStateCurrentPage: (value: number) => void
-  numberClass: string
-  numberActiveClass: string
-  numberInactiveClass: string
-}) {
-  const className = [
-    numberClass,
-    position === 'first' || position === 'single' ? 'rounded-l-md' : '',
-    position === 'last' || position === 'single' ? 'rounded-r-md' : '',
-    isActive ? numberActiveClass : '',
-    !isActive ? numberInactiveClass : ''
-  ].join(' ')
-
-  const handleClick = () => {
-    if (typeof page === 'number') {
-      setStateCurrentPage(page)
-    }
-  }
-
-  return (
-    <div className={className} onClick={handleClick}>
-      {page}
-    </div>
-  )
+function generatePagination(currentPage: number, totalPages: number): (number | string)[] {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages]
+  if (currentPage >= totalPages - 3)
+    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
 }
 
 //----------------------------------------------------------------------------------
@@ -228,21 +199,50 @@ function PaginationArrow({
 }
 
 //----------------------------------------------------------------------------------
-//  generatePagination — builds the page number / ellipsis array for display
+//  PaginationNumber — single clickable (or active) page number cell
 //
 //  Params:
-//    currentPage — current page (1-based)
-//    totalPages  — total page count
-//
-//  Returns:
-//    an array of page numbers and, when there are more pages than fit, '...'
-//    placeholders — full list when totalPages <= 7, otherwise a windowed view
-//    around currentPage with the first/last page always included
+//    page                — the page number (or '...', handled by the caller instead)
+//    position             —'first'/'last'/'single' to round the outer corner; undefined
+//                           for interior numbers
+//    isActive             — whether this is the current page
+//    setStateCurrentPage — called with page when clicked (numeric pages only)
+//    numberClass, numberActiveClass, numberInactiveClass — style classes
 //----------------------------------------------------------------------------------
-function generatePagination(currentPage: number, totalPages: number): (number | string)[] {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
-  if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages]
-  if (currentPage >= totalPages - 3)
-    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
+function PaginationNumber({
+  page,
+  isActive,
+  position,
+  setStateCurrentPage,
+  numberClass,
+  numberActiveClass,
+  numberInactiveClass
+}: {
+  page: number | string
+  position?: 'first' | 'last' | 'single'
+  isActive: boolean
+  setStateCurrentPage: (value: number) => void
+  numberClass: string
+  numberActiveClass: string
+  numberInactiveClass: string
+}) {
+  const className = [
+    numberClass,
+    position === 'first' || position === 'single' ? 'rounded-l-md' : '',
+    position === 'last' || position === 'single' ? 'rounded-r-md' : '',
+    isActive ? numberActiveClass : '',
+    !isActive ? numberInactiveClass : ''
+  ].join(' ')
+
+  function handleClick() {
+    if (typeof page === 'number') {
+      setStateCurrentPage(page)
+    }
+  }
+
+  return (
+    <div className={className} onClick={handleClick}>
+      {page}
+    </div>
+  )
 }

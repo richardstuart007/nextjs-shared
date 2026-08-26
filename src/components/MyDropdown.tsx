@@ -131,10 +131,13 @@ export default function MyDropdown<T extends string, U extends string>({
   //  Fetch dropdown options
   //----------------------------------------------------------------------------------------------
   const fetchOptions = useCallback(async () => {
+    //--------------------------------------------------------------------------------------------
+    //  determineRows — returns tableData as-is if supplied, otherwise queries `table` for the
+    //  distinct optionLabel/optionValue columns
     //
-    //  determineRows — returns tableData as-is if supplied, otherwise queries `table`
-    //  for the distinct optionLabel/optionValue columns
-    //
+    //  Returns:
+    //    the rows to build dropdown options from
+    //--------------------------------------------------------------------------------------------
     async function determineRows(): Promise<Array<RowData<T, U>>> {
       //
       //  Passed data
