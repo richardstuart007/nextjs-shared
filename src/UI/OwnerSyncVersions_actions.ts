@@ -2,6 +2,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
 import { resolve, join } from 'path'
+import { execFileSync } from 'child_process'
 
 const GITHUB_DIR = resolve(process.cwd(), '..')
 const TARGETS_FILE = resolve(process.cwd(), 'src', 'UI', 'sync-targets.json')
@@ -228,23 +229,39 @@ function bumpDownPatch(version: string): string {
 }
 
 //----------------------------------------------------------------------------------
-//  action_readLocalPackageVersions — read version from local source for GitHub-referenced packages
+//  action_readLocalPackageVersions — version for GitHub-referenced packages, taken
+//  from the package's own committed package.json (git show HEAD:package.json)
 //
 //  Params:
-//    packages — package names to look up (matched against GITHUB_DIR/<pkg>/package.json)
+//    packages — package names to look up (matched against GITHUB_DIR/<pkg>)
 //
 //  Returns:
-//    a {package: version} map (bumped down one patch — see bumpDownPatch), including
-//    only packages whose local source was found
+//    a {package: version} map — the version on the current commit, i.e. what a
+//    `github:` consumer install actually resolves to. Falls back to the working-copy
+//    package.json version if the git call fails (git missing / not a repo). Only
+//    includes packages whose local repo was found.
 //----------------------------------------------------------------------------------
 export async function action_readLocalPackageVersions(packages: string[]): Promise<Record<string, string>> {
   const result: Record<string, string> = {}
   for (const pkg of packages) {
-    const localPkgPath = join(GITHUB_DIR, pkg, 'package.json')
+    const pkgDir = join(GITHUB_DIR, pkg)
+    const localPkgPath = join(pkgDir, 'package.json')
     if (!existsSync(localPkgPath)) continue
+    //
+    //  Prefer the committed package.json — that's what a `github:` ref resolves to,
+    //  not the working copy (normally one release bump ahead before it's pushed)
+    //
+    try {
+      const committed = execFileSync('git', ['-C', pkgDir, 'show', 'HEAD:package.json'], { encoding: 'utf-8' })
+      const data = JSON.parse(committed) as { version?: string }
+      if (data.version) {
+        result[pkg] = data.version
+        continue
+      }
+    } catch { /* git unavailable or not a repo — fall through to the working copy */ }
     try {
       const data = JSON.parse(readFileSync(localPkgPath, 'utf-8')) as { version?: string }
-      if (data.version) result[pkg] = bumpDownPatch(data.version)
+      if (data.version) result[pkg] = data.version
     } catch { /* skip */ }
   }
   return result
@@ -320,11 +337,17 @@ export async function action_deleteTarget(pkg: string, kind: 'deps' | 'overrides
 //----------------------------------------------------------------------------------
 //  action_syncVersions — update each project's packages to target or npm latest
 //
+//  Params:
+//    packageName — optional; when set, only this one package is synced across all
+//                  projects. Phase 1/2a/2b are limited to it, and the stale-override
+//                  cleanup only considers this package — every other package's
+//                  overrides are left untouched.
+//
 //  Returns:
 //    one SyncResult per project — the human-readable list of changes made and the
 //    resulting .npmrc status ('already set' / 'created' / 'updated')
 //----------------------------------------------------------------------------------
-export async function action_syncVersions(): Promise<SyncResult[]> {
+export async function action_syncVersions(packageName?: string): Promise<SyncResult[]> {
   const projects = discoverProjects()
   const packages = collectPackages(projects)
   const latest = await action_fetchLatestVersions(packages)
@@ -348,6 +371,7 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
       const sec = pkg[section]
       if (!sec) continue
       for (const [dep, cur] of Object.entries(sec)) {
+        if (packageName && dep !== packageName) continue
         if (cur.includes(':')) continue  // skip GitHub/git/file URL references
         const latestVer = latest[dep]
         if (latestVer && latestVer !== '?' && cur !== latestVer) {
@@ -359,6 +383,7 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
 
     // Phase 2a — dep targets: pin directly in whichever dep section the package lives in
     for (const [dep, targetVer] of Object.entries(targets.deps)) {
+      if (packageName && dep !== packageName) continue
       const directSection = (['dependencies', 'devDependencies', 'peerDependencies'] as const)
         .find(s => pkg[s]?.[dep] != null)
       if (!directSection) continue
@@ -377,6 +402,7 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
     const newOverrides: Record<string, string> = { ...(pkg.overrides ?? {}) }
 
     for (const [dep, targetVer] of Object.entries(targets.overrides)) {
+      if (packageName && dep !== packageName) continue
       const isInProject =
         (['dependencies', 'devDependencies', 'peerDependencies'] as const).some(s => pkg[s]?.[dep] != null) ||
         pkg.overrides?.[dep] != null
@@ -388,7 +414,9 @@ export async function action_syncVersions(): Promise<SyncResult[]> {
     }
 
     // Remove overrides for packages no longer in override targets
+    // (when scoped to one package, only that package is eligible for removal)
     for (const dep of Object.keys(newOverrides)) {
+      if (packageName && dep !== packageName) continue
       if (!targets.overrides[dep]) {
         delete newOverrides[dep]
         allChanges.push(`${dep}: override removed`)

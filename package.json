@@ -1,6 +1,6 @@
 {
   "name": "nextjs-shared",
-  "version": "2.1.84",
+  "version": "2.1.85",
   "description": "Shared Next.js package — DB access, UI components, caching, admin panels, and schema tools",
   "private": true,
   "scripts": {
@@ -13,25 +13,25 @@
     "@neondatabase/serverless": "1.1.0",
     "clsx": "2.1.1",
     "csv-parser": "3.2.1",
-    "nuqs": "2.9.2",
-    "pg": "8.21.0"
+    "nuqs": "2.10.1",
+    "pg": "8.23.0"
   },
   "devDependencies": {
     "@tailwindcss/forms": "0.5.11",
-    "@tailwindcss/postcss": "4.3.1",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "25.9.3",
-    "@types/pg": "8.20.0",
-    "@types/react": "19.2.17",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.2.18",
     "next": "16.2.9",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "tailwindcss": "4.3.1",
-    "tsx": "4.22.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.13",
     "typescript": "6.0.3"
   },
   "peerDependencies": {
     "next": "16.2.9",
-    "react": "19.2.7"
+    "react": "19.2.8"
   },
   "overrides": {
     "postcss": "8.5.10"

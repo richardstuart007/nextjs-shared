@@ -10,6 +10,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
+import { MyHelp } from '../components/MyHelp'
 import {
   action_syncVersions,
   action_readVersions,
@@ -35,6 +36,34 @@ const SECTION_LABELS: Record<string, string> = {
   p: 'peerDependencies',
   o: 'overrides',
 }
+
+//
+//  Compact "?" trigger for the column-heading MyHelp popovers — sized down to fit the text-xxs header row
+//
+const HELP_BUTTON_CLASS = 'text-xxs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1 leading-none'
+
+//
+//  MyHelp_panelDftClass + right-0 so the Sync column's popover (far-right column) opens leftward and stays on-screen
+//
+const SYNC_HELP_PANEL_CLASS = 'absolute right-0 z-10 mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs space-y-2 max-w-md shadow-md'
+
+const HELP_LATEST =
+  'Newest version published to the npm registry right now (live lookup; for nextjs-shared, the local source version minus one patch = last published release). Independent of your projects — a project column only shows this value after a Sync brings it up to date, so rows normally sit behind it.'
+const HELP_INSTALLED =
+  'The version actually resolved into node_modules (the highest across all project columns). Project cells show the declared package.json spec instead, so they only match this where the project exact-pins and has been npm install-ed; ranges (^, ~) and stale installs make them differ.'
+const HELP_DEP =
+  'Optional pin: the version to set for this package in its dependencies / devDependencies / peerDependencies section on Sync. Blank = Sync uses npm latest.'
+const HELP_OVERRIDE =
+  'Optional pin: the version to force via the package.json "overrides" block on Sync. Blank = no override.'
+const HELP_SYNC_ROW =
+  "Runs Sync for just this one package across every project: writes its Dep target (or Override target, or npm latest if neither is set) into each project's package.json, then reinstall the changed projects. The button colour is that row's biggest version gap — red = a major behind, orange = minor, amber = patch, blue = already aligned. It turns blue after a successful Sync."
+const HELP_SYNC_ALL =
+  "Same as a per-row Sync but for every package at once — brings all projects' package.json up to each package's Dep/Override target or npm latest in one pass, then reinstall each changed project."
+
+//
+//  Severity ranking so a row's worst version gap can be picked out (major beats minor beats patch)
+//
+const DIFF_RANK: Record<'major' | 'minor' | 'patch', number> = { major: 3, minor: 2, patch: 1 }
 
 export default function OwnerSyncVersions() {
   const [matrix, setMatrix] = useState<VersionMatrix | null>(null)
@@ -99,6 +128,30 @@ export default function OwnerSyncVersions() {
     }
   }
 
+  //
+  //  Per-project count of packages whose declared version matches the reference but whose
+  //  node_modules is still behind — i.e. the purple "needs npm install" cells. Drives the
+  //  #reinstall header row. URL-referenced packages (nextjs-shared) never count.
+  //
+  const reinstallCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const proj of projects) counts[proj] = 0
+    for (const pkg of packages) {
+      const reference = targets.deps[pkg] ?? targets.overrides[pkg] ?? latest?.[pkg]
+      if (reference == null) continue
+      const refBase = extractBaseVersion(reference)
+      for (const proj of projects) {
+        const ver = matrix?.[proj]?.[pkg] ?? null
+        if (ver === null || ver.includes(':')) continue
+        if (ver !== reference) continue
+        const instVer = installed?.[proj]?.[pkg] ?? null
+        const isInstalled = instVer != null && semverCompare(instVer, refBase) >= 0
+        if (!isInstalled) counts[proj] += 1
+      }
+    }
+    return counts
+  }, [projects, packages, matrix, installed, latest, targets])
+
   return (
     <div className='p-4'>
       <div className='w-fit'>
@@ -113,10 +166,11 @@ export default function OwnerSyncVersions() {
               : `Updated ${syncResults.filter(r => r.changes.length > 0).length} project(s)`}
           </span>
         )}
-        <div className='ml-auto'>
+        <div className='ml-auto flex items-center gap-1'>
           <MyButton onClick={handleSync} disabled={syncing || !matrix} overrideClass='bg-red-600 hover:bg-red-700'>
             {syncing ? 'Syncing...' : 'Sync'}
           </MyButton>
+          <MyHelp text={HELP_SYNC_ALL} />
         </div>
       </div>
       <div className='flex items-center gap-4 mb-4 text-xxs'>
@@ -154,15 +208,41 @@ export default function OwnerSyncVersions() {
             <thead>
               <tr className='bg-yellow-100 text-left'>
                 <th className='w-44 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Package</th>
-                <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Latest</th>
-                <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>Installed</th>
-                <th className='w-28 px-2 py-1 font-bold text-blue-600 border border-gray-200'>Dep</th>
-                <th className='w-28 px-2 py-1 font-bold text-amber-600 border border-gray-200'>Override</th>
+                <th className='w-24 px-2 py-1 font-bold text-gray-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    Latest
+                    <MyHelp text={HELP_LATEST} buttonClass={HELP_BUTTON_CLASS} />
+                  </span>
+                </th>
+                <th className='w-24 px-2 py-1 font-bold text-gray-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    Installed
+                    <MyHelp text={HELP_INSTALLED} buttonClass={HELP_BUTTON_CLASS} />
+                  </span>
+                </th>
+                <th className='w-28 px-2 py-1 font-bold text-blue-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    Dep
+                    <MyHelp text={HELP_DEP} buttonClass={HELP_BUTTON_CLASS} />
+                  </span>
+                </th>
+                <th className='w-28 px-2 py-1 font-bold text-amber-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    Override
+                    <MyHelp text={HELP_OVERRIDE} buttonClass={HELP_BUTTON_CLASS} />
+                  </span>
+                </th>
                 {projects.map(p => (
                   <th key={p} className={`w-32 px-2 py-1 font-bold border border-gray-200 ${parseErrors.includes(p) ? 'text-red-600' : 'text-gray-600'}`}>
                     {p}{parseErrors.includes(p) ? ' !' : ''}
                   </th>
                 ))}
+                <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    Sync
+                    <MyHelp text={HELP_SYNC_ROW} buttonClass={HELP_BUTTON_CLASS} panelClass={SYNC_HELP_PANEL_CLASS} />
+                  </span>
+                </th>
               </tr>
               <tr className='bg-yellow-100 text-left'>
                 <th className='px-2 py-1 font-bold text-gray-600 border border-gray-200'>Version</th>
@@ -175,6 +255,20 @@ export default function OwnerSyncVersions() {
                     {projectVersions[proj] ?? ''}
                   </th>
                 ))}
+                <th className='px-2 py-1 border border-gray-200'></th>
+              </tr>
+              <tr className='bg-yellow-100 text-left'>
+                <th className='px-2 py-1 font-bold text-gray-600 border border-gray-200'>#reinstall</th>
+                <th className='px-2 py-1 border border-gray-200'></th>
+                <th className='px-2 py-1 border border-gray-200'></th>
+                <th className='px-2 py-1 border border-gray-200'></th>
+                <th className='px-2 py-1 border border-gray-200'></th>
+                {projects.map(proj => (
+                  <th key={proj} className='px-2 py-1 font-semibold text-purple-600 border border-gray-200'>
+                    {reinstallCounts[proj] > 0 ? `⟳ ${reinstallCounts[proj]}` : ''}
+                  </th>
+                ))}
+                <th className='px-2 py-1 border border-gray-200'></th>
               </tr>
             </thead>
             <tbody>
@@ -188,6 +282,49 @@ export default function OwnerSyncVersions() {
                 const reference = depTarget ?? overrideTarget ?? latestVer
                 const localVer = localVersions[pkg]
                 const displayLatest = localVer ?? latestVer
+
+                //
+                //  Row-level scan of every project cell:
+                //    worstDiff       — biggest version gap, drives the Sync button colour
+                //    syncWouldChange — whether a Sync would actually rewrite any project's
+                //                      package.json for this package; when false the row's
+                //                      Sync button is hidden entirely (nothing to do)
+                //
+                //  A URL-referenced dep (e.g. nextjs-shared) is only rewritten by Sync when a
+                //  target is set to replace the URL, so it counts toward syncWouldChange only then.
+                //
+                let worstDiff: 'major' | 'minor' | 'patch' | null = null
+                let syncWouldChange = false
+                for (const proj of projects) {
+                  const projVer = matrix[proj]?.[pkg] ?? null
+                  if (projVer === null) continue
+                  const projInst = installed?.[proj]?.[pkg] ?? null
+                  let d: 'major' | 'minor' | 'patch' | 'same' | null = null
+                  if (projVer.includes(':')) {
+                    if (localVer != null && projInst != null && projInst !== localVer) d = versionDiff(projInst, localVer)
+                    if ((depTarget != null || overrideTarget != null) && reference != null && projVer !== reference) syncWouldChange = true
+                  } else if (reference != null && projVer !== reference) {
+                    syncWouldChange = true
+                    d = versionDiff(projVer, reference)
+                  }
+                  if (d != null && d !== 'same' && (worstDiff === null || DIFF_RANK[d] > DIFF_RANK[worstDiff])) worstDiff = d
+                }
+                //
+                //  md: variants are repeated because MyButton's default class is 'h-6 md:h-8' /
+                //  'px-1 md:px-2' — a bare h-4/px-1.5 only replaces the non-variant half
+                //
+                //
+                //  Severity palette — red / orange / yellow, kept in step with the cell text
+                //  colours below and the Major/Minor/Patch filter chips. Patch (yellow) button
+                //  gets dark text since white on yellow-500 is unreadable.
+                //
+                const syncBtnSize = 'h-6 md:h-6 px-1.5 md:px-1.5 text-xxs'
+                const syncBtnClass =
+                  worstDiff === 'major' ? `${syncBtnSize} bg-red-600 hover:bg-red-700` :
+                  worstDiff === 'minor' ? `${syncBtnSize} bg-orange-500 hover:bg-orange-600` :
+                  worstDiff === 'patch' ? `${syncBtnSize} bg-yellow-500 hover:bg-yellow-600 text-gray-900` :
+                  syncBtnSize
+
                 const dataRow = (
                   <tr key={pkg} className='odd:bg-white even:bg-gray-50'>
                     <td className='px-2 py-0.5 font-mono text-gray-700 border border-gray-200'>{pkg}</td>
@@ -236,7 +373,7 @@ export default function OwnerSyncVersions() {
                           if (highlighted) {
                             urlMismatchClass =
                               diff === 'major' ? 'text-red-600 font-semibold' :
-                              diff === 'minor' ? 'text-orange-600 font-semibold' : 'text-amber-600 font-semibold'
+                              diff === 'minor' ? 'text-orange-500 font-semibold' : 'text-yellow-500 font-semibold'
                           } else {
                             urlMismatchClass = 'font-bold text-gray-400'
                           }
@@ -274,7 +411,7 @@ export default function OwnerSyncVersions() {
                         if (highlighted) {
                           mismatchClass =
                             diff === 'major' ? 'text-red-600 font-semibold' :
-                            diff === 'minor' ? 'text-orange-600 font-semibold' : 'text-amber-600 font-semibold'
+                            diff === 'minor' ? 'text-orange-500 font-semibold' : 'text-yellow-500 font-semibold'
                         } else {
                           mismatchClass = 'font-bold text-gray-400'
                         }
@@ -299,11 +436,22 @@ export default function OwnerSyncVersions() {
                         </td>
                       )
                     })}
+                    <td className='px-1 py-0.5 border border-gray-200 text-center'>
+                      {syncWouldChange && (
+                        <MyButton
+                          onClick={() => handleSyncPackage(pkg)}
+                          disabled={syncing}
+                          overrideClass={syncBtnClass}
+                        >
+                          Sync
+                        </MyButton>
+                      )}
+                    </td>
                   </tr>
                 )
                 return showHeader ? [
                   <tr key={`section-${pkgSection}`} className='bg-gray-200'>
-                    <td colSpan={5 + projects.length} className='px-2 py-0.5 font-bold text-gray-600 text-xxs'>
+                    <td colSpan={6 + projects.length} className='px-2 py-0.5 font-bold text-gray-600 text-xxs'>
                       {SECTION_LABELS[pkgSection] ?? pkgSection}
                     </td>
                   </tr>,
@@ -369,6 +517,36 @@ export default function OwnerSyncVersions() {
     const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
     const urlPackages = packages.filter(pkg =>
       Object.values(m).some(row => row[pkg]?.includes(':'))
+    )
+    const [l, lv] = await Promise.all([
+      action_fetchLatestVersions(packages),
+      action_readLocalPackageVersions(urlPackages),
+    ])
+    setLatest(l)
+    setLocalVersions(lv)
+    setSyncing(false)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleSyncPackage — same as handleSync but scoped to a single package across all projects
+  //
+  //  Params:
+  //    pkg — the package name to sync (its Dep/Override target if set, else npm latest)
+  //----------------------------------------------------------------------------------------------
+  async function handleSyncPackage(pkg: string) {
+    setSyncing(true)
+    setSyncResults(null)
+    const results = await action_syncVersions(pkg)
+    setSyncResults(results)
+    const [vr, ins, sec] = await Promise.all([action_readVersions(), action_readInstalledVersions(), action_readSections()])
+    const { matrix: m, parseErrors: pe } = vr
+    setMatrix(m)
+    setParseErrors(pe)
+    setInstalled(ins)
+    setSections(sec)
+    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
+    const urlPackages = packages.filter(p =>
+      Object.values(m).some(row => row[p]?.includes(':'))
     )
     const [l, lv] = await Promise.all([
       action_fetchLatestVersions(packages),
