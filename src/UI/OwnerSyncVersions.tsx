@@ -59,6 +59,8 @@ const HELP_SYNC_ROW =
   "Runs Sync for just this one package across every project: writes its Dep target (or Override target, or npm latest if neither is set) into each project's package.json, then reinstall the changed projects. The button colour is that row's biggest version gap — red = a major behind, orange = minor, amber = patch, blue = already aligned. It turns blue after a successful Sync."
 const HELP_SYNC_ALL =
   "Same as a per-row Sync but for every package at once — brings all projects' package.json up to each package's Dep/Override target or npm latest in one pass, then reinstall each changed project."
+const HELP_VERSION_BUMP =
+  'Does a #plan, #reinstall and #commit to implement the latest nextjs-shared code.'
 
 //
 //  Severity ranking so a row's worst version gap can be picked out (major beats minor beats patch)
@@ -77,6 +79,7 @@ export default function OwnerSyncVersions() {
   const [syncing, setSyncing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [parseErrors, setParseErrors] = useState<string[]>([])
+  const [refreshError, setRefreshError] = useState<string | null>(null)
   const [filterMajor, setFilterMajor] = useState(true)
   const [filterMinor, setFilterMinor] = useState(true)
   const [filterPatch, setFilterPatch] = useState(true)
@@ -159,6 +162,9 @@ export default function OwnerSyncVersions() {
         <MyButton onClick={handleRefresh} disabled={refreshing}>
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </MyButton>
+        {refreshError && (
+          <span className='text-xxs text-red-600'>{refreshError}</span>
+        )}
         {syncResults && (
           <span className='text-xxs text-gray-500'>
             {syncResults.every(r => r.changes.length === 0)
@@ -258,7 +264,12 @@ export default function OwnerSyncVersions() {
                 <th className='px-2 py-1 border border-gray-200'></th>
               </tr>
               <tr className='bg-yellow-100 text-left'>
-                <th className='px-2 py-1 font-bold text-gray-600 border border-gray-200'>#reinstall</th>
+                <th className='px-2 py-1 font-bold text-gray-600 border border-gray-200'>
+                  <span className='inline-flex items-center gap-1'>
+                    #version-bump
+                    <MyHelp text={HELP_VERSION_BUMP} buttonClass={HELP_BUTTON_CLASS} />
+                  </span>
+                </th>
                 <th className='px-2 py-1 border border-gray-200'></th>
                 <th className='px-2 py-1 border border-gray-200'></th>
                 <th className='px-2 py-1 border border-gray-200'></th>
@@ -478,25 +489,35 @@ export default function OwnerSyncVersions() {
   //----------------------------------------------------------------------------------------------
   async function handleRefresh() {
     setRefreshing(true)
-    const [vr, t, ins, pv, sec] = await Promise.all([action_readVersions(), action_readTargets(), action_readInstalledVersions(), action_readProjectVersions(), action_readSections()])
-    const { matrix: m, parseErrors: pe } = vr
-    setMatrix(m)
-    setParseErrors(pe)
-    setTargets(t)
-    setInstalled(ins)
-    setProjectVersions(pv)
-    setSections(sec)
-    const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
-    const urlPackages = packages.filter(pkg =>
-      Object.values(m).some(row => row[pkg]?.includes(':'))
-    )
-    const [l, lv] = await Promise.all([
-      action_fetchLatestVersions(packages),
-      action_readLocalPackageVersions(urlPackages),
-    ])
-    setLatest(l)
-    setLocalVersions(lv)
-    setRefreshing(false)
+    setRefreshError(null)
+    try {
+      const [vr, t, ins, pv, sec] = await Promise.all([action_readVersions(), action_readTargets(), action_readInstalledVersions(), action_readProjectVersions(), action_readSections()])
+      const { matrix: m, parseErrors: pe } = vr
+      setMatrix(m)
+      setParseErrors(pe)
+      setTargets(t)
+      setInstalled(ins)
+      setProjectVersions(pv)
+      setSections(sec)
+      const packages = [...new Set(Object.values(m).flatMap(row => Object.keys(row)))].sort()
+      const urlPackages = packages.filter(pkg =>
+        Object.values(m).some(row => row[pkg]?.includes(':'))
+      )
+      const [l, lv] = await Promise.all([
+        action_fetchLatestVersions(packages),
+        action_readLocalPackageVersions(urlPackages),
+      ])
+      setLatest(l)
+      setLocalVersions(lv)
+    } catch (error) {
+      //
+      //  Any read/fetch failing used to leave the button stuck on "Refreshing..." forever
+      //  (no finally) with the Latest column blank — surface it and let finally reset the button
+      //
+      setRefreshError('Refresh failed (' + (error as Error).message + ') — click Refresh to retry')
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   //----------------------------------------------------------------------------------------------

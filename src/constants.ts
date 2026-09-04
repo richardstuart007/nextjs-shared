@@ -265,6 +265,11 @@ export const MyToggle_dftClass = [
 export const MyToggle_labelDftClass = 'inline-flex items-center cursor-pointer'
 
 //
+//  OwnerSyncVersions
+//
+export const OwnerSyncVersions_npmRegistryFetchTimeoutMs = 5000
+
+//
 //  OwnerTableCache
 //
 export const OwnerTableCache_tablesBadgeVisibleCount = 3

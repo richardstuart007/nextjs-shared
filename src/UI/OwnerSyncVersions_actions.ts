@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
 import { resolve, join } from 'path'
 import { execFileSync } from 'child_process'
+import { OwnerSyncVersions_npmRegistryFetchTimeoutMs } from '../constants'
 
 const GITHUB_DIR = resolve(process.cwd(), '..')
 const TARGETS_FILE = resolve(process.cwd(), 'src', 'UI', 'sync-targets.json')
@@ -199,6 +200,7 @@ export async function action_fetchLatestVersions(packages: string[]): Promise<Re
         const encoded = pkg.startsWith('@') ? pkg.replace('/', '%2F') : pkg
         const res = await fetch(`https://registry.npmjs.org/${encoded}/latest`, {
           next: { revalidate: 0 },
+          signal: AbortSignal.timeout(OwnerSyncVersions_npmRegistryFetchTimeoutMs),
         })
         const data = await res.json() as { version: string }
         return [pkg, data.version] as const
