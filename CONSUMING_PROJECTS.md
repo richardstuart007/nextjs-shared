@@ -264,7 +264,7 @@ All are React client components. Import individually.
 | `nextjs-shared/useLazyFetch` | Fetches on mount (or on demand) with `data`/`loaded`/`loading`/`error` state, re-fetching when `deps` change — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
-| `nextjs-shared/MyInputNumeric` | Numeric input — min/max (error-state styling on violation, not clamped), decimals/integerOnly filtering, blur-formats to fixed decimal places (e.g. `47` → `47.00`), spin arrows hidden by default, no negative values |
+| `nextjs-shared/MyInputNumeric` | Numeric input — min/max (error-state styling on violation, or clamped to bounds on blur via `clampOnBlur`), decimals/integerOnly filtering, blur-formats to fixed decimal places (e.g. `47` → `47.00`), spin arrows hidden by default, no negative values |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch — retained only until consuming projects migrate to `MySelect`/`MySelectTable`; do not use in new code |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) for pre-supplied options; optional search + blank option |
 | `nextjs-shared/MySelectTable` | Labelled select whose options are always fetched from a DB table (like `MyDropdown`, but table-only — no `tableData` path) |
@@ -428,7 +428,7 @@ prop list, a second header with that detail. Import each by name, e.g.
 |---|---|
 | `MyButton` | Standard button |
 | `MyInput` | Text input |
-| `MyInputNumeric` | Numeric input with min/max, decimals/integerOnly filtering, blur-formats to fixed decimal places, no negative values |
+| `MyInputNumeric` | Numeric input with min/max (optionally clamped on blur via `clampOnBlur`), decimals/integerOnly filtering, blur-formats to fixed decimal places, no negative values |
 | `MyTextarea` | Textarea |
 | `MySelect` | Labelled select for pre-supplied options (`options` or `children`); use `MySelectTable` instead when options come from a DB table |
 | `MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars |

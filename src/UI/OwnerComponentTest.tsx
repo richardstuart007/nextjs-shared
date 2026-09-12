@@ -517,6 +517,7 @@ type InputNumericProps = {
   max: string
   decimals: string
   integerOnly: boolean
+  clampOnBlur: boolean
   overrideClass: string
   errorClass: string
   disabled: boolean
@@ -526,6 +527,7 @@ const inputNumericDefaults: InputNumericProps = {
   max: '',
   decimals: '',
   integerOnly: false,
+  clampOnBlur: false,
   overrideClass: '',
   errorClass: MyInputNumeric_errorDftClass,
   disabled: false,
@@ -560,6 +562,9 @@ function MyInputNumericTab() {
           <ControlRow label='integerOnly'>
             <input type='checkbox' checked={draft.integerOnly} onChange={e => setDraft(d => ({ ...d, integerOnly: e.target.checked }))} />
           </ControlRow>
+          <ControlRow label='clampOnBlur'>
+            <input type='checkbox' checked={draft.clampOnBlur} onChange={e => setDraft(d => ({ ...d, clampOnBlur: e.target.checked }))} />
+          </ControlRow>
           <ControlRow label='overrideClass'>
             <MyTextarea
               value={draft.overrideClass}
@@ -588,6 +593,7 @@ function MyInputNumericTab() {
           max={maxNum}
           decimals={decimalsNum}
           integerOnly={applied.integerOnly}
+          clampOnBlur={applied.clampOnBlur}
           disabled={applied.disabled}
           overrideClass={applied.overrideClass}
           errorClass={applied.errorClass || undefined}

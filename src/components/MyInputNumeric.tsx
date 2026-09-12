@@ -8,13 +8,18 @@
 //    Parameters:
 //      value          — current numeric value, or '' when the field is empty
 //      onChange       — called with the parsed number, or null when the field is empty
-//      min            — optional minimum; violating it shows errorClass but does not clamp/block
-//      max            — optional maximum; violating it shows errorClass but does not clamp/block
+//      min            — optional minimum; violating it shows errorClass but does not clamp/block,
+//                       unless clampOnBlur is set
+//      max            — optional maximum; violating it shows errorClass but does not clamp/block,
+//                       unless clampOnBlur is set
 //      decimals       — optional cap on digits allowed after the decimal point; also the number of
 //                       digits the displayed value is padded/formatted to once the field is blurred
 //                       (e.g. 47 → "47.00"); 0 rejects the decimal point keystroke entirely (same
 //                       as integerOnly); omitted = unlimited decimals, no blur formatting
 //      integerOnly    — rejects the decimal point keystroke entirely; same effect as decimals=0
+//      clampOnBlur    — when true, a value outside [min, max] is corrected to the nearest bound on
+//                       blur (via onChange) instead of being left in place with errorClass styling;
+//                       defaults to false. Has no effect unless min and/or max is also set.
 //      overrideClass  — caller classes merged over MyInputNumeric_dftClass via myMergeClasses
 //      errorClass     — classes appended when value is outside min/max; defaults to
 //                       MyInputNumeric_errorDftClass
@@ -34,6 +39,15 @@
 //    `value` would strip the trailing "." or "0" the user just typed on every keystroke.
 //
 //    Spin arrows are always hidden — there is no opt-back-in prop.
+//
+//    clampOnBlur only corrects a value already outside [min, max] on blur — it does not fill in a
+//    default when the field is left empty. A caller wanting "empty on blur becomes some default"
+//    still handles that themselves via their own onBlur, same as before this prop existed.
+//
+//  3) CHANGE HISTORY
+//    2026-09-12 — added optional clampOnBlur prop: corrects an out-of-range value to the nearest
+//                 min/max bound on blur instead of only flagging it via errorClass; defaults to
+//                 false, so existing consumers are unaffected
 //==============================================================================================
 
 import { useEffect, useState } from 'react'
@@ -47,6 +61,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChan
   max?: number
   decimals?: number
   integerOnly?: boolean
+  clampOnBlur?: boolean
   overrideClass?: string
   errorClass?: string
 }
@@ -64,6 +79,7 @@ export function MyInputNumeric({
   max,
   decimals,
   integerOnly = false,
+  clampOnBlur = false,
   overrideClass = '',
   errorClass = MyInputNumeric_errorDftClass,
   onKeyDown,
@@ -152,13 +168,25 @@ export function MyInputNumeric({
   }
 
   //----------------------------------------------------------------------------------------------
-  //  handleBlur — reformats the display to `decimals` places (e.g. 47 → "47.00")
+  //  handleBlur — reformats the display to `decimals` places (e.g. 47 → "47.00"); when
+  //  clampOnBlur is set, first corrects an out-of-range value to the nearest min/max bound
   //
   //  Params:
   //    e — the blur event; forwarded to the caller's own onBlur, if supplied
   //----------------------------------------------------------------------------------------------
   function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
     setIsFocused(false)
+    if (clampOnBlur && value !== '' && (min !== undefined || max !== undefined)) {
+      let clamped = value
+      if (min !== undefined) clamped = Math.max(min, clamped)
+      if (max !== undefined) clamped = Math.min(max, clamped)
+      if (clamped !== value) {
+        onChange(clamped)
+        setDisplayValue(formatValue(clamped))
+        onBlur?.(e)
+        return
+      }
+    }
     setDisplayValue(formatValue(value))
     onBlur?.(e)
   }
