@@ -8,10 +8,11 @@
 //      totalPages          — total page count
 //      statecurrentPage    — current page (1-based)
 //      setStateCurrentPage — called with the newly-selected page
-//      defaultClass, overrideClass, numbersContainerClass, ellipsisClass, numberClass,
+//      overrideClass, numbersContainerClass, ellipsisClass, numberClass,
 //      numberActiveClass, numberInactiveClass, arrowClass, arrowDisabledClass,
 //      arrowEnabledClass, arrowIconClass — style overrides for each sub-element, merged over
-//        their MyPagination_*Class defaults
+//        their MyPagination_*Class defaults (the main wrapper always uses
+//        MyPagination_dftClass, merged with overrideClass)
 //
 //  2) NOTES
 //    The first/last page-number cell's rounded-l-md/rounded-r-md corner rounding, and the
@@ -38,7 +39,6 @@ type PaginationProps = {
   totalPages: number
   statecurrentPage: number
   setStateCurrentPage: (value: number) => void
-  defaultClass?: string
   overrideClass?: string
   numbersContainerClass?: string
   ellipsisClass?: string
@@ -55,7 +55,6 @@ export default function MyPagination({
   totalPages,
   statecurrentPage,
   setStateCurrentPage,
-  defaultClass = MyPagination_dftClass,
   overrideClass = '',
   numbersContainerClass = MyPagination_numbersContainerClass,
   ellipsisClass = MyPagination_ellipsisClass,
@@ -68,7 +67,7 @@ export default function MyPagination({
   arrowIconClass = MyPagination_arrowIconClass
 }: PaginationProps) {
   const allPages = generatePagination(statecurrentPage, totalPages)
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyPagination_dftClass, overrideClass)
 
   //--------------------------------------------------------------------------------------------
   // Render MyPagination

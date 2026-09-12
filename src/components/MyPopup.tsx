@@ -11,8 +11,7 @@
 //      children              — popup body content
 //      closeOnBackdropClick  — when true, clicking the overlay outside the panel also
 //                              calls onClose; defaults to false
-//      defaultClass          — panel base classes; defaults to MyPopup_dftClass
-//      overrideClass         — caller classes merged over defaultClass
+//      overrideClass         — caller classes merged over MyPopup_dftClass
 //      overlayClass          — full-screen backdrop classes; defaults to
 //                              MyPopup_overlayDftClass
 //      closeButtonClass      — close button classes; defaults to
@@ -35,7 +34,6 @@ type Props = {
   onClose: () => void
   children: ReactNode
   closeOnBackdropClick?: boolean
-  defaultClass?: string
   overrideClass?: string
   overlayClass?: string
   closeButtonClass?: string
@@ -46,14 +44,13 @@ export default function MyPopup({
   onClose,
   children,
   closeOnBackdropClick = false,
-  defaultClass = MyPopup_dftClass,
   overrideClass = '',
   overlayClass = MyPopup_overlayDftClass,
   closeButtonClass = MyPopup_closeButtonDftClass,
 }: Props) {
   if (!isOpen) return null
 
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyPopup_dftClass, overrideClass)
 
   return (
     <div className={overlayClass} onClick={closeOnBackdropClick ? onClose : undefined}>

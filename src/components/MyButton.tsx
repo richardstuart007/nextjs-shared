@@ -6,8 +6,7 @@
 //
 //    Parameters:
 //      children      — button contents
-//      defaultClass  — base Tailwind classes; defaults to MyButton_dftClass
-//      overrideClass — caller classes merged over defaultClass via myMergeClasses
+//      overrideClass — caller classes merged over MyButton_dftClass via myMergeClasses
 //      ...rest       — all other standard <button> attributes, passed through
 //==============================================================================================
 
@@ -16,12 +15,11 @@ import { MyButton_dftClass } from '../constants'
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode
-  defaultClass?: string
   overrideClass?: string
 }
 
-export function MyButton({ children, defaultClass = MyButton_dftClass, overrideClass = '', ...rest }: Props) {
-  const className = myMergeClasses(defaultClass, overrideClass)
+export function MyButton({ children, overrideClass = '', ...rest }: Props) {
+  const className = myMergeClasses(MyButton_dftClass, overrideClass)
   //
   //  Output
   //

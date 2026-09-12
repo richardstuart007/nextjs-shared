@@ -10,8 +10,8 @@
 //      options        — rows-per-page choices; defaults to MySelectRows_optionsDftShared
 //      label          — optional label text
 //      id             — <select> id; auto-derived from label if omitted (see MySelect)
-//      defaultClass   — <select> base classes; defaults to MySelectRows_dftClass
-//      overrideClass  — caller classes merged over defaultClass
+//      overrideClass  — caller classes merged over MySelect_dftClass, narrowed to
+//                       MySelectRows_widthClass unless overrideClass itself sets a width
 //      labelClass     — label classes; defaults to MySelect_labelDftClass
 //      containerClass — wrapper classes; defaults to MySelect_containerDftClass
 //
@@ -25,9 +25,10 @@
 //==============================================================================================
 
 import MySelect from './MySelect'
+import { myMergeClasses } from './MyMergeClasses'
 import {
   MySelectRows_optionsDftShared,
-  MySelectRows_dftClass,
+  MySelectRows_widthClass,
   MySelectRows_staticTextClass,
   MySelect_labelDftClass,
   MySelect_containerDftClass
@@ -39,7 +40,6 @@ type Props = {
   options?: readonly number[]
   label?: string
   id?: string
-  defaultClass?: string
   overrideClass?: string
   labelClass?: string
   containerClass?: string
@@ -51,8 +51,7 @@ export default function MySelectRows({
   options = MySelectRows_optionsDftShared,
   label,
   id,
-  defaultClass = MySelectRows_dftClass,
-  overrideClass,
+  overrideClass = '',
   labelClass = MySelect_labelDftClass,
   containerClass = MySelect_containerDftClass
 }: Props) {
@@ -67,14 +66,15 @@ export default function MySelectRows({
     )
   }
 
+  const narrowedOverrideClass = myMergeClasses(MySelectRows_widthClass, overrideClass)
+
   return (
     <MySelect
       label={label}
       id={id}
       value={value}
       onChange={e => onChange(parseInt(e.target.value, 10))}
-      defaultClass={defaultClass}
-      overrideClass={overrideClass}
+      overrideClass={narrowedOverrideClass}
       labelClass={labelClass}
       containerClass={containerClass}
     >

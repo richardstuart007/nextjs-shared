@@ -264,6 +264,7 @@ All are React client components. Import individually.
 | `nextjs-shared/useLazyFetch` | Fetches on mount (or on demand) with `data`/`loaded`/`loading`/`error` state, re-fetching when `deps` change — see usage below |
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
+| `nextjs-shared/MyInputNumeric` | Numeric input — min/max (error-state styling on violation, not clamped), decimals/integerOnly filtering, blur-formats to fixed decimal places (e.g. `47` → `47.00`), spin arrows hidden by default, no negative values |
 | `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch — retained only until consuming projects migrate to `MySelect`/`MySelectTable`; do not use in new code |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) for pre-supplied options; optional search + blank option |
 | `nextjs-shared/MySelectTable` | Labelled select whose options are always fetched from a DB table (like `MyDropdown`, but table-only — no `tableData` path) |
@@ -401,24 +402,11 @@ a tab or panel that only fetches once opened, or a "Refresh" button). The hook's
 (`src/components/useLazyFetch.ts`) documents the full `Params:`/`Returns:` shape, including its
 stale-request-discard and error-handling behavior.
 
-### Project-wide defaults (`defaultClass` pattern)
-
-Every component accepts a `defaultClass` prop alongside `overrideClass`. Every component's default Tailwind classes live centrally in `nextjs-shared/constants` (named `ComponentName_constantName`, e.g. `MyButton_dftClass`) rather than in the component's own module. A consuming project creates a project-wide wrapper by importing the constant, adjusting it, and passing the result as `defaultClass` — callers can still use `overrideClass` for per-instance changes.
-
-```tsx
-// src/components/AppButton.tsx — project-wide wrapper
-import { MyButton } from 'nextjs-shared/MyButton'
-import { MyButton_dftClass } from 'nextjs-shared/constants'
-
-// Taller buttons project-wide; everything else inherited from shared default
-const projectDefault = MyButton_dftClass.replace('h-6 md:h-8', 'h-8 md:h-10')
-
-type Props = React.ComponentProps<typeof MyButton>
-
-export function AppButton(props: Props) {
-  return <MyButton defaultClass={projectDefault} {...props} />
-}
-```
+Every component's default Tailwind classes live centrally in `nextjs-shared/constants` (named
+`ComponentName_constantName`, e.g. `MyButton_dftClass`) rather than in the component's own module —
+this is where the actual default styling is defined and reviewable, even though it's referenced
+internally rather than passed as a prop. Callers customize per-instance via `overrideClass`, merged
+against that constant with `myMergeClasses`.
 
 **`overrideClass` gotcha — responsive defaults need every variant repeated.** `myMergeClasses`
 only replaces a default token with an override that shares the exact same variant prefix — a bare
@@ -440,6 +428,7 @@ prop list, a second header with that detail. Import each by name, e.g.
 |---|---|
 | `MyButton` | Standard button |
 | `MyInput` | Text input |
+| `MyInputNumeric` | Numeric input with min/max, decimals/integerOnly filtering, blur-formats to fixed decimal places, no negative values |
 | `MyTextarea` | Textarea |
 | `MySelect` | Labelled select for pre-supplied options (`options` or `children`); use `MySelectTable` instead when options come from a DB table |
 | `MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars |
@@ -461,9 +450,9 @@ A few things that span more than one component's own source, so they're worth st
   are the correct way to derive "is this `MySelectMulti` selection actually filtering?" and to
   persist a selection across reloads — see that file's own header for full usage. Don't re-derive
   either with an ad hoc check.
-- **`MyTab`'s `*Class` props** follow the same project-wide-wrapper pattern as `MyButton`'s
-  `defaultClass` (see "Project-wide defaults" above) — one override per variant/active combination,
-  so a consuming project's wrapper can re-theme only the combo(s) it needs.
+- **`MyTab`'s `*Class` props** (`underlineActiveClass`, `underlineInactiveClass`, `pillActiveClass`,
+  `pillInactiveClass`) are real, independently overridable props — one per variant/active
+  combination — so a caller can re-theme only the combo(s) it needs.
 - **`MyDropdown`/`MySelectTable`'s `whereColumnValuePairs`** is the same shape as `table_fetch`'s
   own `whereColumnValuePairs` (§5).
 - **`MyHelpField`** (hover-triggered tooltip, not a click-to-open popover — see its row in the

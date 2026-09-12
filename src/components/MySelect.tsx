@@ -11,8 +11,7 @@
 //      searchEnabled — shows a search box above the select that filters options by label;
 //                      auto-selects the sole remaining match; defaults to false
 //      includeBlank  — prepends a blank {value:'',label:''} option; defaults to false
-//      defaultClass  — <select> base classes; defaults to MySelect_dftClass
-//      overrideClass — caller classes merged over defaultClass
+//      overrideClass — caller classes merged over MySelect_dftClass
 //      labelClass    — label classes; defaults to MySelect_labelDftClass
 //      containerClass — wrapper classes; defaults to MySelect_containerDftClass
 //      searchClass   — search input classes; defaults to MySelect_searchDftClass
@@ -41,7 +40,6 @@ type Props = React.SelectHTMLAttributes<HTMLSelectElement> & {
   options?: MySelectOption[]
   searchEnabled?: boolean
   includeBlank?: boolean
-  defaultClass?: string
   overrideClass?: string
   labelClass?: string
   containerClass?: string
@@ -53,7 +51,6 @@ export default function MySelect({
   options = [],
   searchEnabled = false,
   includeBlank = false,
-  defaultClass = MySelect_dftClass,
   overrideClass = '',
   labelClass = MySelect_labelDftClass,
   containerClass = MySelect_containerDftClass,
@@ -66,7 +63,7 @@ export default function MySelect({
 }: Props) {
   const [searchTerm, setSearchTerm] = useState<string>('')
   const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MySelect_dftClass, overrideClass)
 
   //----------------------------------------------------------------------------------------------
   //  Normalize options to {value,label}, add the optional blank option, then filter by search term

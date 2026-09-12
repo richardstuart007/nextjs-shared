@@ -5,6 +5,9 @@
 //    FunctionTestPage — /owner/functiontest dev page. Exercises every tableGeneric function's
 //    TableResult<T> contract, both the success path and an induced-failure path, so a change to
 //    that contract can be verified end to end in one place instead of spot-checked per caller.
+//
+//    Parameters:
+//      none
 //==============================================================================================
 
 import { useState } from 'react'

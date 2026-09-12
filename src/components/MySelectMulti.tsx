@@ -13,10 +13,11 @@
 //      minSelected, maxSelected — optional selection-count bounds; toggling that would violate
 //                                 a bound is ignored (or, when min === max, rotates the oldest
 //                                 selection out)
-//      defaultClass, overrideClass, labelClass, containerClass, panelClass,
+//      overrideClass, labelClass, containerClass, panelClass,
 //      mergePanelWidthClass, mergePanelMaxHeightClass, mergeRowClass,
 //      mergeSelectAllRowClass, mergeCheckboxClass — style overrides for each sub-element,
-//        merged over their MySelectMulti_*DftClass defaults
+//        merged over their MySelectMulti_*DftClass defaults (the main trigger button always
+//        uses MySelectMulti_dftClass, merged with overrideClass)
 //
 //  2) NOTES
 //    Selection convention: every option selected, or none, = no filter. The trigger label
@@ -58,10 +59,10 @@
 //    least 2", "Select up to 4").
 //
 //    Naming convention: a `merge` prefix means the prop is merged via myMergeClasses against a
-//    fixed default, never a full replacement — mirroring the pre-existing
-//    overrideClass/defaultClass pair (overrideClass itself keeps its original name; renaming it
-//    would be a package-wide breaking change, not done here — `merge` is the convention for
-//    props added going forward instead). mergePanelWidthClass/mergePanelMaxHeightClass are kept
+//    fixed default, never a full replacement — mirroring the pre-existing overrideClass pattern
+//    (overrideClass itself keeps its original name; renaming it would be a package-wide breaking
+//    change, not done here — `merge` is the convention for props added going forward instead).
+//    mergePanelWidthClass/mergePanelMaxHeightClass are kept
 //    separate from panelClass so a caller needing a different width or height only overrides
 //    that one piece (w- and max-h- are recognized groups in myMergeClasses). The wrapper
 //    `<div className='relative'>` around the trigger/panel is intentionally excluded from the
@@ -109,7 +110,6 @@ type Props = {
   //
   //  Style
   //
-  defaultClass?: string
   overrideClass?: string
   labelClass?: string
   containerClass?: string
@@ -136,7 +136,6 @@ export default function MySelectMulti({
   //
   //  Style
   //
-  defaultClass = MySelectMulti_dftClass,
   overrideClass = '',
   labelClass = MySelectMulti_labelDftClass,
   containerClass = MySelectMulti_containerDftClass,
@@ -151,7 +150,7 @@ export default function MySelectMulti({
   const ref = useRef<HTMLDivElement>(null)
   const normalized = options.map(normalize)
   const autoId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MySelectMulti_dftClass, overrideClass)
   const panelClassName = myMergeClasses(myMergeClasses(panelClass, mergePanelWidthClass), mergePanelMaxHeightClass)
   const rowClassName = myMergeClasses(MySelectMulti_rowDftClass, mergeRowClass)
   const selectAllRowClassName = myMergeClasses(MySelectMulti_selectAllRowDftClass, mergeSelectAllRowClass)

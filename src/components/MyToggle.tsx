@@ -5,8 +5,7 @@
 //    MyToggle — checkbox toggle switch with hidden form input
 //
 //    Parameters:
-//      defaultClass  — toggle track base classes; defaults to MyToggle_dftClass
-//      overrideClass — caller classes merged over defaultClass
+//      overrideClass — caller classes merged over MyToggle_dftClass
 //      inputName     — name of the hidden form input carrying the boolean value
 //      inputValue    — current checked state
 //      onChange      — checkbox change handler
@@ -18,7 +17,6 @@ import { myMergeClasses } from './MyMergeClasses'
 import { MyToggle_dftClass, MyToggle_labelDftClass } from '../constants'
 
 type Props = React.InputHTMLAttributes<HTMLInputElement> & {
-  defaultClass?: string
   overrideClass?: string
   inputName: string
   inputValue: boolean
@@ -27,7 +25,6 @@ type Props = React.InputHTMLAttributes<HTMLInputElement> & {
 }
 
 export function MyToggle({
-  defaultClass = MyToggle_dftClass,
   overrideClass = '',
   inputName,
   inputValue,
@@ -35,7 +32,7 @@ export function MyToggle({
   labelClass = MyToggle_labelDftClass,
   ...rest
 }: Props) {
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyToggle_dftClass, overrideClass)
   const inputValue_string = `${inputValue}`
   const checkbox_name = `checkbox_${inputName}`
   return (

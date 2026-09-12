@@ -13,8 +13,10 @@
 //      whereColumnValuePairs    — optional WHERE filter for the options query
 //      orderBy                  — ORDER BY column; defaults to optionLabel
 //      optionLabel, optionValue — columns providing each option's display label / value
-//      defaultClass, defaultClass_Label, defaultClass_Search, overrideClass_Label,
+//      defaultClass_Label, defaultClass_Search, overrideClass_Label,
 //      overrideClass_Search, overrideClass_Dropdown — style overrides for each sub-element
+//      (the main dropdown element itself always uses MyDropdown_dftClass, merged with
+//      overrideClass_Dropdown)
 //      includeBlank             — prepends a blank option; defaults to false
 //
 //  2) NOTES
@@ -47,7 +49,6 @@ type SelectTableProps = {
   orderBy?: string
   optionLabel: string
   optionValue: string | number
-  defaultClass?: string
   defaultClass_Label?: string
   defaultClass_Search?: string
   overrideClass_Label?: string
@@ -69,7 +70,6 @@ export default function MySelectTable<T extends string, U extends string>({
   orderBy = '',
   optionLabel,
   optionValue,
-  defaultClass = MyDropdown_dftClass,
   defaultClass_Label = MyDropdown_labelDftClass,
   defaultClass_Search = MyDropdown_searchDftClass,
   overrideClass_Label = '',
@@ -109,7 +109,7 @@ export default function MySelectTable<T extends string, U extends string>({
   //----------------------------------------------------------------------------------------------
   const className_Label = myMergeClasses(defaultClass_Label, overrideClass_Label)
   const className_Search = myMergeClasses(defaultClass_Search, overrideClass_Search)
-  const className_Dropdown = myMergeClasses(defaultClass, overrideClass_Dropdown)
+  const className_Dropdown = myMergeClasses(MyDropdown_dftClass, overrideClass_Dropdown)
 
   //----------------------------------------------------------------------------------------------
   //  Filter Options - If there's only one option, set it as the selected option

@@ -8,8 +8,7 @@
 //      title             — optional heading; required (alongside collapsible) to show the
 //                          collapse toggle
 //      children          — box content
-//      className         — box wrapper classes, merged over defaultClass
-//      defaultClass      — box wrapper base classes; defaults to MyBox_dftClass
+//      className         — box wrapper classes, merged over MyBox_dftClass
 //      titleClass        — heading classes; defaults to MyBox_titleDftClass
 //      collapsible       — when true (with a title present), renders a click-to-collapse
 //                          toggle instead of a static heading; defaults to false
@@ -28,7 +27,6 @@ type Props = {
   title?: string
   children: React.ReactNode
   className?: string
-  defaultClass?: string
   titleClass?: string
   collapsible?: boolean
   defaultOpen?: boolean
@@ -40,7 +38,6 @@ export default function MyBox({
   title,
   children,
   className: overrideClass = '',
-  defaultClass = MyBox_dftClass,
   titleClass = MyBox_titleDftClass,
   collapsible = false,
   defaultOpen = true,
@@ -48,7 +45,7 @@ export default function MyBox({
   chevronClass = MyBox_chevronDftClass,
 }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyBox_dftClass, overrideClass)
 
   if (collapsible && title) {
     return (

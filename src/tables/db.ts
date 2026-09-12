@@ -1,3 +1,19 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    sql — the shared Postgres query entrypoint. Lazily installs the query handler
+//    (see createDbQueryHandler) on first call, then returns it; callers do
+//    `const db = await sql()` and call `db.query(...)` to run a query, which is
+//    logged, routed to the correct database (see resolveDbKey), and executed.
+//
+//    Returns:
+//      the shared { query } handler, lazily initialized on first call
+//
+//  2) NOTES
+//    sqlHandler is a module-level singleton object whose `.query` method is installed
+//    once per warm instance by createDbQueryHandler — every caller of sql() across the
+//    app shares the same handler instance.
+//==============================================================================================
+
 import { Client } from 'pg'
 import { Pool } from '@neondatabase/serverless'
 import { write_logging } from './tableGeneric/write_logging'
@@ -20,12 +36,6 @@ type QueryOptions = {
 let sqlHandler: { query: (options: QueryOptions) => Promise<any> } = {
   query: async () => Promise.resolve()
 }
-//-------------------------------------------------------------------------
-// Export an async function named sql to initialize and return the sql handler
-//
-//  Returns:
-//    the shared query handler ({ query }), lazily initializing it on first call
-//-------------------------------------------------------------------------
 export async function sql() {
   createDbQueryHandler()
   return sqlHandler

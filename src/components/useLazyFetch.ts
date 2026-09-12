@@ -3,8 +3,7 @@
 //==============================================================================================
 //  1) DESCRIPTION
 //    useLazyFetch — fetches on mount (or on demand via `load()`), tracking
-//    data/loaded/loading/error state, re-fetching whenever `deps` changes. Guards against a
-//    stale in-flight fetch overwriting state from a newer `deps` value.
+//    data/loaded/loading/error state, re-fetching whenever `deps` changes.
 //
 //    Parameters:
 //      fetchFn — the async function to call; its resolved value becomes `data`
@@ -21,6 +20,10 @@
 //      error   — the caught error from the most recent failed fetch, or null
 //      load    — re-runs fetchFn on demand (e.g. a "Refresh" button); also used internally to
 //                drive the automatic fetch
+//
+//  2) NOTES
+//    Guards against a stale in-flight fetch overwriting state from a newer `deps` value —
+//    see the requestIdRef inline comments below for how.
 //
 //  3) CHANGE HISTORY
 //    2026-08-25 — new hook: fetches on mount/deps-change; tracks data/loaded/loading/error;

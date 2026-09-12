@@ -16,8 +16,10 @@
 //      whereColumnValuePairs    — optional WHERE filter for the table fetch
 //      orderBy                  — ORDER BY column; defaults to optionLabel
 //      optionLabel, optionValue — columns/keys providing each option's display label / value
-//      defaultClass, defaultClass_Label, defaultClass_Search, overrideClass_Label,
+//      defaultClass_Label, defaultClass_Search, overrideClass_Label,
 //      overrideClass_Search, overrideClass_Dropdown — style overrides for each sub-element
+//      (the main dropdown element itself always uses MyDropdown_dftClass, merged with
+//      overrideClass_Dropdown)
 //      includeBlank             — prepends a blank option; defaults to false
 //
 //  2) NOTES
@@ -51,7 +53,6 @@ type DropdownProps<T extends string, U extends string> = {
   orderBy?: string
   optionLabel: string
   optionValue: string | number
-  defaultClass?: string
   defaultClass_Label?: string
   defaultClass_Search?: string
   overrideClass_Label?: string
@@ -74,7 +75,6 @@ export default function MyDropdown<T extends string, U extends string>({
   orderBy = '',
   optionLabel,
   optionValue,
-  defaultClass = MyDropdown_dftClass,
   defaultClass_Label = MyDropdown_labelDftClass,
   defaultClass_Search = MyDropdown_searchDftClass,
   overrideClass_Label = '',
@@ -114,7 +114,7 @@ export default function MyDropdown<T extends string, U extends string>({
   //----------------------------------------------------------------------------------------------
   const className_Label = myMergeClasses(defaultClass_Label, overrideClass_Label)
   const className_Search = myMergeClasses(defaultClass_Search, overrideClass_Search)
-  const className_Dropdown = myMergeClasses(defaultClass, overrideClass_Dropdown)
+  const className_Dropdown = myMergeClasses(MyDropdown_dftClass, overrideClass_Dropdown)
 
   //----------------------------------------------------------------------------------------------
   //  Filter Options - If there's only one option, set it as the selected option
@@ -128,7 +128,8 @@ export default function MyDropdown<T extends string, U extends string>({
   }, [filteredOptions, selectedOption, setSelectedOption])
 
   //----------------------------------------------------------------------------------------------
-  //  Fetch dropdown options
+  //  fetchOptions — resolves the option rows (via determineRows) and loads them into
+  //  dropdownOptions, toggling loading around the fetch and logging on failure
   //----------------------------------------------------------------------------------------------
   const fetchOptions = useCallback(async () => {
     //--------------------------------------------------------------------------------------------
@@ -136,7 +137,8 @@ export default function MyDropdown<T extends string, U extends string>({
     //  distinct optionLabel/optionValue columns
     //
     //  Returns:
-    //    the rows to build dropdown options from
+    //    the rows to build dropdown options from (throws if neither tableData nor table is
+    //    supplied)
     //--------------------------------------------------------------------------------------------
     async function determineRows(): Promise<Array<RowData<T, U>>> {
       //

@@ -6,8 +6,7 @@
 //
 //    Parameters:
 //      children      — link contents
-//      defaultClass  — base Tailwind classes; defaults to MyLink_dftClass
-//      overrideClass — caller classes merged over defaultClass via myMergeClasses
+//      overrideClass — caller classes merged over MyLink_dftClass via myMergeClasses
 //      href          — pathname + optional segment/query object, built into the final URL
 //      caller        — accepted but unused (kept for call-site compatibility)
 //      ...rest       — all other Next.js <Link> props, passed through
@@ -26,7 +25,6 @@ type LinkHref = {
 
 type Props = {
   children: React.ReactNode
-  defaultClass?: string
   overrideClass?: string
   href: LinkHref
   caller?: string
@@ -35,13 +33,12 @@ type Props = {
 
 export function MyLink({
   children,
-  defaultClass = MyLink_dftClass,
   overrideClass = '',
   href,
   caller: _caller = '',
   ...rest
 }: Props) {
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyLink_dftClass, overrideClass)
   //
   //  Build href string from pathname and optional query params
   //

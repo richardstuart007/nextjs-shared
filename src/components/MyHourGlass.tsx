@@ -5,19 +5,17 @@
 //    MyHourGlass — animated hourglass emoji spinner
 //
 //    Parameters:
-//      defaultClass  — base Tailwind classes; defaults to MyHourGlass_dftClass
-//      overrideClass — caller classes merged over defaultClass via myMergeClasses
+//      overrideClass — caller classes merged over MyHourGlass_dftClass via myMergeClasses
 //==============================================================================================
 
 import { myMergeClasses } from './MyMergeClasses'
 import { MyHourGlass_dftClass } from '../constants'
 
 type Props = {
-  defaultClass?: string
   overrideClass?: string
 }
 
-export function MyHourGlass({ defaultClass = MyHourGlass_dftClass, overrideClass = '' }: Props) {
-  const className = myMergeClasses(defaultClass, overrideClass)
+export function MyHourGlass({ overrideClass = '' }: Props) {
+  const className = myMergeClasses(MyHourGlass_dftClass, overrideClass)
   return <div className={className}>⏳</div>
 }

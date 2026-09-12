@@ -4,6 +4,9 @@
 //  1) DESCRIPTION
 //    Page — dev-only detail route for OwnerBackNavDemo, verifying useBackNav restores the
 //    originating tab via its Back link
+//
+//    Parameters:
+//      none — this page reads the [id] segment itself via useParams, not as a prop
 //==============================================================================================
 
 import { useEffect, useState } from 'react'

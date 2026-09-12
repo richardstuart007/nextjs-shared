@@ -1,6 +1,9 @@
 //==============================================================================================
 //  1) DESCRIPTION
 //    Page — /owner dev app: Logging / Cache / Session Storage / Routing Maintenance tabs
+//
+//    Parameters:
+//      none
 //==============================================================================================
 
 import OwnerPage from '../../UI/OwnerPage'

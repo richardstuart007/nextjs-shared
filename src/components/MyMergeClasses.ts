@@ -57,10 +57,15 @@ export function myMergeClasses(defaultClass: string, overrideClass: string): str
 
   const allPatterns = CLASS_GROUPS.flatMap(g => g.patterns)
 
+  //----------------------------------------------------------------------------------------------
+  //  inAnyGroup — true if cls's core (variant-stripped) starts with any known group pattern
   //
-  //  inAnyGroup — true if cls's core (variant-stripped) starts with any known group
-  //  pattern. Params: cls — the raw class to check. Returns: whether it's grouped.
+  //  Params:
+  //    cls — the raw class to check
   //
+  //  Returns:
+  //    whether cls belongs to any defined group
+  //----------------------------------------------------------------------------------------------
   function inAnyGroup(cls: string): boolean {
     const core = getCoreClass(cls)
     return allPatterns.some(p => core.startsWith(p))

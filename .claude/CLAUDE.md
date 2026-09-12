@@ -177,8 +177,13 @@ export function useLazyFetch<T>(...
 
 **Helper functions keep the existing plain style** — a single-dash `//----...----//` title
 comment (82-dash non-indented for top-level, 94-dash indented for nested-in-component), with a
-plain `Params:`/`Returns:` breakdown when warranted, positioned directly above that helper's own
-declaration. Not numbered, not double-equals-bordered — that treatment is reserved for the one
+plain `Params:`/`Returns:` breakdown always analyzed and included. **The description is never
+optional — every function has a purpose, so every function states it**, whether as the title's own
+"Name — one-line purpose" text or a fuller description line beneath it. Only `Params:`/`Returns:`
+may be omitted, and only when genuinely empty (no parameters, or nothing meaningful returned) —
+never because a helper seemed short or self-explanatory enough to need only a title with no stated
+purpose — positioned directly above that helper's own declaration. Not numbered, not
+double-equals-bordered — that treatment is reserved for the one
 main header per file, so it's the thing that visually stands out. Function declarations still go
 in top-down order — main logic first, nested/local helpers declared below it (function
 declarations hoist, so a helper being called above its own declaration is unaffected). This
@@ -245,14 +250,17 @@ change, so the new/changed behavior can be tested here first. A change to `src/c
 propose `#commit`, while the demo page is still showing the old prop surface.
 
 ### overrideClass — main element
-Every component that renders a single styled element (button, input, select, textarea) must accept `overrideClass?: string` and merge it via `myMergeClasses(defaultClass, overrideClass)`. Define default classes as a joined array, one concern per line:
+Every component that renders a single styled element (button, input, select, textarea) must accept `overrideClass?: string` and merge it via `myMergeClasses(<Component>_dftClass, overrideClass)`, referencing the component's default-class constant (from `src/constants.ts`) directly — `defaultClass` is **not** a component prop; nothing overrides the base default itself, only `overrideClass` is public. (A `defaultClass?: string` prop existed here previously as a "project-wide override" escape hatch — removed 2026-09-12: zero consuming projects, and no internal call site outside the demo page, ever used it. If a real use case for project-wide overrides shows up later, design it fresh against that actual need rather than reintroducing this prop from memory — see git history around 2026-09-12 for the removal and why.) Define the constant as a joined array, one concern per line:
 ```ts
-const defaultClass = [
+// src/constants.ts
+export const MyWidget_dftClass = [
   'h-8 px-2',
   'text-xs text-white',
   'bg-blue-500 hover:bg-blue-600',
 ].join(' ')
-const classValue = myMergeClasses(defaultClass, overrideClass)
+
+// src/components/MyWidget.tsx
+const className = myMergeClasses(MyWidget_dftClass, overrideClass)
 ```
 
 ### Sub-element override props

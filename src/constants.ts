@@ -18,10 +18,10 @@ export const MyBackHomeNav_linkDftClass = 'text-xs text-gray-500 hover:text-gray
 //
 export const MyBox_titleDftClass = 'text-xs font-bold mb-2'
 export const MyBox_dftClass = [
-  'rounded-lg',
-  'border border-gray-300',
   'p-2 md:p-3',
   'mb-3',
+  'rounded-lg',
+  'border border-gray-300',
 ].join(' ')
 export const MyBox_toggleButtonDftClass = 'flex items-center justify-between gap-1 mb-2 w-full text-left'
 export const MyBox_chevronDftClass = 'h-4 w-4 text-gray-500 transition-transform duration-200'
@@ -36,10 +36,11 @@ export const MyButton_dftClass = [
   'font-normal text-xs text-white',
   'rounded-md',
   'bg-blue-500 hover:bg-blue-600',
+  'aria-disabled:opacity-50',
+  'focus-visible:outline focus-visible:outline-blue-500',
   'transition-colors',
   'cursor-pointer',
-  'focus-visible:outline focus-visible:outline-blue-500',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
 
 //
@@ -65,15 +66,16 @@ export const MyConfirmDialog_yesButtonDftClass     = 'bg-red-500 text-white px-4
 //
 export const MyDropdown_dftClass = [
   'h-6 md:h-8',
+  'w-72',
   'py-[2px] px-1 md:px-2',
   'text-xs',
   'rounded-md',
   'border border-blue-500',
   'focus:border-1 focus:border-blue-500',
   'hover:border-blue-500',
+  'aria-disabled:opacity-50',
   'transition-colors',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
-  'w-72',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
 export const MyDropdown_labelDftClass = 'block text-gray-900 mb-1 text-xs w-72'
 export const MyDropdown_searchDftClass = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
@@ -102,8 +104,8 @@ export const MyHelpStep_closeButtonDftClass = 'ml-4 text-gray-400 hover:text-gra
 //  MyHourGlass
 //
 export const MyHourGlass_dftClass = [
-  'text-2xl md:text-4xl',
   'animate-flip',
+  'text-2xl md:text-4xl',
 ].join(' ')
 
 //
@@ -117,8 +119,25 @@ export const MyInput_dftClass = [
   'border border-blue-500',
   'focus:border-1 focus:border-blue-500',
   'hover:border-1 hover:border-blue-500',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+  'aria-disabled:opacity-50',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
+
+//
+//  MyInputNumeric
+//
+export const MyInputNumeric_dftClass = [
+  'h-6 md:h-8',
+  'px-1 md:px-2',
+  'font-normal text-xs text-right',
+  'rounded-md',
+  'border border-blue-500',
+  'focus:border-1 focus:border-blue-500',
+  'hover:border-1 hover:border-blue-500',
+  'aria-disabled:opacity-50',
+  'aria-disabled:cursor-not-allowed',
+].join(' ')
+export const MyInputNumeric_errorDftClass = 'border-red-500 focus:border-red-500 hover:border-red-500'
 
 //
 //  MyLink
@@ -130,9 +149,10 @@ export const MyLink_dftClass = [
   'font-normal text-xs text-white',
   'rounded-md',
   'bg-blue-500 hover:bg-blue-600',
-  'transition-colors',
+  'aria-disabled:opacity-50',
   'focus-visible:outline focus-visible:outline-blue-500',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+  'transition-colors',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
 
 //
@@ -158,7 +178,7 @@ export const MyPagination_arrowIconClass = 'w-4'
 //
 //  MyPaginationFooter
 //
-export const MyPaginationFooter_dftClass = 'grid grid-cols-3 items-center bg-yellow-100 px-2 py-1 rounded-md'
+export const MyPaginationFooter_dftClass = 'grid grid-cols-3 items-center px-2 py-1 rounded-md bg-yellow-100'
 export const MyPaginationFooter_totalRowsClass = 'flex justify-end text-xs text-gray-700'
 
 //
@@ -166,12 +186,12 @@ export const MyPaginationFooter_totalRowsClass = 'flex justify-end text-xs text-
 //
 export const MyPopup_dftClass = [
   'relative',
+  'overflow-y-auto',
   'w-full max-w-md max-h-[90vh]',
   'p-4 md:p-6',
   'rounded-lg',
   'bg-white',
   'shadow-lg',
-  'overflow-y-auto',
 ].join(' ')
 export const MyPopup_overlayDftClass     = 'fixed inset-0 flex justify-center items-center z-50'
 export const MyPopup_closeButtonDftClass = 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800'
@@ -187,8 +207,9 @@ export const MySelect_dftClass = [
   'border border-blue-500',
   'focus:border-1 focus:border-blue-500',
   'hover:border-blue-500',
+  'aria-disabled:opacity-50',
   'transition-colors',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
 export const MySelect_labelDftClass     = 'font-bold text-xs whitespace-nowrap'
 export const MySelect_containerDftClass = 'flex items-center gap-2'
@@ -222,7 +243,7 @@ export const MySelectMulti_selectedDividerClass = 'border-b border-gray-200 mb-1
 //
 export const MySelectRows_optionsDftShared = [10, 20, 50, 100] as const
 export const MySelectRows_valueDftShared = 20
-export const MySelectRows_dftClass = MySelect_dftClass.replace('w-72', 'w-24')
+export const MySelectRows_widthClass = 'w-24'
 export const MySelectRows_staticTextClass = 'text-xs text-gray-700'
 
 //
@@ -237,6 +258,7 @@ export const MyTab_pillInactiveClass      = 'px-3 py-1 text-xs rounded border bg
 //  MyTextarea
 //
 export const MyTextarea_dftClass = [
+  'resize-y',
   'h-24',
   'px-1 md:px-2',
   'font-normal text-xs',
@@ -244,23 +266,21 @@ export const MyTextarea_dftClass = [
   'border border-blue-500',
   'focus:border-1 focus:border-blue-500',
   'hover:border-1 hover:border-blue-500',
-  'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
-  'resize-y',
+  'aria-disabled:opacity-50',
+  'aria-disabled:cursor-not-allowed',
 ].join(' ')
 
 //
 //  MyToggle
 //
 export const MyToggle_dftClass = [
-  'relative',
-  'w-11 h-6',
-  'rounded-full',
-  'bg-gray-400 dark:bg-gray-700',
-  'peer peer-checked:after:translate-x-[1.25rem] peer-checked:after:border-white',
-  'after:content-[""] after:absolute after:top-0.5 after:left-[2px]',
-  'after:bg-white after:border-gray-300 after:border after:rounded-full',
-  'after:h-5 after:w-5',
-  'after:transition-transform dark:border-gray-600 peer-checked:bg-blue-600',
+  'relative peer',
+  'peer-checked:after:translate-x-[1.25rem] after:content-[""] after:absolute after:top-0.5 after:left-[2px]',
+  'w-11 h-6 after:h-5 after:w-5',
+  'rounded-full after:rounded-full',
+  'peer-checked:after:border-white after:border-gray-300 after:border dark:border-gray-600',
+  'bg-gray-400 dark:bg-gray-700 after:bg-white peer-checked:bg-blue-600',
+  'after:transition-transform',
 ].join(' ')
 export const MyToggle_labelDftClass = 'inline-flex items-center cursor-pointer'
 

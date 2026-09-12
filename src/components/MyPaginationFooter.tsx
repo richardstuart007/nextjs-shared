@@ -14,18 +14,16 @@
 //      rowsOptions             — rows-per-page choices; defaults to MySelectRows_optionsDftShared
 //      totalRows               — exact row count to display; when omitted, estimated as
 //                                totalPages * rowsPerPage
-//      defaultClass            — row wrapper base classes; defaults to
-//                                MyPaginationFooter_dftClass
-//      overrideClass           — caller classes merged over defaultClass
+//      overrideClass           — caller classes merged over MyPaginationFooter_dftClass
 //      paginationOverrideClass — forwarded to MyPagination's overrideClass
 //      selectRowsOverrideClass — forwarded to MySelectRows's overrideClass
 //      totalRowsClass          — "N rows" label classes; defaults to
 //                                MyPaginationFooter_totalRowsClass
 //
 //  2) NOTES
-//    defaultClass lays out a 3-column grid (rows-select | pagination | total-rows), so
-//    MyPagination sits centered relative to the whole row rather than just the leftover
-//    space after the rows-per-page dropdown.
+//    MyPaginationFooter_dftClass lays out a 3-column grid (rows-select | pagination |
+//    total-rows), so MyPagination sits centered relative to the whole row rather than just
+//    the leftover space after the rows-per-page dropdown.
 //==============================================================================================
 
 import MyPagination from './MyPagination'
@@ -45,7 +43,6 @@ type Props = {
   setRowsPerPage: (value: number) => void
   rowsOptions?: readonly number[]
   totalRows?: number
-  defaultClass?: string
   overrideClass?: string
   paginationOverrideClass?: string
   selectRowsOverrideClass?: string
@@ -60,13 +57,12 @@ export default function MyPaginationFooter({
   setRowsPerPage,
   rowsOptions = MySelectRows_optionsDftShared,
   totalRows,
-  defaultClass = MyPaginationFooter_dftClass,
   overrideClass = '',
   paginationOverrideClass,
   selectRowsOverrideClass,
   totalRowsClass = MyPaginationFooter_totalRowsClass,
 }: Props) {
-  const className = myMergeClasses(defaultClass, overrideClass)
+  const className = myMergeClasses(MyPaginationFooter_dftClass, overrideClass)
   const displayRows = totalRows ?? totalPages * rowsPerPage
   return (
     <div className={className}>
