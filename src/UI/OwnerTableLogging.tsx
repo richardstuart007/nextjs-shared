@@ -18,6 +18,7 @@ import { fetchTotalRows } from '../tables/tableGeneric/table_pages/fetchTotalRow
 import type { Filter } from '../tables/structures'
 import MyPaginationFooter from '../components/MyPaginationFooter'
 import { MyInput } from '../components/MyInput'
+import { MyInputNumeric } from '../components/MyInputNumeric'
 import { MyButton } from '../components/MyButton'
 import MyPopup from '../components/MyPopup'
 import DbKeySelect from './DbKeySelect'
@@ -41,7 +42,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   const [caller, setcaller] = useState('')
   const [functionname, setfunctionname] = useState('')
   const [severity, setseverity] = useState('')
-  const [level, setlevel] = useState('')
+  const [level, setlevel] = useState<number | ''>('')
   const [dbkey, setdbkey] = useState('')
   const [table, settable] = useState('')
   const [isupdate, setisupdate] = useState('')
@@ -57,7 +58,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     caller: '',
     functionname: '',
     severity: '',
-    level: '',
+    level: '' as number | '',
     dbkey: '',
     table: '',
     isupdate: '',
@@ -136,13 +137,13 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               <th scope='col' className='px-2'></th>
               <th scope='col' className='px-2'>
                 <div className='text-center'>
-                  <MyInput
+                  <MyInputNumeric
                     id='level'
                     name='level'
                     overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
-                    type='text'
+                    integerOnly
                     value={level}
-                    onChange={e => setlevel(e.target.value)}
+                    onChange={v => setlevel(v ?? '')}
                   />
                 </div>
               </th>

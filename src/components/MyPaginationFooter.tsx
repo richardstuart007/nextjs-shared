@@ -23,7 +23,18 @@
 //  2) NOTES
 //    MyPaginationFooter_dftClass lays out a 3-column grid (rows-select | pagination |
 //    total-rows), so MyPagination sits centered relative to the whole row rather than just
-//    the leftover space after the rows-per-page dropdown.
+//    the leftover space after the rows-per-page dropdown. The rows-select/total-rows columns
+//    are sized to their own content (grid-cols-[auto_1fr_auto]), not a fixed third each, and
+//    the middle pagination column has min-w-0 + overflow-x-auto so it can never overflow onto
+//    the total-rows column and intercept clicks meant for the pagination controls — see
+//    3) CHANGE HISTORY.
+//
+//  3) CHANGE HISTORY
+//    2026-09-13 — grid-cols-3 changed to grid-cols-[auto_1fr_auto], and min-w-0 + overflow-x-auto
+//                 added to the pagination column's wrapper: fixes a bug where, in narrow
+//                 containers with enough pages, the pagination content would overflow past its
+//                 fixed 1/3-width column and the opaque total-rows label (painted later in DOM
+//                 order) would intercept clicks meant for the right arrow specifically
 //==============================================================================================
 
 import MyPagination from './MyPagination'
@@ -72,7 +83,7 @@ export default function MyPaginationFooter({
         options={rowsOptions}
         overrideClass={selectRowsOverrideClass}
       />
-      <div className='flex justify-center'>
+      <div className='flex justify-center min-w-0 overflow-x-auto'>
         <MyPagination
           totalPages={totalPages}
           statecurrentPage={statecurrentPage}

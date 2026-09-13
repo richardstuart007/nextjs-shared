@@ -48,6 +48,14 @@
 //    2026-09-12 — added optional clampOnBlur prop: corrects an out-of-range value to the nearest
 //                 min/max bound on blur instead of only flagging it via errorClass; defaults to
 //                 false, so existing consumers are unaffected
+//    2026-09-13 — handleKeyDown rewritten from a blocklist to a strict allowlist (digits, '.'
+//                 when permitted, navigation/editing keys, Ctrl/Cmd shortcuts only), fixing a bug
+//                 where 'e'/'E'/'+' (native type='number' otherwise accepts them as
+//                 scientific-notation characters this component never supported) would get typed
+//                 and stick in the field indefinitely, including after blur; handleChange now
+//                 also runs a sanitizeRaw pass that strips any disallowed character (including
+//                 blanks and extra decimal points) from the raw text before parsing, so paste/
+//                 drag-drop/IME input is covered too, not just individual keystrokes
 //==============================================================================================
 
 import { useEffect, useState } from 'react'
@@ -144,13 +152,21 @@ export function MyInputNumeric({
   }
 
   //----------------------------------------------------------------------------------------------
-  //  handleKeyDown — blocks the '-' key always, and the '.' key when integerOnly/decimals===0
+  //  handleKeyDown — allowlist, not a blocklist: only digits, '.' (when decimals are permitted),
+  //  navigation/editing keys, and Ctrl/Cmd-held shortcuts (copy/paste/select-all) are let through;
+  //  every other keystroke (e.g. 'e'/'E'/'+'/'-', which native type='number' would otherwise
+  //  accept as scientific-notation characters this component doesn't support) is blocked
   //
   //  Params:
   //    e — the keydown event; forwarded to the caller's own onKeyDown, if supplied
   //----------------------------------------------------------------------------------------------
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === '-' || (rejectDecimalPoint && e.key === '.')) {
+    const isDigit = e.key.length === 1 && e.key >= '0' && e.key <= '9'
+    const isDecimalPoint = e.key === '.' && !rejectDecimalPoint
+    const isNavOrEditKey = [
+      'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter'
+    ].includes(e.key)
+    if (!isDigit && !isDecimalPoint && !isNavOrEditKey && !e.ctrlKey && !e.metaKey) {
       e.preventDefault()
     }
     onKeyDown?.(e)
@@ -192,15 +208,55 @@ export function MyInputNumeric({
   }
 
   //----------------------------------------------------------------------------------------------
-  //  handleChange — mirrors the raw typed text into displayValue, rejecting negatives and capping
-  //  decimal digits to `decimals` when set; parses and emits the numeric value on acceptance
+  //  sanitizeRaw — strips every character that isn't a digit (and, when decimals are permitted,
+  //  keeps only the first '.', stripping any further ones) — the paste/drag-drop/IME-safe
+  //  backstop, since the keydown allowlist above only guards keystrokes typed one at a time
+  //
+  //  Params:
+  //    raw — the input's raw text, straight off the change event
+  //
+  //  Returns:
+  //    the same text with every disallowed character (letters, blanks, extra decimal points, a
+  //    decimal point at all when not permitted, etc.) removed
+  //----------------------------------------------------------------------------------------------
+  function sanitizeRaw(raw: string): string {
+    const pattern = rejectDecimalPoint ? /[0-9]/g : /[0-9.]/g
+    let cleaned = (raw.match(pattern) ?? []).join('')
+    if (!rejectDecimalPoint) {
+      const firstDot = cleaned.indexOf('.')
+      if (firstDot !== -1) {
+        cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
+      }
+    }
+    return cleaned
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  handleChange — sanitizes the raw typed/pasted text down to digits (and a single '.' when
+  //  allowed), rejecting negatives and capping decimal digits to `decimals` when set; parses and
+  //  emits the numeric value on acceptance
   //
   //  Params:
   //    e — the change event carrying the raw typed text
   //----------------------------------------------------------------------------------------------
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value
+    const raw = sanitizeRaw(e.target.value)
+    if (raw !== e.target.value) {
+      //
+      //  Pasted/dropped text can carry characters the keydown allowlist never saw (letters,
+      //  blanks, a second decimal point) — force the native element to reflect the cleaned
+      //  string rather than leaving the stale unsanitized text visible
+      //
+      e.target.value = raw
+    }
     if (raw === '') {
+      //
+      //  A native number input sanitizes invalid text (e.g. a bare "e") to "" on the .value
+      //  getter, but keeps showing the invalid text the user typed — React sees displayValue
+      //  is already '' and skips re-writing the DOM. Explicitly assigning e.target.value forces
+      //  the browser to actually discard that stale text, even though it already reads as ''.
+      //
+      e.target.value = ''
       setDisplayValue('')
       onChange(null)
       return

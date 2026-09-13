@@ -178,7 +178,7 @@ export const MyPagination_arrowIconClass = 'w-4'
 //
 //  MyPaginationFooter
 //
-export const MyPaginationFooter_dftClass = 'grid grid-cols-3 items-center px-2 py-1 rounded-md bg-yellow-100'
+export const MyPaginationFooter_dftClass = 'grid grid-cols-[auto_1fr_auto] items-center px-2 py-1 rounded-md bg-yellow-100'
 export const MyPaginationFooter_totalRowsClass = 'flex justify-end text-xs text-gray-700'
 
 //
