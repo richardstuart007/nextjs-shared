@@ -85,17 +85,26 @@ export default function MySelect({
   }, [updatedOptions, searchEnabled, searchTerm])
 
   //----------------------------------------------------------------------------------------------
-  //  Auto-select the sole remaining option once search narrows the list to one match
+  //  Auto-select the sole remaining option once search narrows the list to one match. Also clears
+  //  the selection when the current value drops out of the filtered list (0 or 2+ remaining
+  //  matches) — otherwise the native <select> silently displays the first filtered option's text
+  //  while `value` stays stale, looking selected without actually being selected.
   //----------------------------------------------------------------------------------------------
   useEffect(() => {
-    if (
-      searchEnabled &&
-      filteredOptions.length === 1 &&
-      value !== filteredOptions[0].value &&
-      onChange
-    ) {
+    if (!searchEnabled || !onChange) return
+
+    if (filteredOptions.length === 1 && value !== filteredOptions[0].value) {
       const syntheticEvent = {
         target: { value: filteredOptions[0].value }
+      } as React.ChangeEvent<HTMLSelectElement>
+      onChange(syntheticEvent)
+      return
+    }
+
+    const valueStillMatches = filteredOptions.some(opt => opt.value === value)
+    if (!valueStillMatches && value !== '') {
+      const syntheticEvent = {
+        target: { value: '' }
       } as React.ChangeEvent<HTMLSelectElement>
       onChange(syntheticEvent)
     }
