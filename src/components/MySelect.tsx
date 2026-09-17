@@ -21,6 +21,11 @@
 //    The auto-select-on-single-match behavior requires a controlled <select> — both value and
 //    onChange must be passed. An uncontrolled MySelect (no onChange) silently skips the
 //    auto-select, since there's no caller-owned state to update.
+//
+//  3) CHANGE HISTORY
+//    2026-09-17 — fixed searchEnabled: clicking the first option in a search-narrowed list with
+//                 value='' silently failed to fire onChange when the current value's own option
+//                 (e.g. the blank option) was filtered out of the list
 //==============================================================================================
 
 import { useEffect, useMemo, useState } from 'react'
@@ -110,6 +115,22 @@ export default function MySelect({
     }
   }, [searchEnabled, filteredOptions, value, onChange])
 
+  //----------------------------------------------------------------------------------------------
+  //  When the search term filters the current value's own option out of filteredOptions (most
+  //  commonly the blank option, when blankLabel doesn't match the search term), the native
+  //  <select> has no <option> matching its own `value` and silently falls back to displaying the
+  //  first rendered option as selected — without firing a change event, so a click on that first
+  //  option registers no change at all. Rendering a hidden option for the current value keeps the
+  //  DOM's actual selection in sync with `value`, so every click is a genuine index change.
+  //----------------------------------------------------------------------------------------------
+  const missingCurrentOption = useMemo(() => {
+    const result =
+      searchEnabled && !filteredOptions.some(opt => opt.value === value)
+        ? updatedOptions.find(opt => opt.value === value)
+        : undefined
+    return result
+  }, [searchEnabled, filteredOptions, updatedOptions, value])
+
   return (
     <div className={containerClass}>
       {label && <label htmlFor={autoId} className={labelClass}>{label}</label>}
@@ -132,11 +153,18 @@ export default function MySelect({
           {...rest}
         >
           {options.length > 0
-            ? filteredOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))
+            ? <>
+                {missingCurrentOption && (
+                  <option key={missingCurrentOption.value} value={missingCurrentOption.value} hidden>
+                    {missingCurrentOption.label}
+                  </option>
+                )}
+                {filteredOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </>
             : children}
         </select>
       </div>
