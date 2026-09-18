@@ -265,9 +265,8 @@ All are React client components. Import individually.
 | `nextjs-shared/MyButton` | Standard button — `cursor-pointer` default, `aria-disabled:cursor-not-allowed` on disabled |
 | `nextjs-shared/MyInput` | Text input |
 | `nextjs-shared/MyInputNumeric` | Numeric input — min/max (error-state styling on violation, or clamped to bounds on blur via `clampOnBlur`), decimals/integerOnly filtering, blur-formats to fixed decimal places (e.g. `47` → `47.00`), spin arrows hidden by default, no negative values |
-| `nextjs-shared/MyDropdown` | Searchable dropdown with optional DB fetch — retained only until consuming projects migrate to `MySelect`/`MySelectTable`; do not use in new code |
 | `nextjs-shared/MySelect` | Labelled select (label + select element) for pre-supplied options; optional search + blank option |
-| `nextjs-shared/MySelectTable` | Labelled select whose options are always fetched from a DB table (like `MyDropdown`, but table-only — no `tableData` path) |
+| `nextjs-shared/MySelectTable` | Labelled select whose options are always fetched from a DB table |
 | `nextjs-shared/MySelectMulti` | Compact checkbox-dropdown multi-select for filter bars — collapsed trigger, opens on click |
 | `nextjs-shared/MySelectRows` | Rows-per-page dropdown, for use alongside `MyPagination` |
 | `nextjs-shared/MyTab` | Single tab button — `underline` or `pill` variant, active state controlled by the caller |
@@ -411,7 +410,7 @@ against that constant with `myMergeClasses`.
 **`overrideClass` gotcha — responsive defaults need every variant repeated.** `myMergeClasses`
 only replaces a default token with an override that shares the exact same variant prefix — a bare
 override never touches a `md:`-prefixed default, only the unqualified base token. `MyButton`,
-`MyInput`, `MyDropdown`, `MySelect`, and `MyLink` all default to `'h-6 md:h-8'` (two independent
+`MyInput`, `MySelect`, and `MyLink` all default to `'h-6 md:h-8'` (two independent
 tokens, not one). Passing `overrideClass="h-6"` replaces only the base `h-6`; `md:h-8` survives
 untouched and still applies at the `md:` breakpoint and up. To force one fixed height across all
 breakpoints, repeat both variants: `overrideClass="h-6 md:h-6"`. This is intentional
@@ -438,7 +437,6 @@ prop list, a second header with that detail. Import each by name, e.g.
 | `MyTab` | Single tab button (`underline`/`pill` variant); active state and click handling owned by the caller |
 | `MyBox` | Bordered container box, optionally collapsible |
 | `MyToggle` | Toggle switch |
-| `MyDropdown` | Searchable dropdown with optional DB fetch — **do not use in new code**, retained only until consuming projects finish migrating to `MySelect`/`MySelectTable` |
 | `MySelectTable` | Labelled select whose options are always fetched from a DB table |
 | `MyCheckbox` | Always-expanded multi-select checkbox group with search/sort/min-max — for dedicated form space; use `MySelectMulti` instead for a collapsed filter-bar control |
 | `MyPopup` | Modal overlay panel with close button |
@@ -453,8 +451,8 @@ A few things that span more than one component's own source, so they're worth st
 - **`MyTab`'s `*Class` props** (`underlineActiveClass`, `underlineInactiveClass`, `pillActiveClass`,
   `pillInactiveClass`) are real, independently overridable props — one per variant/active
   combination — so a caller can re-theme only the combo(s) it needs.
-- **`MyDropdown`/`MySelectTable`'s `whereColumnValuePairs`** is the same shape as `table_fetch`'s
-  own `whereColumnValuePairs` (§5).
+- **`MySelectTable`'s `whereColumnValuePairs`** is the same shape as `table_fetch`'s own
+  `whereColumnValuePairs` (§5).
 - **`MyHelpField`** (hover-triggered tooltip, not a click-to-open popover — see its row in the
   "UI Components" import table near the top of this section) is a structurally different
   interaction model from `MyHelp`/`MyHelpStep` — it dismisses on mouse-leave and has no

@@ -21,8 +21,12 @@
 //
 //  2) NOTES
 //    Auto-selects the single option when the (filtered) option list narrows to exactly one.
-//    Always fetches from `table` on mount (no `tableData` escape hatch — see MyDropdown for
-//    that).
+//    Always fetches from `table` on mount (no `tableData` escape hatch).
+//
+//  3) CHANGE HISTORY
+//    2026-09-18 — fixed the auto-select-on-single-match effect firing before the table fetch
+//                 resolved (only the blank placeholder loaded yet), which silently cleared an
+//                 already-selected value; now guarded by hasRealOptions
 //==============================================================================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -113,14 +117,21 @@ export default function MySelectTable<T extends string, U extends string>({
 
   //----------------------------------------------------------------------------------------------
   //  Filter Options - If there's only one option, set it as the selected option
+  //
+  //  Guarded by hasRealOptions so this never fires before the async fetchOptions() has resolved —
+  //  with only the blank placeholder (or nothing) loaded, filteredOptions.length can be 0 or 1 for
+  //  reasons unrelated to the search term, and would otherwise wipe an already-selected value.
   //----------------------------------------------------------------------------------------------
+  const hasRealOptions = updatedOptions.some(option => option.value !== '')
+
   useEffect(() => {
+    if (!hasRealOptions) return
     if (filteredOptions.length === 1 && selectedOption !== filteredOptions[0].value) {
       const value = filteredOptions[0].value
       const valueUpdate = value !== '' && !isNaN(Number(value)) ? Number(value) : value
       setSelectedOption(valueUpdate)
     }
-  }, [filteredOptions, selectedOption, setSelectedOption])
+  }, [hasRealOptions, filteredOptions, selectedOption, setSelectedOption])
 
   //----------------------------------------------------------------------------------------------
   //  Fetch dropdown options

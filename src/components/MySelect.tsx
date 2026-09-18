@@ -26,6 +26,9 @@
 //    2026-09-17 — fixed searchEnabled: clicking the first option in a search-narrowed list with
 //                 value='' silently failed to fire onChange when the current value's own option
 //                 (e.g. the blank option) was filtered out of the list
+//    2026-09-18 — fixed searchEnabled: the auto-select/auto-clear effect could fire while the
+//                 caller's async options hadn't loaded yet (only the blank placeholder present),
+//                 silently clearing an already-selected value; now guarded by hasRealOptions
 //==============================================================================================
 
 import { useEffect, useMemo, useState } from 'react'
@@ -94,9 +97,16 @@ export default function MySelect({
   //  the selection when the current value drops out of the filtered list (0 or 2+ remaining
   //  matches) — otherwise the native <select> silently displays the first filtered option's text
   //  while `value` stays stale, looking selected without actually being selected.
+  //
+  //  Guarded by hasRealOptions so this never fires while the caller's async option-fetch hasn't
+  //  resolved yet — with only the blank placeholder (or nothing) loaded, filteredOptions.length
+  //  can be 0 or 1 for reasons that have nothing to do with the user's search term, and would
+  //  otherwise wipe an already-selected value that was never actually invalidated.
   //----------------------------------------------------------------------------------------------
+  const hasRealOptions = useMemo(() => updatedOptions.some(opt => opt.value !== ''), [updatedOptions])
+
   useEffect(() => {
-    if (!searchEnabled || !onChange) return
+    if (!searchEnabled || !onChange || !hasRealOptions) return
 
     if (filteredOptions.length === 1 && value !== filteredOptions[0].value) {
       const syntheticEvent = {
@@ -113,7 +123,7 @@ export default function MySelect({
       } as React.ChangeEvent<HTMLSelectElement>
       onChange(syntheticEvent)
     }
-  }, [searchEnabled, filteredOptions, value, onChange])
+  }, [searchEnabled, hasRealOptions, filteredOptions, value, onChange])
 
   //----------------------------------------------------------------------------------------------
   //  When the search term filters the current value's own option out of filteredOptions (most

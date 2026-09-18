@@ -11,13 +11,12 @@ import { MyButton } from '../components/MyButton'
 import { MyInput } from '../components/MyInput'
 import { MyInputNumeric } from '../components/MyInputNumeric'
 import { MyTextarea } from '../components/MyTextarea'
-import MyDropdown from '../components/MyDropdown'
 import { myMergeClasses } from '../components/MyMergeClasses'
 import MyCheckBox from '../components/MyCheckbox'
 import { MyConfirmDialog, ConfirmDialogInt } from '../components/MyConfirmDialog'
 import MyPagination from '../components/MyPagination'
 import { MyLink } from '../components/MyLink'
-import MySelect from '../components/MySelect'
+import MySelect, { MySelectOption } from '../components/MySelect'
 import MySelectTable from '../components/MySelectTable'
 import { MyToggle } from '../components/MyToggle'
 import { MyLoadingMessage } from '../components/MyLoadingMessage'
@@ -112,7 +111,6 @@ export default function OwnerComponentTest() {
     { label: 'MyPagination', content: <MyPaginationTab /> },
     { label: 'MyConfirmDialog', content: <MyConfirmDialogTab /> },
     { label: 'MyLink', content: <MyLinkTab /> },
-    { label: 'MyDropdown', content: <MyDropdownTab /> },
     { label: 'MySelect', content: <MySelectTab /> },
     { label: 'MySelectTable', content: <MySelectTableTab /> },
     { label: 'MySelectMulti', content: <MySelectMultiTab /> },
@@ -253,33 +251,6 @@ function ThreeSection({ controls, preview, returns }: ThreeSectionProps) {
 //----------------------------------------------------------------------------------
 function parseNumberList(str: string): number[] {
   const result = str.split(',').map(s => Number(s.trim())).filter(n => !Number.isNaN(n))
-  return result
-}
-
-//----------------------------------------------------------------------------------
-//  parseTableData — parses "label,value" lines into row objects keyed by the given field names
-//
-//  Params:
-//    str              — newline-separated "label,value" lines
-//    optionLabelField — key to store each line's label under
-//    optionValueField — key to store each line's value under
-//
-//  Returns:
-//    one row object per non-blank line
-//----------------------------------------------------------------------------------
-function parseTableData(
-  str: string,
-  optionLabelField: string,
-  optionValueField: string
-): Array<Record<string, string>> {
-  const result = str
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map(line => {
-      const [label, value] = line.split(',').map(s => s.trim())
-      return { [optionLabelField]: label ?? '', [optionValueField]: value ?? '' }
-    })
   return result
 }
 
@@ -813,198 +784,6 @@ function MyBoxTab() {
   function handleApply(e: React.FormEvent) {
     e.preventDefault()
     setApplied({ ...draft })
-  }
-}
-
-type DropdownControlProps = {
-  mode: 'tableData' | 'table'
-  label: string
-  name: string
-  optionLabel: string
-  optionValue: string
-  tableDataText: string
-  table: string
-  whereColumn1: string
-  whereValue1: string
-  whereColumn2: string
-  whereValue2: string
-  orderBy: string
-  defaultClass_Label: string
-  defaultClass_Search: string
-  overrideClass_Label: string
-  overrideClass_Search: string
-  overrideClass_Dropdown: string
-  includeBlank: boolean
-  searchEnabled: boolean
-}
-const dropdownDefaults: DropdownControlProps = {
-  mode: 'tableData',
-  label: 'Pick one',
-  name: 'colour',
-  optionLabel: 'col_label',
-  optionValue: 'col_value',
-  tableDataText: 'Red,red\nGreen,green\nBlue,blue\nYellow,yellow\nPurple,purple',
-  table: 'xlg_logging',
-  whereColumn1: '',
-  whereValue1: '',
-  whereColumn2: '',
-  whereValue2: '',
-  orderBy: '',
-  defaultClass_Label: MyDropdown_labelDftClass,
-  defaultClass_Search: MyDropdown_searchDftClass,
-  overrideClass_Label: '',
-  overrideClass_Search: '',
-  overrideClass_Dropdown: 'w-72',
-  includeBlank: true,
-  searchEnabled: false,
-}
-
-//----------------------------------------------------------------------------------
-//  MyDropdownTab — interactive demo of MyDropdown: props, live preview, and returns
-//----------------------------------------------------------------------------------
-function MyDropdownTab() {
-  const [draft, setDraft] = useState<DropdownControlProps>(dropdownDefaults)
-  const [applied, setApplied] = useState<DropdownControlProps>(dropdownDefaults)
-  const [selectedOption, setSelectedOption] = useState<string | number>('')
-
-  const whereColumnValuePairs = useMemo(() => {
-    const pairs = [
-      { column: applied.whereColumn1, value: applied.whereValue1 },
-      { column: applied.whereColumn2, value: applied.whereValue2 }
-    ].filter(pair => pair.column && pair.value)
-    return pairs.length > 0 ? pairs : undefined
-  }, [applied.whereColumn1, applied.whereValue1, applied.whereColumn2, applied.whereValue2])
-
-  return (
-    <ThreeSection
-      controls={
-        <form onSubmit={handleApply} className='flex flex-col gap-2'>
-          <ControlRow label='mode'>
-            <label className='mr-3 text-xs'>
-              <input type='radio' name='dropdown-mode' checked={draft.mode === 'tableData'} onChange={() => setDraft(d => ({ ...d, mode: 'tableData' }))} /> tableData
-            </label>
-            <label className='text-xs'>
-              <input type='radio' name='dropdown-mode' checked={draft.mode === 'table'} onChange={() => setDraft(d => ({ ...d, mode: 'table' }))} /> table
-            </label>
-          </ControlRow>
-          <ControlRow label='label'>
-            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='name'>
-            <MyInput value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='optionLabel'>
-            <MyInput value={draft.optionLabel} onChange={e => setDraft(d => ({ ...d, optionLabel: e.target.value }))} overrideClass='w-full' placeholder='e.g. col_label / lg_functionname' />
-          </ControlRow>
-          <ControlRow label='optionValue'>
-            <MyInput value={draft.optionValue} onChange={e => setDraft(d => ({ ...d, optionValue: e.target.value }))} overrideClass='w-full' placeholder='e.g. col_value / lg_functionname' />
-          </ControlRow>
-          <ControlRow label='tableData (mode=tableData, "label,value" per line)'>
-            <MyTextarea value={draft.tableDataText} onChange={e => setDraft(d => ({ ...d, tableDataText: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='table (mode=table)'>
-            <MyInput value={draft.table} onChange={e => setDraft(d => ({ ...d, table: e.target.value }))} overrideClass='w-full' placeholder='e.g. xlg_logging' />
-          </ControlRow>
-          <ControlRow label='whereColumn 1 (mode=table)'>
-            <MyInput value={draft.whereColumn1} onChange={e => setDraft(d => ({ ...d, whereColumn1: e.target.value }))} overrideClass='w-full' placeholder='e.g. lg_severity' />
-          </ControlRow>
-          <ControlRow label='whereValue 1 (mode=table)'>
-            <MyInput value={draft.whereValue1} onChange={e => setDraft(d => ({ ...d, whereValue1: e.target.value }))} overrideClass='w-full' placeholder='e.g. E' />
-          </ControlRow>
-          <ControlRow label='whereColumn 2 (mode=table)'>
-            <MyInput value={draft.whereColumn2} onChange={e => setDraft(d => ({ ...d, whereColumn2: e.target.value }))} overrideClass='w-full' placeholder='e.g. lg_caller' />
-          </ControlRow>
-          <ControlRow label='whereValue 2 (mode=table)'>
-            <MyInput value={draft.whereValue2} onChange={e => setDraft(d => ({ ...d, whereValue2: e.target.value }))} overrideClass='w-full' placeholder='e.g. test-app' />
-          </ControlRow>
-          <ControlRow label='orderBy'>
-            <MyInput value={draft.orderBy} onChange={e => setDraft(d => ({ ...d, orderBy: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='overrideClass_Dropdown'>
-            <MyTextarea
-              value={draft.overrideClass_Dropdown}
-              onChange={e => setDraft(d => ({ ...d, overrideClass_Dropdown: e.target.value }))}
-              overrideClass='w-full h-48'
-            />
-          </ControlRow>
-          <ControlRow label='defaultClass_Label'>
-            <MyTextarea value={draft.defaultClass_Label} onChange={e => setDraft(d => ({ ...d, defaultClass_Label: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='defaultClass_Search'>
-            <MyTextarea value={draft.defaultClass_Search} onChange={e => setDraft(d => ({ ...d, defaultClass_Search: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='overrideClass_Label'>
-            <MyTextarea value={draft.overrideClass_Label} onChange={e => setDraft(d => ({ ...d, overrideClass_Label: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='overrideClass_Search'>
-            <MyTextarea value={draft.overrideClass_Search} onChange={e => setDraft(d => ({ ...d, overrideClass_Search: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='includeBlank'>
-            <input type='checkbox' checked={draft.includeBlank} onChange={e => setDraft(d => ({ ...d, includeBlank: e.target.checked }))} />
-          </ControlRow>
-          <ControlRow label='searchEnabled'>
-            <input type='checkbox' checked={draft.searchEnabled} onChange={e => setDraft(d => ({ ...d, searchEnabled: e.target.checked }))} />
-          </ControlRow>
-          <div className='mt-3'>
-            <MyButton type='submit'>Apply</MyButton>
-          </div>
-        </form>
-      }
-      preview={
-        <MyDropdown
-          selectedOption={selectedOption}
-          setSelectedOption={setSelectedOption}
-          tableData={
-            applied.mode === 'tableData'
-              ? parseTableData(applied.tableDataText, applied.optionLabel, applied.optionValue)
-              : undefined
-          }
-          table={applied.mode === 'table' ? applied.table : undefined}
-          whereColumnValuePairs={applied.mode === 'table' ? whereColumnValuePairs : undefined}
-          orderBy={applied.orderBy}
-          optionLabel={applied.optionLabel}
-          optionValue={applied.optionValue}
-          label={applied.label}
-          name={applied.name}
-          includeBlank={applied.includeBlank}
-          searchEnabled={applied.searchEnabled}
-          defaultClass_Label={applied.defaultClass_Label}
-          defaultClass_Search={applied.defaultClass_Search}
-          overrideClass_Label={applied.overrideClass_Label}
-          overrideClass_Search={applied.overrideClass_Search}
-          overrideClass_Dropdown={applied.overrideClass_Dropdown}
-        />
-      }
-      returns={
-        <>
-          <ClassInfo constants={[{ name: 'MyDropdown_dftClass', value: MyDropdown_dftClass }]} overrideClass={applied.overrideClass_Dropdown} />
-          <ReturnRow label='selectedOption' value={selectedOption !== '' ? String(selectedOption) : '(none)'} />
-          <ReturnRow label='type' value={selectedOption !== '' ? typeof selectedOption : '—'} />
-          <ReturnRow
-            label='tableData'
-            value={
-              applied.mode === 'tableData'
-                ? JSON.stringify(parseTableData(applied.tableDataText, applied.optionLabel, applied.optionValue))
-                : '(unused)'
-            }
-          />
-          <ReturnRow label='labelClassName' value={myMergeClasses(applied.defaultClass_Label, applied.overrideClass_Label)} />
-          <ReturnRow label='searchClassName' value={myMergeClasses(applied.defaultClass_Search, applied.overrideClass_Search)} />
-        </>
-      }
-    />
-  )
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //
-  //  Params:
-  //    e — the form's submit event; only used to call preventDefault
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelectedOption('')
   }
 }
 
@@ -1578,8 +1357,9 @@ function MySelectTab() {
   const [draft, setDraft] = useState<SelectControlProps>(selectDefaults)
   const [applied, setApplied] = useState<SelectControlProps>(selectDefaults)
   const [selected, setSelected] = useState('')
+  const [simulatingDelayedLoad, setSimulatingDelayedLoad] = useState(false)
 
-  const parsedOptions =
+  const parsedOptions: MySelectOption[] =
     applied.optionsMode === 'labelValue'
       ? parseLabelValueOptions(applied.labelValueOptions)
       : applied.options.split(',').map(o => o.trim()).filter(Boolean)
@@ -1637,15 +1417,18 @@ function MySelectTab() {
           <ControlRow label='searchClass'>
             <MyTextarea value={draft.searchClass} onChange={e => setDraft(d => ({ ...d, searchClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
-          <div className='mt-3'>
+          <div className='mt-3 flex items-center gap-2'>
             <MyButton type='submit'>Apply</MyButton>
+            <MyButton type='button' onClick={simulateDelayedLoad}>
+              Simulate delayed load (pre-selected value)
+            </MyButton>
           </div>
         </form>
       }
       preview={
         <MySelect
           label={applied.label}
-          options={parsedOptions}
+          options={simulatingDelayedLoad ? [] : parsedOptions}
           overrideClass={applied.overrideClass}
           labelClass={applied.labelClass || undefined}
           containerClass={applied.containerClass || undefined}
@@ -1661,6 +1444,14 @@ function MySelectTab() {
           <ClassInfo constants={[{ name: 'MySelect_dftClass', value: MySelect_dftClass }]} overrideClass={applied.overrideClass} />
           <ReturnRow label='selected' value={selected || '(none)'} />
           <ReturnRow label='searchClassName' value={myMergeClasses(MySelect_searchDftClass, applied.searchClass)} />
+          <ReturnRow
+            label='delayed-load demo'
+            value={
+              simulatingDelayedLoad
+                ? 'options withheld — selected should NOT clear'
+                : '(idle — click the demo button, with searchEnabled on)'
+            }
+          />
         </>
       }
     />
@@ -1676,6 +1467,21 @@ function MySelectTab() {
     e.preventDefault()
     setApplied({ ...draft })
     setSelected('')
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  simulateDelayedLoad — reproduces the searchEnabled auto-select race: pre-selects a real
+  //  option, then withholds `options` for a moment (as if an async fetch hadn't resolved yet),
+  //  restoring it after a delay. Demonstrates that `selected` survives the gap instead of being
+  //  silently cleared while the option list is momentarily empty.
+  //----------------------------------------------------------------------------------------------
+  function simulateDelayedLoad() {
+    const demoDelayMs = 1200
+    const firstOption = parsedOptions[0]
+    if (!firstOption) return
+    setSelected(typeof firstOption === 'string' ? firstOption : firstOption.value)
+    setSimulatingDelayedLoad(true)
+    setTimeout(() => setSimulatingDelayedLoad(false), demoDelayMs)
   }
 }
 
@@ -1725,6 +1531,7 @@ function MySelectTableTab() {
   const [draft, setDraft] = useState<SelectTableControlProps>(selectTableDefaults)
   const [applied, setApplied] = useState<SelectTableControlProps>(selectTableDefaults)
   const [selectedOption, setSelectedOption] = useState<string | number>('')
+  const [demoRunId, setDemoRunId] = useState(0)
 
   const whereColumnValuePairs = useMemo(() => {
     const pairs = [
@@ -1809,13 +1616,17 @@ function MySelectTableTab() {
               overrideClass='w-full h-16'
             />
           </ControlRow>
-          <div className='mt-3'>
+          <div className='mt-3 flex items-center gap-2'>
             <MyButton type='submit'>Apply</MyButton>
+            <MyButton type='button' onClick={() => setDemoRunId(id => id + 1)}>
+              Simulate reload (keep current selection)
+            </MyButton>
           </div>
         </form>
       }
       preview={
         <MySelectTable
+          key={demoRunId}
           selectedOption={selectedOption}
           setSelectedOption={setSelectedOption}
           table={applied.table}
@@ -1839,6 +1650,10 @@ function MySelectTableTab() {
           <ClassInfo constants={[{ name: 'MyDropdown_dftClass', value: MyDropdown_dftClass }]} overrideClass={applied.overrideClass_Dropdown} />
           <ReturnRow label='selectedOption' value={selectedOption !== '' ? String(selectedOption) : '(none)'} />
           <ReturnRow label='type' value={selectedOption !== '' ? typeof selectedOption : '—'} />
+          <ReturnRow
+            label='reload demo'
+            value='select a value above, then click "Simulate reload" — it should still be selected once the table re-fetches'
+          />
         </>
       }
     />
