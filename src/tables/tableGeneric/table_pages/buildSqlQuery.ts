@@ -1,6 +1,6 @@
 import type { JoinParams, Filter } from '../../structures'
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Helper to build SQL query and WHERE clause
 //
 //  Params:
@@ -13,7 +13,7 @@ import type { JoinParams, Filter } from '../../structures'
 //  Returns:
 //    sqlQuery    — the built 'SELECT * FROM ...' string
 //    queryValues — the values for each placeholder, in order
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function buildSqlQuery({
   table,
   joins = [],
@@ -91,7 +91,7 @@ export function buildSqlQuery({
   return { sqlQuery, queryValues }
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Apply DISTINCT ON / ORDER BY / LIMIT / OFFSET to a base SELECT * query — shared by
 // fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build.
 // LIMIT/OFFSET are bound as $N params (they're values); ORDER BY/DISTINCT ON stay
@@ -107,7 +107,7 @@ export function buildSqlQuery({
 //  Returns:
 //    finalQuery  — the query with DISTINCT ON/ORDER BY/LIMIT/OFFSET applied
 //    queryValues — queryValues with limit/offset appended, if supplied
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function applyFetchSuffix(
   sqlQuery: string,
   queryValues: (string | number)[],
@@ -143,7 +143,7 @@ export function applyFetchSuffix(
   return { finalQuery, queryValues: updatedValues }
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Build a COUNT(*) version of a base SELECT * query, wrapping in a subquery when
 // DISTINCT ON is needed for an accurate count — shared by fetchTotalPages's cache-key
 // build and table_fetch_pages_total's actual query build
@@ -155,7 +155,7 @@ export function applyFetchSuffix(
 //
 //  Returns:
 //    the COUNT(*) query
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function buildCountQuery(sqlQuery: string, distinctColumns: string[] = []): string {
   if (distinctColumns.length > 0) {
     return `SELECT COUNT(*) FROM (${sqlQuery.replace(

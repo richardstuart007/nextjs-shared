@@ -60,6 +60,12 @@ export function MyHelp({
 
   useEffect(() => {
     if (!closeOnOutsideClick) return
+    //----------------------------------------------------------------------------------------------
+    //  onClickOutside — closes the help panel when a mousedown lands outside the component
+    //
+    //  Params:
+    //    e — the document mousedown event
+    //----------------------------------------------------------------------------------------------
     function onClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }

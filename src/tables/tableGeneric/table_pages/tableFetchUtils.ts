@@ -7,7 +7,7 @@ import { buildSql_Readable } from '../buildSql_Readable'
 import { buildSqlQuery, applyFetchSuffix, buildCountQuery } from './buildSqlQuery'
 import type { JoinParams, Filter } from '../../structures'
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Shared private function – builds and executes the query
 //
 //  Params:
@@ -21,7 +21,7 @@ import type { JoinParams, Filter } from '../../structures'
 //
 //  Returns:
 //    the matching rows for this page (throws on failure, after logging)
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export async function table_fetch_pages_filtered({
   table,
   joins = [],
@@ -88,7 +88,7 @@ export async function table_fetch_pages_filtered({
   }
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Shared logic for total pages
 //
 //  Params:
@@ -102,7 +102,7 @@ export async function table_fetch_pages_filtered({
 //
 //  Returns:
 //    the total page count (throws on failure, after logging)
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export async function table_fetch_pages_total({
   table,
   joins = [],
@@ -165,7 +165,7 @@ export async function table_fetch_pages_total({
   }
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Shared logic for the actual total row count (no page-size division)
 //
 //  Params:
@@ -178,7 +178,7 @@ export async function table_fetch_pages_total({
 //
 //  Returns:
 //    the total row count (throws on failure, after logging)
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export async function table_fetch_rows_total({
   table,
   joins = [],

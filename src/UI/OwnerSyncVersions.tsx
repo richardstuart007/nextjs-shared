@@ -549,6 +549,33 @@ export default function OwnerSyncVersions() {
   }
 
   //----------------------------------------------------------------------------------------------
+  //  handleTargetBlur — saves (or, if cleared, deletes) one package's target version
+  //
+  //  Params:
+  //    pkg   — package name
+  //    value — the input's current value
+  //    kind  — which target section this input edits ('deps' or 'overrides')
+  //----------------------------------------------------------------------------------------------
+  async function handleTargetBlur(pkg: string, value: string, kind: 'deps' | 'overrides') {
+    const trimmed = value.trim()
+
+    if (trimmed === '') {
+      await action_deleteTarget(pkg, kind)
+      setTargets(prev => {
+        const next = { deps: { ...prev.deps }, overrides: { ...prev.overrides } }
+        delete next[kind][pkg]
+        return next
+      })
+      return
+    }
+
+    if (trimmed !== targets[kind][pkg]) {
+      await action_saveTarget(pkg, trimmed, kind)
+      setTargets(prev => ({ ...prev, [kind]: { ...prev[kind], [pkg]: trimmed } }))
+    }
+  }
+
+  //----------------------------------------------------------------------------------------------
   //  handleSyncPackage — same as handleSync but scoped to a single package across all projects
   //
   //  Params:
@@ -577,36 +604,9 @@ export default function OwnerSyncVersions() {
     setLocalVersions(lv)
     setSyncing(false)
   }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleTargetBlur — saves (or, if cleared, deletes) one package's target version
-  //
-  //  Params:
-  //    pkg   — package name
-  //    value — the input's current value
-  //    kind  — which target section this input edits ('deps' or 'overrides')
-  //----------------------------------------------------------------------------------------------
-  async function handleTargetBlur(pkg: string, value: string, kind: 'deps' | 'overrides') {
-    const trimmed = value.trim()
-
-    if (trimmed === '') {
-      await action_deleteTarget(pkg, kind)
-      setTargets(prev => {
-        const next = { deps: { ...prev.deps }, overrides: { ...prev.overrides } }
-        delete next[kind][pkg]
-        return next
-      })
-      return
-    }
-
-    if (trimmed !== targets[kind][pkg]) {
-      await action_saveTarget(pkg, trimmed, kind)
-      setTargets(prev => ({ ...prev, [kind]: { ...prev[kind], [pkg]: trimmed } }))
-    }
-  }
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  semverCompare — compares two semver strings' major.minor.patch segments
 //
 //  Params:
@@ -614,7 +614,7 @@ export default function OwnerSyncVersions() {
 //
 //  Returns:
 //    negative if a < b, positive if a > b, 0 if equal
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function semverCompare(a: string, b: string): number {
   const pa = a.replace(/-.*$/, '').split('.').map(Number)
   const pb = b.replace(/-.*$/, '').split('.').map(Number)
@@ -625,25 +625,7 @@ function semverCompare(a: string, b: string): number {
   return 0
 }
 
-//----------------------------------------------------------------------------------------------
-//  versionDiff — classifies how two versions differ
-//
-//  Params:
-//    a, b — version specs to compare (range operators stripped via extractBaseVersion)
-//
-//  Returns:
-//    'major' | 'minor' | 'patch' | 'same', for the highest-order segment that differs
-//----------------------------------------------------------------------------------------------
-function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same' {
-  const pa = extractBaseVersion(a).split('.').map(Number)
-  const pb = extractBaseVersion(b).split('.').map(Number)
-  if ((pa[0] ?? 0) !== (pb[0] ?? 0)) return 'major'
-  if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
-  if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
-  return 'same'
-}
-
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  extractBaseVersion — strips a leading range operator (>=, ^, ~, etc.) from a version spec
 //
 //  Params:
@@ -651,7 +633,25 @@ function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same'
 //
 //  Returns:
 //    the bare version, e.g. '1.2.3'
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function extractBaseVersion(value: string): string {
   return value.replace(/^[>=<^~\s]+/, '')
+}
+
+//----------------------------------------------------------------------------------
+//  versionDiff — classifies how two versions differ
+//
+//  Params:
+//    a, b — version specs to compare (range operators stripped via extractBaseVersion)
+//
+//  Returns:
+//    'major' | 'minor' | 'patch' | 'same', for the highest-order segment that differs
+//----------------------------------------------------------------------------------
+function versionDiff(a: string, b: string): 'major' | 'minor' | 'patch' | 'same' {
+  const pa = extractBaseVersion(a).split('.').map(Number)
+  const pb = extractBaseVersion(b).split('.').map(Number)
+  if ((pa[0] ?? 0) !== (pb[0] ?? 0)) return 'major'
+  if ((pa[1] ?? 0) !== (pb[1] ?? 0)) return 'minor'
+  if ((pa[2] ?? 0) !== (pb[2] ?? 0)) return 'patch'
+  return 'same'
 }

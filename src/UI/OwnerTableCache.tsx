@@ -252,12 +252,12 @@ export default function OwnerTableCache() {
   }
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  TablesBadge — comma-joined table list, truncated with a "+N" suffix past the visible count
 //
 //  Params:
 //    tables — the tables this cache entry touches
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function TablesBadge({ tables }: { tables: string[] }) {
   if (tables.length === 0) return <span className='text-gray-400'>—</span>
   const visible = tables.slice(0, OwnerTableCache_tablesBadgeVisibleCount)
@@ -272,7 +272,7 @@ function TablesBadge({ tables }: { tables: string[] }) {
 
 const MAX_DISPLAY_ROWS = 100
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  CacheEntryDetail — full detail view for one cache entry: metadata, the cache key
 //  (SQL), and a row/column grid (with a per-row detail panel) if the cached data is an
 //  array, otherwise raw JSON
@@ -280,7 +280,7 @@ const MAX_DISPLAY_ROWS = 100
 //  Params:
 //    entry — the entry's summary info (tables, caller, rowCount, hitCount, sql)
 //    data  — the entry's full cached value
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const rows = Array.isArray(data) ? data : null
@@ -394,7 +394,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
   )
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  fmtCellValue — formats one cell's raw value for display (Date -> 'YYYY-MM-DD HH:mm',
 //  everything else -> String(val))
 //
@@ -403,7 +403,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
 //
 //  Returns:
 //    the display string
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function fmtCellValue(val: unknown): string {
   if (val instanceof Date) return val.toISOString().slice(0, 16).replace('T', ' ')
   return String(val)

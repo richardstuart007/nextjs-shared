@@ -153,6 +153,22 @@ function getCoreClass(cls: string): string {
 }
 
 //----------------------------------------------------------------------------------
+//  sameTextType — guard for text- group: size class must replace size, colour replace colour
+//
+//  Params:
+//    defaultCls, overrideCls — the two classes being considered for replacement
+//
+//  Returns:
+//    whether both are the same kind (both size, or both colour)
+//----------------------------------------------------------------------------------
+function sameTextType(defaultCls: string, overrideCls: string): boolean {
+  const result = isTextSizeClass(defaultCls) === isTextSizeClass(overrideCls)
+  return result
+}
+
+const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
+
+//----------------------------------------------------------------------------------
 //  isTextSizeClass — true if cls is a text SIZE class (text-xs etc.), not a colour
 //
 //  Params:
@@ -161,13 +177,25 @@ function getCoreClass(cls: string): string {
 //  Returns:
 //    whether cls's core is a known text-size suffix
 //----------------------------------------------------------------------------------
-const TEXT_SIZES = new Set(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', '8xl', '9xl', 'xxs', 'xxx'])
-
 function isTextSizeClass(cls: string): boolean {
   const core = getCoreClass(cls)
   if (!core.startsWith('text-')) return false
   const suffix = core.slice('text-'.length)
   const result = TEXT_SIZES.has(suffix)
+  return result
+}
+
+//----------------------------------------------------------------------------------
+//  sameBorderType — guard for border group: width must replace width, colour replace colour
+//
+//  Params:
+//    defaultCls, overrideCls — the two classes being considered for replacement
+//
+//  Returns:
+//    whether both are the same kind (both colour, or both non-colour)
+//----------------------------------------------------------------------------------
+function sameBorderType(defaultCls: string, overrideCls: string): boolean {
+  const result = isBorderColorClass(defaultCls) === isBorderColorClass(overrideCls)
   return result
 }
 
@@ -185,33 +213,5 @@ function isBorderColorClass(cls: string): boolean {
   if (!cls.startsWith('border-')) return false
   const suffix = cls.slice('border-'.length)
   const result = suffix.includes('-')
-  return result
-}
-
-//----------------------------------------------------------------------------------
-//  sameTextType — guard for text- group: size class must replace size, colour replace colour
-//
-//  Params:
-//    defaultCls, overrideCls — the two classes being considered for replacement
-//
-//  Returns:
-//    whether both are the same kind (both size, or both colour)
-//----------------------------------------------------------------------------------
-function sameTextType(defaultCls: string, overrideCls: string): boolean {
-  const result = isTextSizeClass(defaultCls) === isTextSizeClass(overrideCls)
-  return result
-}
-
-//----------------------------------------------------------------------------------
-//  sameBorderType — guard for border group: width must replace width, colour replace colour
-//
-//  Params:
-//    defaultCls, overrideCls — the two classes being considered for replacement
-//
-//  Returns:
-//    whether both are the same kind (both colour, or both non-colour)
-//----------------------------------------------------------------------------------
-function sameBorderType(defaultCls: string, overrideCls: string): boolean {
-  const result = isBorderColorClass(defaultCls) === isBorderColorClass(overrideCls)
   return result
 }

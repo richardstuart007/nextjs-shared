@@ -137,9 +137,12 @@ export default function MySelectTable<T extends string, U extends string>({
   //  Fetch dropdown options
   //----------------------------------------------------------------------------------------------
   const fetchOptions = useCallback(async () => {
-    //
+    //----------------------------------------------------------------------------------------------
     //  determineRows — queries `table` for the distinct optionLabel/optionValue columns
     //
+    //  Returns:
+    //    the fetched rows; throws if table_fetch reports a failure
+    //----------------------------------------------------------------------------------------------
     async function determineRows(): Promise<Array<RowData<T, U>>> {
       const fetchParams = {
         caller: functionName,

@@ -149,9 +149,16 @@ export default function MyCheckBox({
       const selected = filtered.filter(option => selectedOptions.includes(option.value))
       const unselected = filtered.filter(option => !selectedOptions.includes(option.value))
 
+      //----------------------------------------------------------------------------------------------
+      //  sortFn — comparator applying the sortBy rule (value: numeric when both numbers, else
+      //  string compare; otherwise label string compare) to both the selected and unselected arrays
       //
-      //  Sort both arrays by the same sortBy rule
+      //  Params:
+      //    a, b — the two options being compared
       //
+      //  Returns:
+      //    negative/zero/positive comparator result
+      //----------------------------------------------------------------------------------------------
       function sortFn(
         a: { value: string | number; label: string },
         b: { value: string | number; label: string }

@@ -1672,6 +1672,281 @@ function MySelectTableTab() {
   }
 }
 
+//----------------------------------------------------------------------------------
+//  MySelectMultiTab — interactive demo of MySelectMulti: props, live preview, and returns
+//----------------------------------------------------------------------------------
+function MySelectMultiTab() {
+  const [draft, setDraft] = useState<SelectMultiControlProps>(selectMultiDefaults)
+  const [applied, setApplied] = useState<SelectMultiControlProps>(selectMultiDefaults)
+  const [selected, setSelected] = useState<string[]>([])
+
+  const appliedOptions = applied.optionSet === '20 fruits' ? selectMultiFruitOptions20 : selectMultiFruitOptions6
+  const computedPanelClass = myMergeClasses(
+    myMergeClasses(applied.panelClass, applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : MySelectMulti_panelWidthDftClass),
+    applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : MySelectMulti_panelMaxHeightDftClass
+  )
+  const computedRowClass = myMergeClasses(MySelectMulti_rowDftClass, applied.mergeRowClass)
+  const computedSelectAllRowClass = myMergeClasses(MySelectMulti_selectAllRowDftClass, applied.mergeSelectAllRowClass)
+  const computedCheckboxClass = myMergeClasses(MySelectMulti_checkboxDftClass, applied.mergeCheckboxClass)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='optionSet'>
+            <MySelect
+              options={['6 fruits', '20 fruits']}
+              value={draft.optionSet}
+              onChange={e => setDraft(d => ({ ...d, optionSet: e.target.value as '6 fruits' | '20 fruits' }))}
+            />
+          </ControlRow>
+          <ControlRow label='id'>
+            <MyInput value={draft.id} onChange={e => setDraft(d => ({ ...d, id: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='selectAllLabel'>
+            <MyInput value={draft.selectAllLabel} onChange={e => setDraft(d => ({ ...d, selectAllLabel: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='minSelected'>
+            <MyInput type='number' value={draft.minSelected} onChange={e => setDraft(d => ({ ...d, minSelected: e.target.value }))} overrideClass='w-20' />
+          </ControlRow>
+          <ControlRow label='maxSelected'>
+            <MyInput type='number' value={draft.maxSelected} onChange={e => setDraft(d => ({ ...d, maxSelected: e.target.value }))} overrideClass='w-20' />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea
+              value={draft.overrideClass}
+              onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))}
+              overrideClass='w-full h-48'
+            />
+          </ControlRow>
+          <ControlRow label='labelClass'>
+            <MyTextarea value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='containerClass'>
+            <MyTextarea value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='panelClass'>
+            <MyTextarea value={draft.panelClass} onChange={e => setDraft(d => ({ ...d, panelClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='mergePanelWidthClass'>
+            <MyInput value={draft.mergePanelWidthClass} onChange={e => setDraft(d => ({ ...d, mergePanelWidthClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergePanelMaxHeightClass'>
+            <MyInput value={draft.mergePanelMaxHeightClass} onChange={e => setDraft(d => ({ ...d, mergePanelMaxHeightClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeRowClass'>
+            <MyInput value={draft.mergeRowClass} onChange={e => setDraft(d => ({ ...d, mergeRowClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeSelectAllRowClass'>
+            <MyInput value={draft.mergeSelectAllRowClass} onChange={e => setDraft(d => ({ ...d, mergeSelectAllRowClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='mergeCheckboxClass'>
+            <MyInput value={draft.mergeCheckboxClass} onChange={e => setDraft(d => ({ ...d, mergeCheckboxClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MySelectMulti
+          label={applied.label}
+          options={appliedOptions}
+          selected={selected}
+          onChange={setSelected}
+          id={applied.id || undefined}
+          selectAllLabel={applied.selectAllLabel}
+          minSelected={applied.minSelected !== '' ? Number(applied.minSelected) : undefined}
+          maxSelected={applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined}
+          overrideClass={applied.overrideClass}
+          labelClass={applied.labelClass || undefined}
+          containerClass={applied.containerClass || undefined}
+          panelClass={applied.panelClass || undefined}
+          mergePanelWidthClass={applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : undefined}
+          mergePanelMaxHeightClass={applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : undefined}
+          mergeRowClass={applied.mergeRowClass}
+          mergeSelectAllRowClass={applied.mergeSelectAllRowClass}
+          mergeCheckboxClass={applied.mergeCheckboxClass}
+        />
+      }
+      returns={
+        <>
+          <ClassInfo constants={[{ name: 'MySelectMulti_dftClass', value: MySelectMulti_dftClass }]} overrideClass={applied.overrideClass} />
+          <ReturnRow label='count' value={String(selected.length)} />
+          <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
+          <ReturnRow label='id (auto)' value={applied.id || applied.label.toLowerCase().replace(/\s+/g, '-')} />
+          <ReturnRow label='labelClass' value={applied.labelClass} />
+          <ReturnRow label='containerClass' value={applied.containerClass} />
+          <ReturnRow label='panelClassName' value={computedPanelClass} />
+          <ReturnRow label='rowClass' value={computedRowClass} />
+          <ReturnRow label='selectAllRowClass' value={computedSelectAllRowClass} />
+          <ReturnRow label='checkboxClass' value={computedCheckboxClass} />
+          <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, appliedOptions.length))} />
+          <ReturnRow label='serializeSelection' value={JSON.stringify(serializeSelection(selected, appliedOptions.length))} />
+        </>
+      }
+    />
+  )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //
+  //  Params:
+  //    e — the form's submit event; only used to call preventDefault
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setSelected([])
+  }
+}
+
+//----------------------------------------------------------------------------------
+//  MySelectRowsTab — interactive demo of MySelectRows: props, live preview, and returns
+//----------------------------------------------------------------------------------
+function MySelectRowsTab() {
+  const [draft, setDraft] = useState<SelectRowsControlProps>(selectRowsDefaults)
+  const [applied, setApplied] = useState<SelectRowsControlProps>(selectRowsDefaults)
+  const [value, setValue] = useState(20)
+
+  const parsedOptions = parseNumberList(applied.options)
+  const narrowedOverrideClass = myMergeClasses(MySelectRows_widthClass, applied.overrideClass)
+  const computedClass = myMergeClasses(MySelect_dftClass, narrowedOverrideClass)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='label'>
+            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='options (comma-sep)'>
+            <MyInput value={draft.options} onChange={e => setDraft(d => ({ ...d, options: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='id'>
+            <MyInput value={draft.id} onChange={e => setDraft(d => ({ ...d, id: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea value={draft.overrideClass} onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))} overrideClass='w-full h-48' />
+          </ControlRow>
+          <ControlRow label='labelClass'>
+            <MyTextarea value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='containerClass'>
+            <MyTextarea value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MySelectRows
+          label={applied.label}
+          options={parsedOptions}
+          value={value}
+          onChange={setValue}
+          id={applied.id || undefined}
+          overrideClass={applied.overrideClass}
+          labelClass={applied.labelClass || undefined}
+          containerClass={applied.containerClass || undefined}
+        />
+      }
+      returns={
+        <>
+          <ClassInfo
+            constants={[
+              { name: 'MySelect_dftClass', value: MySelect_dftClass },
+              { name: 'MySelectRows_widthClass', value: MySelectRows_widthClass },
+            ]}
+            overrideClass={applied.overrideClass}
+            computedMerged={computedClass}
+          />
+          <ReturnRow label='value' value={String(value)} />
+          <ReturnRow label='options' value={parsedOptions.join(', ') || '(none)'} />
+          <ReturnRow label='id (auto)' value={applied.id || applied.label.toLowerCase().replace(/\s+/g, '-')} />
+          <ReturnRow label='labelClass' value={applied.labelClass} />
+          <ReturnRow label='containerClass' value={applied.containerClass} />
+        </>
+      }
+    />
+  )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //
+  //  Params:
+  //    e — the form's submit event; only used to call preventDefault
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+  }
+}
+
+//----------------------------------------------------------------------------------
+//  MyToggleTab — interactive demo of MyToggle: props, live preview, and returns
+//----------------------------------------------------------------------------------
+function MyToggleTab() {
+  const [draft, setDraft] = useState<ToggleControlProps>(toggleDefaults)
+  const [applied, setApplied] = useState<ToggleControlProps>(toggleDefaults)
+  const [value, setValue] = useState(false)
+
+  return (
+    <ThreeSection
+      controls={
+        <form onSubmit={handleApply} className='flex flex-col gap-2'>
+          <ControlRow label='inputName'>
+            <MyInput value={draft.inputName} onChange={e => setDraft(d => ({ ...d, inputName: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <ControlRow label='inputValue (start)'>
+            <input type='checkbox' checked={draft.inputValue} onChange={e => setDraft(d => ({ ...d, inputValue: e.target.checked }))} />
+          </ControlRow>
+          <ControlRow label='overrideClass'>
+            <MyTextarea value={draft.overrideClass} onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))} overrideClass='w-full h-48' />
+          </ControlRow>
+          <ControlRow label='labelClass'>
+            <MyInput value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
+          <div className='mt-3'>
+            <MyButton type='submit'>Apply</MyButton>
+          </div>
+        </form>
+      }
+      preview={
+        <MyToggle
+          inputName={applied.inputName}
+          inputValue={value}
+          overrideClass={applied.overrideClass}
+          labelClass={applied.labelClass || undefined}
+          onChange={e => setValue(e.target.checked)}
+        />
+      }
+      returns={
+        <>
+          <ClassInfo constants={[{ name: 'MyToggle_dftClass', value: MyToggle_dftClass }]} overrideClass={applied.overrideClass} />
+          <ReturnRow label='value' value={String(value)} />
+        </>
+      }
+    />
+  )
+
+  //----------------------------------------------------------------------------------------------
+  //  handleApply — commits the draft props to applied on form submit
+  //
+  //  Params:
+  //    e — the form's submit event; only used to call preventDefault
+  //----------------------------------------------------------------------------------------------
+  function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    setApplied({ ...draft })
+    setValue(draft.inputValue)
+  }
+}
+
 type LoadingMessageControlProps = { message1: string; message2: string; containerClass: string; messageClass: string }
 const loadingMessageDefaults: LoadingMessageControlProps = {
   message1: 'Please wait...',
@@ -1747,66 +2022,6 @@ const toggleDefaults: ToggleControlProps = {
   labelClass: 'inline-flex items-center cursor-pointer',
 }
 
-//----------------------------------------------------------------------------------
-//  MyToggleTab — interactive demo of MyToggle: props, live preview, and returns
-//----------------------------------------------------------------------------------
-function MyToggleTab() {
-  const [draft, setDraft] = useState<ToggleControlProps>(toggleDefaults)
-  const [applied, setApplied] = useState<ToggleControlProps>(toggleDefaults)
-  const [value, setValue] = useState(false)
-
-  return (
-    <ThreeSection
-      controls={
-        <form onSubmit={handleApply} className='flex flex-col gap-2'>
-          <ControlRow label='inputName'>
-            <MyInput value={draft.inputName} onChange={e => setDraft(d => ({ ...d, inputName: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='inputValue (start)'>
-            <input type='checkbox' checked={draft.inputValue} onChange={e => setDraft(d => ({ ...d, inputValue: e.target.checked }))} />
-          </ControlRow>
-          <ControlRow label='overrideClass'>
-            <MyTextarea value={draft.overrideClass} onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))} overrideClass='w-full h-48' />
-          </ControlRow>
-          <ControlRow label='labelClass'>
-            <MyInput value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <div className='mt-3'>
-            <MyButton type='submit'>Apply</MyButton>
-          </div>
-        </form>
-      }
-      preview={
-        <MyToggle
-          inputName={applied.inputName}
-          inputValue={value}
-          overrideClass={applied.overrideClass}
-          labelClass={applied.labelClass || undefined}
-          onChange={e => setValue(e.target.checked)}
-        />
-      }
-      returns={
-        <>
-          <ClassInfo constants={[{ name: 'MyToggle_dftClass', value: MyToggle_dftClass }]} overrideClass={applied.overrideClass} />
-          <ReturnRow label='value' value={String(value)} />
-        </>
-      }
-    />
-  )
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //
-  //  Params:
-  //    e — the form's submit event; only used to call preventDefault
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setValue(draft.inputValue)
-  }
-}
-
 type PopupControlProps = { overrideClass: string; overlayClass: string; closeButtonClass: string; closeOnBackdropClick: boolean }
 const popupDefaults: PopupControlProps = {
   overrideClass: '',
@@ -1815,9 +2030,9 @@ const popupDefaults: PopupControlProps = {
   closeOnBackdropClick: false,
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyPopupTab — interactive demo of MyPopup: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyPopupTab() {
   const [draft, setDraft] = useState<PopupControlProps>(popupDefaults)
   const [applied, setApplied] = useState<PopupControlProps>(popupDefaults)
@@ -1884,9 +2099,9 @@ function MyPopupTab() {
 type HourGlassControlProps = { overrideClass: string }
 const hourGlassDefaults: HourGlassControlProps = { overrideClass: '' }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyHourGlassTab — interactive demo of MyHourGlass: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyHourGlassTab() {
   const [draft, setDraft] = useState<HourGlassControlProps>(hourGlassDefaults)
   const [applied, setApplied] = useState<HourGlassControlProps>(hourGlassDefaults)
@@ -1945,9 +2160,9 @@ const helpDefaults: HelpControlProps = {
   closeButtonClass: MyHelp_closeButtonDftClass,
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyHelpTab — interactive demo of MyHelp: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyHelpTab() {
   const [draft, setDraft] = useState<HelpControlProps>(helpDefaults)
   const [applied, setApplied] = useState<HelpControlProps>(helpDefaults)
@@ -2048,9 +2263,9 @@ const helpFieldDefaults: HelpFieldControlProps = {
   tooltipClass: 'absolute left-0 top-full mt-1 z-50 w-64 bg-blue-50 border border-blue-200 text-gray-700 text-xs rounded px-2 py-1.5 shadow-md pointer-events-none whitespace-normal',
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyHelpFieldTab — interactive demo of MyHelpField: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyHelpFieldTab() {
   const [draft, setDraft] = useState<HelpFieldControlProps>(helpFieldDefaults)
   const [applied, setApplied] = useState<HelpFieldControlProps>(helpFieldDefaults)
@@ -2130,9 +2345,9 @@ const helpStepDefaults: HelpStepControlProps = {
   closeButtonClass: MyHelpStep_closeButtonDftClass,
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyHelpStepTab — interactive demo of MyHelpStep: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyHelpStepTab() {
   const [draft, setDraft] = useState<HelpStepControlProps>(helpStepDefaults)
   const [applied, setApplied] = useState<HelpStepControlProps>(helpStepDefaults)
@@ -2411,138 +2626,6 @@ const selectMultiDefaults: SelectMultiControlProps = {
   mergeCheckboxClass: '',
 }
 
-//----------------------------------------------------------------------------------------------
-//  MySelectMultiTab — interactive demo of MySelectMulti: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
-function MySelectMultiTab() {
-  const [draft, setDraft] = useState<SelectMultiControlProps>(selectMultiDefaults)
-  const [applied, setApplied] = useState<SelectMultiControlProps>(selectMultiDefaults)
-  const [selected, setSelected] = useState<string[]>([])
-
-  const appliedOptions = applied.optionSet === '20 fruits' ? selectMultiFruitOptions20 : selectMultiFruitOptions6
-  const computedPanelClass = myMergeClasses(
-    myMergeClasses(applied.panelClass, applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : MySelectMulti_panelWidthDftClass),
-    applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : MySelectMulti_panelMaxHeightDftClass
-  )
-  const computedRowClass = myMergeClasses(MySelectMulti_rowDftClass, applied.mergeRowClass)
-  const computedSelectAllRowClass = myMergeClasses(MySelectMulti_selectAllRowDftClass, applied.mergeSelectAllRowClass)
-  const computedCheckboxClass = myMergeClasses(MySelectMulti_checkboxDftClass, applied.mergeCheckboxClass)
-
-  return (
-    <ThreeSection
-      controls={
-        <form onSubmit={handleApply} className='flex flex-col gap-2'>
-          <ControlRow label='label'>
-            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='optionSet'>
-            <MySelect
-              options={['6 fruits', '20 fruits']}
-              value={draft.optionSet}
-              onChange={e => setDraft(d => ({ ...d, optionSet: e.target.value as '6 fruits' | '20 fruits' }))}
-            />
-          </ControlRow>
-          <ControlRow label='id'>
-            <MyInput value={draft.id} onChange={e => setDraft(d => ({ ...d, id: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='selectAllLabel'>
-            <MyInput value={draft.selectAllLabel} onChange={e => setDraft(d => ({ ...d, selectAllLabel: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='minSelected'>
-            <MyInput type='number' value={draft.minSelected} onChange={e => setDraft(d => ({ ...d, minSelected: e.target.value }))} overrideClass='w-20' />
-          </ControlRow>
-          <ControlRow label='maxSelected'>
-            <MyInput type='number' value={draft.maxSelected} onChange={e => setDraft(d => ({ ...d, maxSelected: e.target.value }))} overrideClass='w-20' />
-          </ControlRow>
-          <ControlRow label='overrideClass'>
-            <MyTextarea
-              value={draft.overrideClass}
-              onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))}
-              overrideClass='w-full h-48'
-            />
-          </ControlRow>
-          <ControlRow label='labelClass'>
-            <MyTextarea value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='containerClass'>
-            <MyTextarea value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='panelClass'>
-            <MyTextarea value={draft.panelClass} onChange={e => setDraft(d => ({ ...d, panelClass: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='mergePanelWidthClass'>
-            <MyInput value={draft.mergePanelWidthClass} onChange={e => setDraft(d => ({ ...d, mergePanelWidthClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='mergePanelMaxHeightClass'>
-            <MyInput value={draft.mergePanelMaxHeightClass} onChange={e => setDraft(d => ({ ...d, mergePanelMaxHeightClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='mergeRowClass'>
-            <MyInput value={draft.mergeRowClass} onChange={e => setDraft(d => ({ ...d, mergeRowClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='mergeSelectAllRowClass'>
-            <MyInput value={draft.mergeSelectAllRowClass} onChange={e => setDraft(d => ({ ...d, mergeSelectAllRowClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='mergeCheckboxClass'>
-            <MyInput value={draft.mergeCheckboxClass} onChange={e => setDraft(d => ({ ...d, mergeCheckboxClass: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <div className='mt-3'>
-            <MyButton type='submit'>Apply</MyButton>
-          </div>
-        </form>
-      }
-      preview={
-        <MySelectMulti
-          label={applied.label}
-          options={appliedOptions}
-          selected={selected}
-          onChange={setSelected}
-          id={applied.id || undefined}
-          selectAllLabel={applied.selectAllLabel}
-          minSelected={applied.minSelected !== '' ? Number(applied.minSelected) : undefined}
-          maxSelected={applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined}
-          overrideClass={applied.overrideClass}
-          labelClass={applied.labelClass || undefined}
-          containerClass={applied.containerClass || undefined}
-          panelClass={applied.panelClass || undefined}
-          mergePanelWidthClass={applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : undefined}
-          mergePanelMaxHeightClass={applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : undefined}
-          mergeRowClass={applied.mergeRowClass}
-          mergeSelectAllRowClass={applied.mergeSelectAllRowClass}
-          mergeCheckboxClass={applied.mergeCheckboxClass}
-        />
-      }
-      returns={
-        <>
-          <ClassInfo constants={[{ name: 'MySelectMulti_dftClass', value: MySelectMulti_dftClass }]} overrideClass={applied.overrideClass} />
-          <ReturnRow label='count' value={String(selected.length)} />
-          <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
-          <ReturnRow label='id (auto)' value={applied.id || applied.label.toLowerCase().replace(/\s+/g, '-')} />
-          <ReturnRow label='labelClass' value={applied.labelClass} />
-          <ReturnRow label='containerClass' value={applied.containerClass} />
-          <ReturnRow label='panelClassName' value={computedPanelClass} />
-          <ReturnRow label='rowClass' value={computedRowClass} />
-          <ReturnRow label='selectAllRowClass' value={computedSelectAllRowClass} />
-          <ReturnRow label='checkboxClass' value={computedCheckboxClass} />
-          <ReturnRow label='isSelectionFiltering' value={String(isSelectionFiltering(selected, appliedOptions.length))} />
-          <ReturnRow label='serializeSelection' value={JSON.stringify(serializeSelection(selected, appliedOptions.length))} />
-        </>
-      }
-    />
-  )
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //
-  //  Params:
-  //    e — the form's submit event; only used to call preventDefault
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-    setSelected([])
-  }
-}
-
 type SelectRowsControlProps = {
   label: string
   options: string
@@ -2558,89 +2641,6 @@ const selectRowsDefaults: SelectRowsControlProps = {
   overrideClass: '',
   labelClass: MySelect_labelDftClass,
   containerClass: MySelect_containerDftClass,
-}
-
-//----------------------------------------------------------------------------------------------
-//  MySelectRowsTab — interactive demo of MySelectRows: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
-function MySelectRowsTab() {
-  const [draft, setDraft] = useState<SelectRowsControlProps>(selectRowsDefaults)
-  const [applied, setApplied] = useState<SelectRowsControlProps>(selectRowsDefaults)
-  const [value, setValue] = useState(20)
-
-  const parsedOptions = parseNumberList(applied.options)
-  const narrowedOverrideClass = myMergeClasses(MySelectRows_widthClass, applied.overrideClass)
-  const computedClass = myMergeClasses(MySelect_dftClass, narrowedOverrideClass)
-
-  return (
-    <ThreeSection
-      controls={
-        <form onSubmit={handleApply} className='flex flex-col gap-2'>
-          <ControlRow label='label'>
-            <MyInput value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='options (comma-sep)'>
-            <MyInput value={draft.options} onChange={e => setDraft(d => ({ ...d, options: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='id'>
-            <MyInput value={draft.id} onChange={e => setDraft(d => ({ ...d, id: e.target.value }))} overrideClass='w-full' />
-          </ControlRow>
-          <ControlRow label='overrideClass'>
-            <MyTextarea value={draft.overrideClass} onChange={e => setDraft(d => ({ ...d, overrideClass: e.target.value }))} overrideClass='w-full h-48' />
-          </ControlRow>
-          <ControlRow label='labelClass'>
-            <MyTextarea value={draft.labelClass} onChange={e => setDraft(d => ({ ...d, labelClass: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <ControlRow label='containerClass'>
-            <MyTextarea value={draft.containerClass} onChange={e => setDraft(d => ({ ...d, containerClass: e.target.value }))} overrideClass='w-full h-16' />
-          </ControlRow>
-          <div className='mt-3'>
-            <MyButton type='submit'>Apply</MyButton>
-          </div>
-        </form>
-      }
-      preview={
-        <MySelectRows
-          label={applied.label}
-          options={parsedOptions}
-          value={value}
-          onChange={setValue}
-          id={applied.id || undefined}
-          overrideClass={applied.overrideClass}
-          labelClass={applied.labelClass || undefined}
-          containerClass={applied.containerClass || undefined}
-        />
-      }
-      returns={
-        <>
-          <ClassInfo
-            constants={[
-              { name: 'MySelect_dftClass', value: MySelect_dftClass },
-              { name: 'MySelectRows_widthClass', value: MySelectRows_widthClass },
-            ]}
-            overrideClass={applied.overrideClass}
-            computedMerged={computedClass}
-          />
-          <ReturnRow label='value' value={String(value)} />
-          <ReturnRow label='options' value={parsedOptions.join(', ') || '(none)'} />
-          <ReturnRow label='id (auto)' value={applied.id || applied.label.toLowerCase().replace(/\s+/g, '-')} />
-          <ReturnRow label='labelClass' value={applied.labelClass} />
-          <ReturnRow label='containerClass' value={applied.containerClass} />
-        </>
-      }
-    />
-  )
-
-  //----------------------------------------------------------------------------------------------
-  //  handleApply — commits the draft props to applied on form submit
-  //
-  //  Params:
-  //    e — the form's submit event; only used to call preventDefault
-  //----------------------------------------------------------------------------------------------
-  function handleApply(e: React.FormEvent) {
-    e.preventDefault()
-    setApplied({ ...draft })
-  }
 }
 
 type PaginationFooterControlProps = {
@@ -2662,9 +2662,9 @@ const paginationFooterDefaults: PaginationFooterControlProps = {
   totalRowsClass: MyPaginationFooter_totalRowsClass,
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyPaginationFooterTab — interactive demo of MyPaginationFooter: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyPaginationFooterTab() {
   const [draft, setDraft] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
   const [applied, setApplied] = useState<PaginationFooterControlProps>(paginationFooterDefaults)
@@ -2762,9 +2762,9 @@ const backHomeNavDefaults: BackHomeNavControlProps = {
   linkClass: MyBackHomeNav_linkDftClass,
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  MyBackHomeNavTab — interactive demo of MyBackHomeNav: props, live preview, and returns
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function MyBackHomeNavTab() {
   const [draft, setDraft] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
   const [applied, setApplied] = useState<BackHomeNavControlProps>(backHomeNavDefaults)

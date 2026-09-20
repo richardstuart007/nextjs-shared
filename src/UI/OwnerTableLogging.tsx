@@ -351,7 +351,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
   }
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  truncateDisplay — shortens a string to OwnerTableLogging_msgTruncateLen with a trailing …
 //
 //  Params:
@@ -359,13 +359,13 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
 //
 //  Returns:
 //    the truncated string, or '' if val is null
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function truncateDisplay(val: string | null): string {
   if (!val) return ''
   return val.length > OwnerTableLogging_msgTruncateLen ? val.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : val
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  sqlViewValue — extracts the SQL field matching the header's raw/readable/params toggle
 //
 //  Params:
@@ -374,14 +374,14 @@ function truncateDisplay(val: string | null): string {
 //
 //  Returns:
 //    the raw/readable SQL string, the params object as JSON text, or null if absent
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): string | null {
   if (view === 'raw') return row.lg_sql_raw
   if (view === 'readable') return row.lg_sql_readable
   return row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  fmtDate — formats a log timestamp as 'YYYY-MM-DD HH:mm'
 //
 //  Params:
@@ -389,18 +389,18 @@ function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): 
 //
 //  Returns:
 //    the formatted display string
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function fmtDate(val: Date | string): string {
   const d = val instanceof Date ? val : new Date(val)
   return d.toISOString().slice(0, 16).replace('T', ' ')
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  LoggingDetail — full detail view for one logging row
 //
 //  Params:
 //    row — the logging row to display
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function LoggingDetail({ row }: { row: table_Logging }) {
   return (
     <div>

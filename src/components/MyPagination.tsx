@@ -69,9 +69,9 @@ export default function MyPagination({
   const allPages = generatePagination(statecurrentPage, totalPages)
   const className = myMergeClasses(MyPagination_dftClass, overrideClass)
 
-  //--------------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   // Render MyPagination
-  //--------------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   return (
     <div className={className}>
       {/* --------------------------------------------------------------------- */}
@@ -233,6 +233,10 @@ function PaginationNumber({
     !isActive ? numberInactiveClass : ''
   ].join(' ')
 
+  //----------------------------------------------------------------------------------------------
+  //  handleClick — sets the current page to this number's page (ignored for non-numeric entries
+  //  such as the '...' ellipsis)
+  //----------------------------------------------------------------------------------------------
   function handleClick() {
     if (typeof page === 'number') {
       setStateCurrentPage(page)

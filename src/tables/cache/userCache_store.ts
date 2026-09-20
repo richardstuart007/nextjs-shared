@@ -14,7 +14,7 @@ const globalForCache = globalThis as unknown as { _Cache: Map<string, CacheEntry
 if (!globalForCache._Cache) globalForCache._Cache = new Map()
 const cache = globalForCache._Cache
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  normalizeSql - Remove extra whitespace from SQL for cleaner cache keys
 //
 //  Params:
@@ -22,14 +22,14 @@ const cache = globalForCache._Cache
 //
 //  Returns:
 //    sql with runs of whitespace collapsed to a single space, trimmed
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function normalizeSql(sql: string): string {
   return sql
     .replace(/\s+/g, ' ') // Replace multiple whitespace characters with a single space
     .trim() // Remove leading/trailing spaces
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  extractTables - Extract all table names from FROM and JOIN clauses
 //
 //  Params:
@@ -37,12 +37,12 @@ function normalizeSql(sql: string): string {
 //
 //  Returns:
 //    every table name found after a FROM or JOIN keyword
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function extractTables(sql: string): string[] {
   return [...sql.matchAll(/\b(?:FROM|JOIN)\s+(\w+)/gi)].map(m => m[1])
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_get - Get cached data by SQL key
 //
 //  Params:
@@ -53,7 +53,7 @@ function extractTables(sql: string): string[] {
 //
 //  Returns:
 //    the cached value, or null on a miss
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_get<T>(
   sql: string,
   caller: string = '',
@@ -91,7 +91,7 @@ export function cache_get<T>(
   return null
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_set - Store data in cache with SQL key
 //
 //  Params:
@@ -100,7 +100,7 @@ export function cache_get<T>(
 //    caller          — logging caller identity
 //    table           — table name, for logging only
 //    level, severity — logging level/severity; default 1/'I'
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_set<T>(
   sql: string,
   data: T,
@@ -132,7 +132,7 @@ export function cache_set<T>(
   })
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_clearUser - Clear all entries containing userId in SQL
 //  (userId appears in the WHERE clause, not in table names, so SQL string search is correct)
 //
@@ -149,7 +149,7 @@ export function cache_set<T>(
 //
 //  Returns:
 //    the number of entries cleared
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_clearUser(
   userId: number,
   caller: string = '',
@@ -191,7 +191,7 @@ export function cache_clearUser(
   return cleared
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_clearTable - Clear all entries referencing a table (uses stored tables array)
 //
 //  Params:
@@ -201,7 +201,7 @@ export function cache_clearUser(
 //
 //  Returns:
 //    the number of entries cleared
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_clearTable(
   tableName: string,
   caller: string = '',
@@ -247,13 +247,13 @@ export function cache_clearTable(
   return cleared
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_clearAll - Clear entire cache
 //
 //  Params:
 //    caller          — logging caller identity
 //    level, severity — logging level/severity; default 1/'I'
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_clearAll(
   caller: string = '',
   level: number = 1,
@@ -273,7 +273,7 @@ export function cache_clearAll(
   })
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_getStats - Get cache statistics
 //
 //  Params:
@@ -283,7 +283,7 @@ export function cache_clearAll(
 //  Returns:
 //    size — total entry count
 //    sqls — every cached SQL key
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_getStats(caller: string = '', level: number = 1, severity: string = 'I') {
   const functionName = 'cache_getStats'
   const sqls: string[] = Array.from(cache.keys())
@@ -312,20 +312,6 @@ export function cache_getStats(caller: string = '', level: number = 1, severity:
   }
 }
 
-//---------------------------------------------------------------------
-//  cache_getEntriesInfo - Return a page of cache entries matching the given filters, simulating
-//  SQL LIMIT/OFFSET over the in-memory cache (there is no table behind this data)
-//
-//  Params:
-//    limit, offset                        — pagination over the filtered result
-//    keyFilter, tableFilter, callerFilter — optional case-insensitive substring
-//                                           filters, applied together (AND)
-//
-//  Returns:
-//    entries     — the page of matching entries
-//    totalCount  — total matching entries (before pagination)
-//    overallSize — total entries in the cache (before filtering)
-//---------------------------------------------------------------------
 export type CacheEntryInfo = {
   sql: string
   tables: string[]
@@ -341,6 +327,20 @@ export type CacheEntriesPage = {
   overallSize: number
 }
 
+//----------------------------------------------------------------------------------
+//  cache_getEntriesInfo - Return a page of cache entries matching the given filters, simulating
+//  SQL LIMIT/OFFSET over the in-memory cache (there is no table behind this data)
+//
+//  Params:
+//    limit, offset                        — pagination over the filtered result
+//    keyFilter, tableFilter, callerFilter — optional case-insensitive substring
+//                                           filters, applied together (AND)
+//
+//  Returns:
+//    entries     — the page of matching entries
+//    totalCount  — total matching entries (before pagination)
+//    overallSize — total entries in the cache (before filtering)
+//----------------------------------------------------------------------------------
 export function cache_getEntriesInfo({
   limit,
   offset,
@@ -382,7 +382,7 @@ export function cache_getEntriesInfo({
   }
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_getEntryData - Return the raw data stored for a cache entry
 //
 //  Params:
@@ -390,14 +390,14 @@ export function cache_getEntriesInfo({
 //
 //  Returns:
 //    the cached value, or null if not found
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_getEntryData(sql: string): any | null {
   const normalizedSql = normalizeSql(sql)
   const entry = cache.get(normalizedSql)
   return entry ? entry.data : null
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_deleteEntry - Delete a single cache entry by SQL key
 //
 //  Params:
@@ -407,7 +407,7 @@ export function cache_getEntryData(sql: string): any | null {
 //
 //  Returns:
 //    whether an entry was actually found and removed
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_deleteEntry(
   sql: string,
   caller: string = '',
@@ -429,17 +429,17 @@ export function cache_deleteEntry(
   return deleted
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  cache_getEntries - Return all cached SQL strings for display
 //
 //  Returns:
 //    every cached SQL key
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 export function cache_getEntries(): string[] {
   return Array.from(cache.keys())
 }
 
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  getDataInfo - Helper to get data info for logging
 //
 //  Params:
@@ -448,7 +448,7 @@ export function cache_getEntries(): string[] {
 //  Returns:
 //    'empty' for null/undefined, 'N rows' for an array, 'object' for a plain
 //    object, or 'type: value' for a primitive
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function getDataInfo(data: any): string {
   if (data === null || data === undefined) {
     return 'empty'

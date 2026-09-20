@@ -150,7 +150,7 @@ export async function table_copy_data({
     return { ok: false, data: false, error: errorMessage }
   }
 }
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  getColumns — lists a table's column names
 //
 //  Params:
@@ -160,7 +160,7 @@ export async function table_copy_data({
 //
 //  Returns:
 //    the table's column names
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 async function getColumns(
   db: any,
   table: string,

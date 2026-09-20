@@ -152,6 +152,74 @@ export function MyInputNumeric({
   }
 
   //----------------------------------------------------------------------------------------------
+  //  handleChange — sanitizes the raw typed/pasted text down to digits (and a single '.' when
+  //  allowed), rejecting negatives and capping decimal digits to `decimals` when set; parses and
+  //  emits the numeric value on acceptance
+  //
+  //  Params:
+  //    e — the change event carrying the raw typed text
+  //----------------------------------------------------------------------------------------------
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = sanitizeRaw(e.target.value)
+    if (raw !== e.target.value) {
+      //
+      //  Pasted/dropped text can carry characters the keydown allowlist never saw (letters,
+      //  blanks, a second decimal point) — force the native element to reflect the cleaned
+      //  string rather than leaving the stale unsanitized text visible
+      //
+      e.target.value = raw
+    }
+    if (raw === '') {
+      //
+      //  A native number input sanitizes invalid text (e.g. a bare "e") to "" on the .value
+      //  getter, but keeps showing the invalid text the user typed — React sees displayValue
+      //  is already '' and skips re-writing the DOM. Explicitly assigning e.target.value forces
+      //  the browser to actually discard that stale text, even though it already reads as ''.
+      //
+      e.target.value = ''
+      setDisplayValue('')
+      onChange(null)
+      return
+    }
+    if (decimals !== undefined && decimals >= 1) {
+      const decimalIndex = raw.indexOf('.')
+      if (decimalIndex !== -1 && raw.length - decimalIndex - 1 > decimals) {
+        return
+      }
+    }
+    const parsed = Number(raw)
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return
+    }
+    setDisplayValue(raw)
+    onChange(parsed)
+  }
+
+  //----------------------------------------------------------------------------------------------
+  //  sanitizeRaw — strips every character that isn't a digit (and, when decimals are permitted,
+  //  keeps only the first '.', stripping any further ones) — the paste/drag-drop/IME-safe
+  //  backstop, since the keydown allowlist above only guards keystrokes typed one at a time
+  //
+  //  Params:
+  //    raw — the input's raw text, straight off the change event
+  //
+  //  Returns:
+  //    the same text with every disallowed character (letters, blanks, extra decimal points, a
+  //    decimal point at all when not permitted, etc.) removed
+  //----------------------------------------------------------------------------------------------
+  function sanitizeRaw(raw: string): string {
+    const pattern = rejectDecimalPoint ? /[0-9]/g : /[0-9.]/g
+    let cleaned = (raw.match(pattern) ?? []).join('')
+    if (!rejectDecimalPoint) {
+      const firstDot = cleaned.indexOf('.')
+      if (firstDot !== -1) {
+        cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
+      }
+    }
+    return cleaned
+  }
+
+  //----------------------------------------------------------------------------------------------
   //  handleKeyDown — allowlist, not a blocklist: only digits, '.' (when decimals are permitted),
   //  navigation/editing keys, and Ctrl/Cmd-held shortcuts (copy/paste/select-all) are let through;
   //  every other keystroke (e.g. 'e'/'E'/'+'/'-', which native type='number' would otherwise
@@ -205,73 +273,5 @@ export function MyInputNumeric({
     }
     setDisplayValue(formatValue(value))
     onBlur?.(e)
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  sanitizeRaw — strips every character that isn't a digit (and, when decimals are permitted,
-  //  keeps only the first '.', stripping any further ones) — the paste/drag-drop/IME-safe
-  //  backstop, since the keydown allowlist above only guards keystrokes typed one at a time
-  //
-  //  Params:
-  //    raw — the input's raw text, straight off the change event
-  //
-  //  Returns:
-  //    the same text with every disallowed character (letters, blanks, extra decimal points, a
-  //    decimal point at all when not permitted, etc.) removed
-  //----------------------------------------------------------------------------------------------
-  function sanitizeRaw(raw: string): string {
-    const pattern = rejectDecimalPoint ? /[0-9]/g : /[0-9.]/g
-    let cleaned = (raw.match(pattern) ?? []).join('')
-    if (!rejectDecimalPoint) {
-      const firstDot = cleaned.indexOf('.')
-      if (firstDot !== -1) {
-        cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
-      }
-    }
-    return cleaned
-  }
-
-  //----------------------------------------------------------------------------------------------
-  //  handleChange — sanitizes the raw typed/pasted text down to digits (and a single '.' when
-  //  allowed), rejecting negatives and capping decimal digits to `decimals` when set; parses and
-  //  emits the numeric value on acceptance
-  //
-  //  Params:
-  //    e — the change event carrying the raw typed text
-  //----------------------------------------------------------------------------------------------
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = sanitizeRaw(e.target.value)
-    if (raw !== e.target.value) {
-      //
-      //  Pasted/dropped text can carry characters the keydown allowlist never saw (letters,
-      //  blanks, a second decimal point) — force the native element to reflect the cleaned
-      //  string rather than leaving the stale unsanitized text visible
-      //
-      e.target.value = raw
-    }
-    if (raw === '') {
-      //
-      //  A native number input sanitizes invalid text (e.g. a bare "e") to "" on the .value
-      //  getter, but keeps showing the invalid text the user typed — React sees displayValue
-      //  is already '' and skips re-writing the DOM. Explicitly assigning e.target.value forces
-      //  the browser to actually discard that stale text, even though it already reads as ''.
-      //
-      e.target.value = ''
-      setDisplayValue('')
-      onChange(null)
-      return
-    }
-    if (decimals !== undefined && decimals >= 1) {
-      const decimalIndex = raw.indexOf('.')
-      if (decimalIndex !== -1 && raw.length - decimalIndex - 1 > decimals) {
-        return
-      }
-    }
-    const parsed = Number(raw)
-    if (Number.isNaN(parsed) || parsed < 0) {
-      return
-    }
-    setDisplayValue(raw)
-    onChange(parsed)
   }
 }

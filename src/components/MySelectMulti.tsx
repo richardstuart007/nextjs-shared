@@ -157,6 +157,12 @@ export default function MySelectMulti({
   const checkboxClassName = myMergeClasses(MySelectMulti_checkboxDftClass, mergeCheckboxClass)
 
   useEffect(() => {
+    //----------------------------------------------------------------------------------------------
+    //  onClickOutside — closes the dropdown panel when a mousedown lands outside the component
+    //
+    //  Params:
+    //    e — the document mousedown event
+    //----------------------------------------------------------------------------------------------
     function onClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }

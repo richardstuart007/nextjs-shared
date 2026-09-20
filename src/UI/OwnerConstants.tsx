@@ -83,12 +83,12 @@ export default function OwnerConstants({ envValues }: Props) {
   )
 }
 
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 //  groupConstants — groups every constants.ts export by its component-name prefix
 //
 //  Returns:
 //    a map of group name (e.g. 'MyButton') to its {name,value} entries
-//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 function groupConstants(): Record<string, { name: string; value: string }[]> {
   const groups: Record<string, { name: string; value: string }[]> = {}
   for (const [name, value] of Object.entries(Constants)) {
