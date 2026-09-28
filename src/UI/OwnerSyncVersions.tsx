@@ -5,6 +5,10 @@
 //    OwnerSyncVersions — cross-project package-version matrix, with per-package target pinning
 //    (deps/overrides) and a one-click Sync that applies targets/npm-latest to every project's
 //    package.json + .npmrc
+//
+//  3) CHANGE HISTORY
+//    2026-09-28 — with no Dep/Override target, a project ahead of npm latest (semver-compared,
+//                 prerelease-aware) no longer shows a Sync button and is shown in teal
 //==============================================================================================
 
 import { useState, useEffect, useMemo } from 'react'
@@ -28,6 +32,7 @@ import {
   type SectionMatrix,
 } from './OwnerSyncVersions_actions'
 import sectionExceptions from './section-exceptions.json'
+import { isAheadOfLatest } from './OwnerSyncVersions_semver'
 
 const SECTION_ORDER: Record<string, number> = { d: 0, v: 1, p: 2, o: 3 }
 const SECTION_LABELS: Record<string, string> = {
@@ -48,17 +53,17 @@ const HELP_BUTTON_CLASS = 'text-xxs text-blue-600 hover:text-blue-800 border bor
 const SYNC_HELP_PANEL_CLASS = 'absolute right-0 z-10 mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs space-y-2 max-w-md shadow-md'
 
 const HELP_LATEST =
-  'Newest version published to the npm registry right now (live lookup; for nextjs-shared, the local source version minus one patch = last published release). Independent of your projects — a project column only shows this value after a Sync brings it up to date, so rows normally sit behind it.'
+  'Newest version published to the npm registry right now (live lookup; for nextjs-shared, the local source version minus one patch = last published release). Independent of your projects — a project column only shows this value after a Sync brings it up to date, so rows normally sit behind it. A project already ahead of it (e.g. on a beta line not yet tagged latest) shows in teal and is never downgraded to it by Sync.'
 const HELP_INSTALLED =
   'The version actually resolved into node_modules (the highest across all project columns). Project cells show the declared package.json spec instead, so they only match this where the project exact-pins and has been npm install-ed; ranges (^, ~) and stale installs make them differ.'
 const HELP_DEP =
-  'Optional pin: the version to set for this package in its dependencies / devDependencies / peerDependencies section on Sync. Blank = Sync uses npm latest.'
+  'Optional pin: the version to set for this package in its dependencies / devDependencies / peerDependencies section on Sync. Blank = Sync uses npm latest, but never downgrades a project that is already ahead of it. An explicit Dep target is applied as-is, even if that is a downgrade.'
 const HELP_OVERRIDE =
   'Optional pin: the version to force via the package.json "overrides" block on Sync. Blank = no override.'
 const HELP_SYNC_ROW =
-  "Runs Sync for just this one package across every project: writes its Dep target (or Override target, or npm latest if neither is set) into each project's package.json, then reinstall the changed projects. The button colour is that row's biggest version gap — red = a major behind, orange = minor, amber = patch, blue = already aligned. It turns blue after a successful Sync."
+  "Runs Sync for just this one package across every project: writes its Dep target (or Override target, or npm latest if neither is set — skipping projects already ahead of npm latest) into each project's package.json, then reinstall the changed projects. The button colour is that row's biggest version gap — red = a major behind, orange = minor, amber = patch, blue = already aligned. It turns blue after a successful Sync."
 const HELP_SYNC_ALL =
-  "Same as a per-row Sync but for every package at once — brings all projects' package.json up to each package's Dep/Override target or npm latest in one pass, then reinstall each changed project."
+  "Same as a per-row Sync but for every package at once — brings all projects' package.json up to each package's Dep/Override target or npm latest (never downgrading a project already ahead of npm latest) in one pass, then reinstall each changed project."
 const HELP_VERSION_BUMP =
   'Does a #plan, #reinstall and #commit to implement the latest nextjs-shared code.'
 
@@ -66,6 +71,13 @@ const HELP_VERSION_BUMP =
 //  Severity ranking so a row's worst version gap can be picked out (major beats minor beats patch)
 //
 const DIFF_RANK: Record<'major' | 'minor' | 'patch', number> = { major: 3, minor: 2, patch: 1 }
+
+//
+//  Project cell that is newer than npm latest with no Dep/Override target set — Sync skips it.
+//  Teal, distinct from green-700 (aligned + installed) and the red/orange/yellow "behind" palette.
+//
+const AHEAD_OF_LATEST_CLASS = 'text-teal-600 font-semibold'
+const AHEAD_OF_LATEST_TITLE = 'Ahead of npm latest — Sync leaves it alone. Set a Dep target to pin it explicitly.'
 
 export default function OwnerSyncVersions() {
   const [matrix, setMatrix] = useState<VersionMatrix | null>(null)
@@ -310,6 +322,11 @@ export default function OwnerSyncVersions() {
                 const depTarget = targets.deps[pkg]
                 const overrideTarget = targets.overrides[pkg]
                 const reference = depTarget ?? overrideTarget ?? latestVer
+                //
+                //  Reference falls back to npm latest only when no Dep/Override target is set —
+                //  the only case where a project ahead of the reference is left alone by Sync
+                //
+                const referenceIsLatest = depTarget == null && overrideTarget == null && latestVer != null
                 const localVer = localVersions[pkg]
                 const displayLatest = localVer ?? latestVer
                 const sectionColSpan = 6 + projects.length
@@ -334,6 +351,11 @@ export default function OwnerSyncVersions() {
                   if (projVer.includes(':')) {
                     if (localVer != null && projInst != null && projInst !== localVer) d = versionDiff(projInst, localVer)
                     if ((depTarget != null || overrideTarget != null) && reference != null && projVer !== reference) syncWouldChange = true
+                  } else if (referenceIsLatest && isAheadOfLatest(projVer, latestVer!)) {
+                    //
+                    //  Ahead of npm latest with no target set — Sync skips it, so no button/colour
+                    //
+                    continue
                   } else if (reference != null && projVer !== reference) {
                     syncWouldChange = true
                     d = versionDiff(projVer, reference)
@@ -432,6 +454,8 @@ export default function OwnerSyncVersions() {
                         )
                       }
                       const aligned = reference != null && ver === reference
+                      const aheadOfLatest = !aligned && ver !== null && referenceIsLatest && isAheadOfLatest(ver, latestVer!)
+                      const cellTitle = aheadOfLatest ? AHEAD_OF_LATEST_TITLE : undefined
                       const refBase = reference ? extractBaseVersion(reference) : null
                       const isInstalled = aligned && instVer != null && refBase != null && semverCompare(instVer, refBase) >= 0
                       let mismatchClass = ''
@@ -452,6 +476,8 @@ export default function OwnerSyncVersions() {
                       const cellClass = `px-2 py-0.5 font-mono border border-gray-200 ${sectionMismatch ? 'bg-pink-100' : ''} ${
                         ver === null
                           ? 'text-gray-300'
+                          : aheadOfLatest
+                          ? AHEAD_OF_LATEST_CLASS
                           : !aligned
                           ? mismatchClass
                           : isInstalled
@@ -464,6 +490,7 @@ export default function OwnerSyncVersions() {
                         <td
                           key={proj}
                           className={cellClass}
+                          title={cellTitle}
                         >
                           {verText}
                           {showSectionCode && (

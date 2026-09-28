@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
 import { resolve, join } from 'path'
 import { execFileSync } from 'child_process'
 import { OwnerSyncVersions_npmRegistryFetchTimeoutMs } from '../constants'
+import { isAheadOfLatest } from './OwnerSyncVersions_semver'
 
 const GITHUB_DIR = resolve(process.cwd(), '..')
 const TARGETS_FILE = resolve(process.cwd(), 'src', 'UI', 'sync-targets.json')
@@ -342,6 +343,8 @@ export async function action_deleteTarget(pkg: string, kind: 'deps' | 'overrides
 
 //----------------------------------------------------------------------------------
 //  action_syncVersions — update each project's packages to target or npm latest
+//  (never downgrading to npm latest: a project already ahead of it is skipped in Phase 1;
+//  only an explicit Dep/Override target can move a version backwards)
 //
 //  Params:
 //    packageName — optional; when set, only this one package is synced across all
@@ -382,6 +385,12 @@ export async function action_syncVersions(packageName?: string): Promise<SyncRes
         if (packageName && dep !== packageName) continue
         if (cur.includes(':')) continue  // skip GitHub/git/file URL references
         const latestVer = latest[dep]
+        //
+        //  Never downgrade to npm latest — a project ahead of it (e.g. on a beta line not yet
+        //  tagged latest) is left alone here; only an explicit Dep/Override target (Phase 2)
+        //  may move it backwards
+        //
+        if (latestVer && latestVer !== '?' && isAheadOfLatest(cur, latestVer)) continue
         if (latestVer && latestVer !== '?' && cur !== latestVer) {
           sec[dep] = latestVer
           allChanges.push(`${dep}: ${cur} → ${latestVer}`)
