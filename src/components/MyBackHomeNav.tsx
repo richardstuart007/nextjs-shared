@@ -30,12 +30,14 @@ export function MyBackHomeNav({
   containerClass = MyBackHomeNav_containerDftClass,
   linkClass = MyBackHomeNav_linkDftClass,
 }: Props) {
+  const differsFromHome = backPath !== homePath
+
   return (
     <div className={containerClass}>
       <a href={homePath} className={linkClass}>
         ⌂ Home
       </a>
-      {backPath && backPath !== homePath && (
+      {backPath && differsFromHome && (
         <a href={backPath} className={linkClass}>
           ← {backLabel ?? 'Back'}
         </a>

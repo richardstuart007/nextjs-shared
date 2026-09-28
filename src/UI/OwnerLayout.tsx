@@ -11,17 +11,18 @@
 //==============================================================================================
 
 import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { MyBackHomeNav } from '../components/MyBackHomeNav'
 import { SessionStorageKeyPrefixShared } from '../constants'
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
   const [backPath, setBackPath] = useState<string | null>(null)
+  const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') {
-      window.location.href = '/'
+      router.push('/')
       return
     }
     if (pathname === '/owner') {
@@ -29,7 +30,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
     } else {
       setBackPath('/owner')
     }
-  }, [pathname])
+  }, [pathname, router])
 
   if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') return null
 

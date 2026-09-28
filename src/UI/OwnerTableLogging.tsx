@@ -26,73 +26,76 @@ import { action_truncateLogging } from './OwnerTableLogging_actions'
 import {
   OwnerTableLogging_filterDebounceMs,
   OwnerTableLogging_msgTruncateLen,
-  OwnerTableLogging_rowsOptions
+  OwnerTableLogging_rowsOptions,
+  OwnerTableLogging_rowsPerPage
 } from '../constants'
 
-const LOGGING_ROWS_PER_PAGE = 40
-
-interface TableProps {
+type TableProps = {
   initialRows?: table_Logging[]
   initialTotalPages?: number
 }
 
 export default function OwnerTableLogging({ initialRows, initialTotalPages }: TableProps = {}) {
   const functionName = 'OwnerTableLogging'
-  const [msg, setmsg] = useState('')
-  const [caller, setcaller] = useState('')
-  const [functionname, setfunctionname] = useState('')
-  const [severity, setseverity] = useState('')
-  const [level, setlevel] = useState<number | ''>('')
-  const [dbkey, setdbkey] = useState('')
-  const [table, settable] = useState('')
-  const [isupdate, setisupdate] = useState('')
-  const [sqlfilter, setsqlfilter] = useState('')
+  const [filter_msg, setFilter_msg] = useState('')
+  const [filter_caller, setFilter_caller] = useState('')
+  const [filter_functionname, setFilter_functionname] = useState('')
+  const [filter_severity, setFilter_severity] = useState('')
+  const [filter_level, setFilter_level] = useState<number | ''>('')
+  const [filter_dbkey, setFilter_dbkey] = useState('')
+  const [filter_table, setFilter_table] = useState('')
+  const [filter_isupdate, setFilter_isupdate] = useState('')
+  const [filter_sql, setFilter_sql] = useState('')
   const [sqlView, setSqlView] = useState<'raw' | 'readable' | 'params'>('raw')
-  const [currentPage, setcurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(LOGGING_ROWS_PER_PAGE)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(OwnerTableLogging_rowsPerPage)
   const [tabledata, settabledata] = useState<table_Logging[]>(initialRows ?? [])
   const [totalPages, setTotalPages] = useState<number>(initialTotalPages ?? 0)
   const [totalRows, setTotalRows] = useState<number>(0)
-  const prevFilters = useRef({
-    msg: '',
-    caller: '',
-    functionname: '',
-    severity: '',
-    level: '' as number | '',
-    dbkey: '',
-    table: '',
-    isupdate: '',
-    sqlfilter: '',
-    sqlView: 'raw' as 'raw' | 'readable' | 'params'
-  })
   const [message, setMessage] = useState('')
   const [popup, setPopup] = useState<table_Logging | null>(null)
+  const prevFilters = useRef({
+    filter_msg: '',
+    filter_caller: '',
+    filter_functionname: '',
+    filter_severity: '',
+    filter_level: '' as number | '',
+    filter_dbkey: '',
+    filter_table: '',
+    filter_isupdate: '',
+    filter_sql: '',
+    sqlView: 'raw' as 'raw' | 'readable' | 'params'
+  })
 
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) setcurrentPage(totalPages)
+    if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages)
   }, [currentPage, totalPages])
 
   useEffect(() => {
     const filtersChanged =
-      msg !== prevFilters.current.msg ||
-      caller !== prevFilters.current.caller ||
-      functionname !== prevFilters.current.functionname ||
-      severity !== prevFilters.current.severity ||
-      level !== prevFilters.current.level ||
-      dbkey !== prevFilters.current.dbkey ||
-      table !== prevFilters.current.table ||
-      isupdate !== prevFilters.current.isupdate ||
-      sqlfilter !== prevFilters.current.sqlfilter ||
+      filter_msg !== prevFilters.current.filter_msg ||
+      filter_caller !== prevFilters.current.filter_caller ||
+      filter_functionname !== prevFilters.current.filter_functionname ||
+      filter_severity !== prevFilters.current.filter_severity ||
+      filter_level !== prevFilters.current.filter_level ||
+      filter_dbkey !== prevFilters.current.filter_dbkey ||
+      filter_table !== prevFilters.current.filter_table ||
+      filter_isupdate !== prevFilters.current.filter_isupdate ||
+      filter_sql !== prevFilters.current.filter_sql ||
       sqlView !== prevFilters.current.sqlView
     setMessage(filtersChanged ? 'Applying filters...' : '')
     const timeout = filtersChanged ? OwnerTableLogging_filterDebounceMs : 1
     const handler = setTimeout(() => {
-      prevFilters.current = { msg, caller, functionname, severity, level, dbkey, table, isupdate, sqlfilter, sqlView }
+      prevFilters.current = { filter_msg, filter_caller, filter_functionname, filter_severity, filter_level, filter_dbkey, filter_table, filter_isupdate, filter_sql, sqlView }
       fetchdata()
       setMessage('')
     }, timeout)
     return () => clearTimeout(handler)
-  }, [msg, caller, functionname, severity, level, dbkey, table, isupdate, sqlfilter, sqlView, currentPage, rowsPerPage])
+  }, [filter_msg, filter_caller, filter_functionname, filter_severity, filter_level, filter_dbkey, filter_table, filter_isupdate, filter_sql, sqlView, currentPage, rowsPerPage])
+
+  const hasRows = tabledata.length > 0
+  const noRows = !hasRows
+  const popupOpen = popup !== null
 
   return (
     <div className='bg-orange-50'>
@@ -118,16 +121,20 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
                 <div className='flex items-center gap-2'>
                   <span>SQL</span>
                   <div className='flex gap-1'>
-                    {(['raw', 'readable', 'params'] as const).map(opt => (
-                      <button
-                        key={opt}
-                        type='button'
-                        onClick={() => setSqlView(opt)}
-                        className={`px-1.5 py-0.5 rounded text-xxs font-normal ${sqlView === opt ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                      >
-                        {opt === 'raw' ? 'Raw' : opt === 'readable' ? 'Readable' : 'Params'}
-                      </button>
-                    ))}
+                    {(['raw', 'readable', 'params'] as const).map(opt => {
+                      const chipClass = `px-1.5 py-0.5 rounded text-xxs font-normal ${sqlView === opt ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+                      const chipLabel = opt === 'raw' ? 'Raw' : opt === 'readable' ? 'Readable' : 'Params'
+                      return (
+                        <button
+                          key={opt}
+                          type='button'
+                          onClick={() => setSqlView(opt)}
+                          className={chipClass}
+                        >
+                          {chipLabel}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </th>
@@ -138,129 +145,133 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
               <th scope='col' className='px-2'>
                 <div className='text-center'>
                   <MyInputNumeric
-                    id='level'
-                    name='level'
+                    id='filter_level'
+                    name='filter_level'
                     overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     integerOnly
-                    value={level}
-                    onChange={v => setlevel(v ?? '')}
+                    value={filter_level}
+                    onChange={v => setFilter_level(v ?? '')}
                   />
                 </div>
               </th>
               <th scope='col' className='px-2'>
                 <div className='text-center'>
                   <MyInput
-                    id='severity'
-                    name='severity'
+                    id='filter_severity'
+                    name='filter_severity'
                     overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     type='text'
-                    value={severity}
-                    onChange={e => setseverity(e.target.value.toUpperCase())}
+                    value={filter_severity}
+                    onChange={e => setFilter_severity(e.target.value.toUpperCase())}
                   />
                 </div>
               </th>
               <th scope='col' className='px-2'>
                 <DbKeySelect
-                  id='dbkey'
+                  id='filter_dbkey'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   includeBlank
-                  value={dbkey}
-                  onChange={setdbkey}
+                  value={filter_dbkey}
+                  onChange={setFilter_dbkey}
                 />
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
-                  id='table'
-                  name='table'
+                  id='filter_table'
+                  name='filter_table'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   type='text'
-                  value={table}
-                  onChange={e => settable(e.target.value)}
+                  value={filter_table}
+                  onChange={e => setFilter_table(e.target.value)}
                 />
               </th>
               <th scope='col' className='px-2'>
                 <div className='text-center'>
                   <MyInput
-                    id='isupdate'
-                    name='isupdate'
+                    id='filter_isupdate'
+                    name='filter_isupdate'
                     overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs text-center'
                     type='text'
-                    value={isupdate}
-                    onChange={e => setisupdate(e.target.value)}
+                    value={filter_isupdate}
+                    onChange={e => setFilter_isupdate(e.target.value)}
                   />
                 </div>
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
-                  id='caller'
-                  name='caller'
+                  id='filter_caller'
+                  name='filter_caller'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   type='text'
-                  value={caller}
-                  onChange={e => setcaller(e.target.value)}
+                  value={filter_caller}
+                  onChange={e => setFilter_caller(e.target.value)}
                 />
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
-                  id='functionname'
-                  name='functionname'
+                  id='filter_functionname'
+                  name='filter_functionname'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   type='text'
-                  value={functionname}
-                  onChange={e => setfunctionname(e.target.value)}
+                  value={filter_functionname}
+                  onChange={e => setFilter_functionname(e.target.value)}
                 />
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
-                  id='msg'
-                  name='msg'
+                  id='filter_msg'
+                  name='filter_msg'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   type='text'
-                  value={msg}
-                  onChange={e => setmsg(e.target.value)}
+                  value={filter_msg}
+                  onChange={e => setFilter_msg(e.target.value)}
                 />
               </th>
               <th scope='col' className='px-2'>
                 <MyInput
-                  id='sqlfilter'
-                  name='sqlfilter'
+                  id='filter_sql'
+                  name='filter_sql'
                   overrideClass='w-full rounded-md border border-blue-500 font-normal text-xxs'
                   type='text'
-                  value={sqlfilter}
-                  onChange={e => setsqlfilter(e.target.value)}
+                  value={filter_sql}
+                  onChange={e => setFilter_sql(e.target.value)}
                 />
               </th>
               <th scope='col' className='px-2'></th>
             </tr>
           </thead>
           <tbody className='bg-sky-50 text-xxs'>
-            {tabledata && tabledata.length > 0 ? (
-              tabledata.map(row => (
-                <tr
-                  key={row.lg_lgid}
-                  className={`w-full border-b border-gray-100 cursor-pointer ${popup?.lg_lgid === row.lg_lgid ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
-                  onClick={() => setPopup(row)}
-                >
-                  <td className='px-2 text-xxs'>{row.lg_lgid}</td>
-                  <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
-                  <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
-                  <td className='px-2 text-xxs'>{row.lg_dbkey}</td>
-                  <td className='px-2 text-xxs'>{row.lg_table}</td>
-                  <td className='px-2 text-center text-xxs'>{row.lg_isupdate ? 'Y' : 'N'}</td>
-                  <td className='px-2 text-xxs'>{row.lg_caller}</td>
-                  <td className='px-2 text-xxs'>{row.lg_functionname}</td>
-                  <td className='px-2 text-xxs'>
-                    <div className='truncate'>
-                      {row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg}
-                    </div>
-                  </td>
-                  <td className='px-2 text-xxs'>
-                    <div className='truncate'>{truncateDisplay(sqlViewValue(row, sqlView))}</div>
-                  </td>
-                  <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
-                </tr>
-              ))
-            ) : (
+            {hasRows &&
+              tabledata.map(row => {
+                const rowClass = `w-full border-b border-gray-100 cursor-pointer ${popup?.lg_lgid === row.lg_lgid ? 'bg-blue-100' : 'hover:bg-blue-50'}`
+                const isupdateText = row.lg_isupdate ? 'Y' : 'N'
+                const msgText =
+                  row.lg_msg.length > OwnerTableLogging_msgTruncateLen ? row.lg_msg.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : row.lg_msg
+                return (
+                  <tr
+                    key={row.lg_lgid}
+                    className={rowClass}
+                    onClick={() => setPopup(row)}
+                  >
+                    <td className='px-2 text-xxs'>{row.lg_lgid}</td>
+                    <td className='px-2 text-center text-xxs'>{row.lg_level}</td>
+                    <td className='px-2 text-center text-xxs'>{row.lg_severity}</td>
+                    <td className='px-2 text-xxs'>{row.lg_dbkey}</td>
+                    <td className='px-2 text-xxs'>{row.lg_table}</td>
+                    <td className='px-2 text-center text-xxs'>{isupdateText}</td>
+                    <td className='px-2 text-xxs'>{row.lg_caller}</td>
+                    <td className='px-2 text-xxs'>{row.lg_functionname}</td>
+                    <td className='px-2 text-xxs'>
+                      <div className='truncate'>{msgText}</div>
+                    </td>
+                    <td className='px-2 text-xxs'>
+                      <div className='truncate'>{truncateDisplay(sqlViewValue(row, sqlView))}</div>
+                    </td>
+                    <td className='px-2 text-xxs whitespace-nowrap'>{fmtDate(row.lg_datetime)}</td>
+                  </tr>
+                )
+              })}
+            {noRows && (
               <tr>
                 <td colSpan={11}>No data available</td>
               </tr>
@@ -272,17 +283,17 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
           <MyPaginationFooter
             totalPages={totalPages}
             statecurrentPage={currentPage}
-            setStateCurrentPage={setcurrentPage}
+            setStateCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
-            setRowsPerPage={v => { setRowsPerPage(v); setcurrentPage(1) }}
+            setRowsPerPage={v => { setRowsPerPage(v); setCurrentPage(1) }}
             rowsOptions={OwnerTableLogging_rowsOptions}
             totalRows={totalRows}
           />
         </div>
       </div>
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
-        {popup !== null && <LoggingDetail row={popup} />}
+      <MyPopup isOpen={popupOpen} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
+        {popup && <LoggingDetail row={popup} />}
       </MyPopup>
     </div>
   )
@@ -298,15 +309,15 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     const sqlFilterColumn =
       sqlView === 'raw' ? 'lg_sql_raw' : sqlView === 'readable' ? 'lg_sql_readable' : 'lg_sql_params::text'
     const filtersToUpdate: Filter[] = [
-      { column: 'lg_msg', value: msg, operator: 'LIKE' },
-      { column: 'lg_caller', value: caller, operator: 'LIKE' },
-      { column: 'lg_functionname', value: functionname, operator: 'LIKE' },
-      { column: 'lg_severity', value: severity, operator: '=' },
-      { column: 'lg_level', value: level, operator: '=' },
-      { column: 'lg_dbkey', value: dbkey, operator: '=' },
-      { column: 'lg_table', value: table, operator: 'LIKE' },
-      { column: 'lg_isupdate', value: isupdate, operator: '=' },
-      { column: sqlFilterColumn, value: sqlfilter, operator: 'LIKE' }
+      { column: 'lg_msg', value: filter_msg, operator: 'LIKE' },
+      { column: 'lg_caller', value: filter_caller, operator: 'LIKE' },
+      { column: 'lg_functionname', value: filter_functionname, operator: 'LIKE' },
+      { column: 'lg_severity', value: filter_severity, operator: '=' },
+      { column: 'lg_level', value: filter_level, operator: '=' },
+      { column: 'lg_dbkey', value: filter_dbkey, operator: '=' },
+      { column: 'lg_table', value: filter_table, operator: 'LIKE' },
+      { column: 'lg_isupdate', value: filter_isupdate, operator: '=' },
+      { column: sqlFilterColumn, value: filter_sql, operator: 'LIKE' }
     ]
     const filters = filtersToUpdate.filter(filter => filter.value)
     const tableName = 'xlg_logging'
@@ -321,7 +332,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       skipCache: true
     })
     if (fetchResult.ok) settabledata(fetchResult.data)
-    else console.error('Error fetching logging:', fetchResult.error)
+    else setMessage('Error fetching logging: ' + fetchResult.error)
 
     const totalRowsResult = await fetchTotalRows({
       caller: functionName,
@@ -333,7 +344,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
       setTotalRows(totalRowsResult.data)
       setTotalPages(Math.max(1, Math.ceil(totalRowsResult.data / rowsPerPage)))
     } else {
-      console.error('Error fetching logging total rows:', totalRowsResult.error)
+      setMessage('Error fetching logging total rows: ' + totalRowsResult.error)
     }
   }
 
@@ -345,7 +356,7 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
     setMessage('Truncating...')
     await action_truncateLogging()
     setPopup(null)
-    setcurrentPage(1)
+    setCurrentPage(1)
     await fetchdata()
     setMessage('')
   }
@@ -362,7 +373,8 @@ export default function OwnerTableLogging({ initialRows, initialTotalPages }: Ta
 //----------------------------------------------------------------------------------
 function truncateDisplay(val: string | null): string {
   if (!val) return ''
-  return val.length > OwnerTableLogging_msgTruncateLen ? val.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : val
+  const result = val.length > OwnerTableLogging_msgTruncateLen ? val.slice(0, OwnerTableLogging_msgTruncateLen) + '…' : val
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -378,7 +390,8 @@ function truncateDisplay(val: string | null): string {
 function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): string | null {
   if (view === 'raw') return row.lg_sql_raw
   if (view === 'readable') return row.lg_sql_readable
-  return row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
+  const result = row.lg_sql_params ? JSON.stringify(row.lg_sql_params) : null
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -392,7 +405,8 @@ function sqlViewValue(row: table_Logging, view: 'raw' | 'readable' | 'params'): 
 //----------------------------------------------------------------------------------
 function fmtDate(val: Date | string): string {
   const d = val instanceof Date ? val : new Date(val)
-  return d.toISOString().slice(0, 16).replace('T', ' ')
+  const result = d.toISOString().slice(0, 16).replace('T', ' ')
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -402,6 +416,9 @@ function fmtDate(val: Date | string): string {
 //    row — the logging row to display
 //----------------------------------------------------------------------------------
 function LoggingDetail({ row }: { row: table_Logging }) {
+  const isupdateText = row.lg_isupdate ? 'Y' : 'N'
+  const hasSqlParams = row.lg_sql_params !== null && row.lg_sql_params !== undefined
+
   return (
     <div>
       <h3 className='text-sm font-semibold text-gray-700 mb-3'>Log Entry Detail</h3>
@@ -429,7 +446,7 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         </div>
         <div>
           <span className='font-medium text-gray-500'>IsUpdate: </span>
-          {row.lg_isupdate ? 'Y' : 'N'}
+          {isupdateText}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Caller: </span>
@@ -462,7 +479,7 @@ function LoggingDetail({ row }: { row: table_Logging }) {
         </div>
       )}
 
-      {row.lg_sql_params !== null && row.lg_sql_params !== undefined && (
+      {hasSqlParams && (
         <div className='mb-3'>
           <p className='text-xs font-medium text-gray-500 mb-1'>SQL Params:</p>
           <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>

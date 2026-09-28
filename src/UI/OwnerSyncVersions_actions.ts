@@ -35,9 +35,10 @@ export type SectionMatrix = Record<string, Record<string, string | null>>
 //    each project's directory name and absolute path
 //----------------------------------------------------------------------------------
 function discoverProjects(): { name: string; absPath: string }[] {
-  return readdirSync(GITHUB_DIR, { withFileTypes: true })
+  const result = readdirSync(GITHUB_DIR, { withFileTypes: true })
     .filter(e => e.isDirectory() && existsSync(join(GITHUB_DIR, e.name, 'package.json')))
     .map(e => ({ name: e.name, absPath: join(GITHUB_DIR, e.name) }))
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -209,7 +210,8 @@ export async function action_fetchLatestVersions(packages: string[]): Promise<Re
       }
     })
   )
-  return Object.fromEntries(entries)
+  const result = Object.fromEntries(entries)
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -302,7 +304,9 @@ export async function action_readTargets(): Promise<SyncTargets> {
     if ('deps' in raw || 'overrides' in raw) {
       return { deps: (raw.deps ?? {}) as Record<string, string>, overrides: (raw.overrides ?? {}) as Record<string, string> }
     }
-    // migrate old flat format — treat everything as overrides
+    //
+    //  migrate old flat format — treat everything as overrides
+    //
     return { deps: {}, overrides: raw as Record<string, string> }
   } catch {
     return { deps: {}, overrides: {} }
@@ -368,7 +372,9 @@ export async function action_syncVersions(packageName?: string): Promise<SyncRes
 
     const allChanges: string[] = []
 
-    // Phase 1 — update deps/devDeps/peerDeps to npm latest (overrides handles the actual pin)
+    //
+    //  Phase 1 — update deps/devDeps/peerDeps to npm latest (overrides handles the actual pin)
+    //
     for (const section of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
       const sec = pkg[section]
       if (!sec) continue
@@ -383,7 +389,9 @@ export async function action_syncVersions(packageName?: string): Promise<SyncRes
       }
     }
 
-    // Phase 2a — dep targets: pin directly in whichever dep section the package lives in
+    //
+    //  Phase 2a — dep targets: pin directly in whichever dep section the package lives in
+    //
     for (const [dep, targetVer] of Object.entries(targets.deps)) {
       if (packageName && dep !== packageName) continue
       const directSection = (['dependencies', 'devDependencies', 'peerDependencies'] as const)
@@ -393,14 +401,18 @@ export async function action_syncVersions(packageName?: string): Promise<SyncRes
         pkg[directSection]![dep] = targetVer
         allChanges.push(`${dep}: pinned to ${targetVer} in ${directSection}`)
       }
-      // Remove from overrides if it was previously there
+      //
+      //  Remove from overrides if it was previously there
+      //
       if (pkg.overrides?.[dep] != null) {
         delete pkg.overrides![dep]
         allChanges.push(`${dep}: removed from overrides (now pinned in ${directSection})`)
       }
     }
 
-    // Phase 2b — override targets: write to npm overrides block
+    //
+    //  Phase 2b — override targets: write to npm overrides block
+    //
     const newOverrides: Record<string, string> = { ...(pkg.overrides ?? {}) }
 
     for (const [dep, targetVer] of Object.entries(targets.overrides)) {
@@ -415,8 +427,10 @@ export async function action_syncVersions(packageName?: string): Promise<SyncRes
       }
     }
 
-    // Remove overrides for packages no longer in override targets
-    // (when scoped to one package, only that package is eligible for removal)
+    //
+    //  Remove overrides for packages no longer in override targets
+    //  (when scoped to one package, only that package is eligible for removal)
+    //
     for (const dep of Object.keys(newOverrides)) {
       if (packageName && dep !== packageName) continue
       if (!targets.overrides[dep]) {

@@ -61,7 +61,9 @@ export async function table_fetch({
   level = 1,
   severity = 'I'
 }: table_fetch_Props): Promise<TableResult<any[]>> {
-  // Build the SQL with placeholders
+  //
+  //  Build the SQL with placeholders
+  //
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
     table,
     whereColumnValuePairs,
@@ -158,7 +160,8 @@ async function table_fetch_query({
     //
     // Return rows
     //
-    return data.rows.length > 0 ? data.rows : []
+    const result = data.rows.length > 0 ? data.rows : []
+    return result
     //
     // Errors
     //

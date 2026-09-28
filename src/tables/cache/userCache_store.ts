@@ -394,7 +394,8 @@ export function cache_getEntriesInfo({
 export function cache_getEntryData(sql: string): any | null {
   const normalizedSql = normalizeSql(sql)
   const entry = cache.get(normalizedSql)
-  return entry ? entry.data : null
+  const result = entry ? entry.data : null
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -436,7 +437,8 @@ export function cache_deleteEntry(
 //    every cached SQL key
 //----------------------------------------------------------------------------------
 export function cache_getEntries(): string[] {
-  return Array.from(cache.keys())
+  const result = Array.from(cache.keys())
+  return result
 }
 
 //----------------------------------------------------------------------------------

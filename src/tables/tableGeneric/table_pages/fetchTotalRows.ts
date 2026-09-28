@@ -20,7 +20,8 @@
 //==============================================================================================
 
 import { cache_get, cache_set } from '../../cache/userCache_store'
-import { buildSqlQuery, buildCountQuery } from './buildSqlQuery'
+import { buildSqlQuery } from './buildSqlQuery'
+import { buildCountQuery } from './buildCountQuery'
 import type { JoinParams, Filter } from '../../structures'
 import { TableResult } from '../../structures'
 import { table_fetch_rows_total } from './tableFetchUtils'

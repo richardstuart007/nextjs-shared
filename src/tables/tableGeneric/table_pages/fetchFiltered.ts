@@ -19,7 +19,8 @@
 //==============================================================================================
 
 import { cache_get, cache_set } from '../../cache/userCache_store'
-import { buildSqlQuery, applyFetchSuffix } from './buildSqlQuery'
+import { buildSqlQuery } from './buildSqlQuery'
+import { applyFetchSuffix } from './applyFetchSuffix'
 import type { JoinParams, Filter } from '../../structures'
 import { TableResult } from '../../structures'
 import { table_fetch_pages_filtered } from './tableFetchUtils'

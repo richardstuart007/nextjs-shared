@@ -10,6 +10,8 @@
 //      setConfirmDialog   — setter used internally to close the dialog on "No"/backdrop
 //      iconContainerClass — warning-icon wrapper classes; defaults to
 //                           MyConfirmDialog_iconContainerDftClass
+//      iconClass          — warning-icon (ExclamationCircleIcon) classes; defaults to
+//                           MyConfirmDialog_iconDftClass
 //      titleClass         — title classes; defaults to MyConfirmDialog_titleDftClass
 //      subTitleClass      — subtitle classes; defaults to MyConfirmDialog_subTitleDftClass
 //      lineClass          — detail-line classes; defaults to MyConfirmDialog_lineDftClass
@@ -23,6 +25,7 @@ import MyPopup from './MyPopup'
 import { MyButton } from './MyButton'
 import {
   MyConfirmDialog_iconContainerDftClass,
+  MyConfirmDialog_iconDftClass,
   MyConfirmDialog_titleDftClass,
   MyConfirmDialog_subTitleDftClass,
   MyConfirmDialog_lineDftClass,
@@ -47,6 +50,7 @@ type Props = {
   confirmDialog: ConfirmDialogInt
   setConfirmDialog: React.Dispatch<React.SetStateAction<ConfirmDialogInt>>
   iconContainerClass?: string
+  iconClass?: string
   titleClass?: string
   subTitleClass?: string
   lineClass?: string
@@ -58,6 +62,7 @@ export function MyConfirmDialog({
   confirmDialog,
   setConfirmDialog,
   iconContainerClass = MyConfirmDialog_iconContainerDftClass,
+  iconClass = MyConfirmDialog_iconDftClass,
   titleClass = MyConfirmDialog_titleDftClass,
   subTitleClass = MyConfirmDialog_subTitleDftClass,
   lineClass = MyConfirmDialog_lineDftClass,
@@ -88,7 +93,7 @@ export function MyConfirmDialog({
     >
       <div className='text-center mb-4'>
         <div className={iconContainerClass}>
-          <ExclamationCircleIcon className='h-24 w-24 text-current' />
+          <ExclamationCircleIcon className={iconClass} />
         </div>
         <h2 className={titleClass}>{confirmDialog.title}</h2>
         <p className={subTitleClass}>{confirmDialog.subTitle}</p>

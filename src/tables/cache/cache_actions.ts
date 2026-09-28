@@ -57,7 +57,8 @@ export async function cacheAction_getEntries({
   tableFilter?: string
   callerFilter?: string
 }): Promise<CacheEntriesPage> {
-  return cache_getEntriesInfo({ limit, offset, keyFilter, tableFilter, callerFilter })
+  const result = cache_getEntriesInfo({ limit, offset, keyFilter, tableFilter, callerFilter })
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -70,7 +71,8 @@ export async function cacheAction_getEntries({
 //    the cached value
 //----------------------------------------------------------------------------------
 export async function cacheAction_getEntryData(sql: string): Promise<any> {
-  return cache_getEntryData(sql)
+  const result = cache_getEntryData(sql)
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -91,5 +93,6 @@ export async function cacheAction_deleteEntry(
   level: number = 1,
   severity: string = 'I'
 ): Promise<boolean> {
-  return cache_deleteEntry(sql, caller, level, severity)
+  const result = cache_deleteEntry(sql, caller, level, severity)
+  return result
 }

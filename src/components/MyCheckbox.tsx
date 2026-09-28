@@ -11,8 +11,9 @@
 //      name                      — form field name (hidden inputs use `${name}[]`)
 //      label                     — optional label text
 //      defaultClass_Label, defaultClass_Search, defaultClass_Container,
-//      defaultClass_CheckboxItem, overrideClass_Label, overrideClass_Search,
-//      overrideClass_Container, overrideClass_CheckboxItem — style overrides
+//      defaultClass_CheckboxItem, defaultClass_Checkbox, overrideClass_Label,
+//      overrideClass_Search, overrideClass_Container, overrideClass_CheckboxItem,
+//      overrideClass_Checkbox — style overrides
 //      showSelectedCount         — shows an "N items selected" summary; defaults to true
 //      maxSelections, minSelections — optional selection-count bounds; a violating
 //                                    change is rejected and reported via onError
@@ -36,7 +37,8 @@ import {
   MyCheckbox_labelDftClass,
   MyCheckbox_searchDftClass,
   MyCheckbox_containerDftClass,
-  MyCheckbox_itemDftClass
+  MyCheckbox_itemDftClass,
+  MyCheckbox_checkboxDftClass
 } from '../constants'
 
 //
@@ -53,10 +55,12 @@ type CheckBoxProps = {
   defaultClass_Search?: string
   defaultClass_Container?: string
   defaultClass_CheckboxItem?: string
+  defaultClass_Checkbox?: string
   overrideClass_Label?: string
   overrideClass_Search?: string
   overrideClass_Container?: string
   overrideClass_CheckboxItem?: string
+  overrideClass_Checkbox?: string
   showSelectedCount?: boolean
   maxSelections?: number
   minSelections?: number
@@ -76,10 +80,12 @@ export default function MyCheckBox({
   defaultClass_Search = MyCheckbox_searchDftClass,
   defaultClass_Container = MyCheckbox_containerDftClass,
   defaultClass_CheckboxItem = MyCheckbox_itemDftClass,
+  defaultClass_Checkbox = MyCheckbox_checkboxDftClass,
   overrideClass_Label = '',
   overrideClass_Search = '',
   overrideClass_Container = '',
   overrideClass_CheckboxItem = '',
+  overrideClass_Checkbox = '',
   showSelectedCount = true,
   maxSelections,
   minSelections,
@@ -125,6 +131,7 @@ export default function MyCheckBox({
   const className_Search = myMergeClasses(defaultClass_Search, overrideClass_Search)
   const className_Container = myMergeClasses(defaultClass_Container, overrideClass_Container)
   const className_CheckboxItem = myMergeClasses(defaultClass_CheckboxItem, overrideClass_CheckboxItem)
+  const className_Checkbox = myMergeClasses(defaultClass_Checkbox, overrideClass_Checkbox)
   const className_ResortButton = 'text-[10px] px-1 py-0 h-5 bg-green-500 hover:bg-green-600'
 
   //----------------------------------------------------------------------------------------------
@@ -167,9 +174,11 @@ export default function MyCheckBox({
           if (typeof a.value === 'number' && typeof b.value === 'number') {
             return a.value - b.value
           }
-          return String(a.value).localeCompare(String(b.value))
+          const result = String(a.value).localeCompare(String(b.value))
+          return result
         } else {
-          return a.label.localeCompare(b.label)
+          const result = a.label.localeCompare(b.label)
+          return result
         }
       }
 
@@ -196,6 +205,13 @@ export default function MyCheckBox({
   //  renderCheckboxes - Main render function for checkbox group
   //----------------------------------------------------------------------------------------------
   function renderCheckboxes() {
+    const resortButtonLabel = showSelectedFirst ? 'Show Original Order' : 'Show Selected First'
+    const hasFilteredOptions = filteredOptions.length > 0
+    const noFilteredOptions = !hasFilteredOptions
+    const itemSuffix = selectedOptions.length !== 1 ? 's' : ''
+    const minSelectionsText = minSelections !== undefined ? ` (min: ${minSelections})` : ''
+    const maxSelectionsText = maxSelections !== undefined ? ` (max: ${maxSelections})` : ' (max: unlimited)'
+
     return (
       <div className='font-medium'>
         {/* Label */}
@@ -215,7 +231,7 @@ export default function MyCheckBox({
                 setShowSelectedFirst(!showSelectedFirst)
               }}
             >
-              {showSelectedFirst ? 'Show Original Order' : 'Show Selected First'}
+              {resortButtonLabel}
             </MyButton>
           </div>
         )}
@@ -238,7 +254,7 @@ export default function MyCheckBox({
 
         {/* Checkbox Group */}
         <div className={className_Container}>
-          {filteredOptions.length > 0 ? (
+          {hasFilteredOptions &&
             filteredOptions.map(option => (
               <label key={option.value} className={className_CheckboxItem}>
                 <input
@@ -248,12 +264,12 @@ export default function MyCheckBox({
                   onChange={e => {
                     handleCheckboxChange(option.value, e.target.checked)
                   }}
-                  className='h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                  className={className_Checkbox}
                 />
                 <span className='text-xs text-gray-900 cursor-pointer'>{option.label}</span>
               </label>
-            ))
-          ) : (
+            ))}
+          {noFilteredOptions && (
             <p className='text-xs text-gray-500'>No options found</p>
           )}
         </div>
@@ -264,9 +280,9 @@ export default function MyCheckBox({
         {/* Selected count */}
         {showSelectedCount && (
           <p className='text-xs text-gray-500 mt-1'>
-            {selectedOptions.length} item{selectedOptions.length !== 1 ? 's' : ''} selected
-            {minSelections !== undefined && ` (min: ${minSelections})`}
-            {maxSelections !== undefined ? ` (max: ${maxSelections})` : ' (max: unlimited)'}
+            {selectedOptions.length} item{itemSuffix} selected
+            {minSelectionsText}
+            {maxSelectionsText}
           </p>
         )}
       </div>

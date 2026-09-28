@@ -9,14 +9,17 @@
 //==============================================================================================
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { MyBackHomeNav } from '../../components/MyBackHomeNav'
 
 export default function TestLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') {
-      window.location.href = '/'
+      router.push('/')
     }
-  }, [])
+  }, [router])
 
   if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') return null
 

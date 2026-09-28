@@ -19,6 +19,9 @@ export default function OwnerTableSessionStorage() {
     refresh()
   }, [])
 
+  const hasEntries = entries.length > 0
+  const noEntries = entries.length === 0
+
   return (
     <>
       <div className='flex items-center gap-2 mb-2 bg-orange-50'>
@@ -26,7 +29,7 @@ export default function OwnerTableSessionStorage() {
         <MyButton
           overrideClass='bg-red-500 hover:bg-red-600'
           onClick={handleClearAll}
-          disabled={entries.length === 0}
+          disabled={noEntries}
         >
           Clear All
         </MyButton>
@@ -42,23 +45,26 @@ export default function OwnerTableSessionStorage() {
             </tr>
           </thead>
           <tbody className='bg-sky-50 text-xxs'>
-            {entries.length > 0 ? (
-              entries.map((entry, idx) => (
-                <tr key={entry.key} className='w-full border-b border-gray-100'>
-                  <td className='px-2'>{idx + 1}</td>
-                  <td className='px-2 font-mono'>{entry.key}</td>
-                  <td className='px-2 font-mono break-all whitespace-pre-wrap'>{entry.value}</td>
-                  <td className='px-2'>
-                    <MyButton
-                      overrideClass='h-5 px-1 text-xxs bg-red-400 hover:bg-red-500'
-                      onClick={() => handleDelete(entry.key)}
-                    >
-                      Delete
-                    </MyButton>
-                  </td>
-                </tr>
-              ))
-            ) : (
+            {hasEntries &&
+              entries.map((entry, idx) => {
+                const rowNumber = idx + 1
+                return (
+                  <tr key={entry.key} className='w-full border-b border-gray-100'>
+                    <td className='px-2'>{rowNumber}</td>
+                    <td className='px-2 font-mono'>{entry.key}</td>
+                    <td className='px-2 font-mono break-all whitespace-pre-wrap'>{entry.value}</td>
+                    <td className='px-2'>
+                      <MyButton
+                        overrideClass='h-5 px-1 text-xxs bg-red-400 hover:bg-red-500'
+                        onClick={() => handleDelete(entry.key)}
+                      >
+                        Delete
+                      </MyButton>
+                    </td>
+                  </tr>
+                )
+              })}
+            {noEntries && (
               <tr>
                 <td colSpan={4} className='px-2 py-4 text-center text-gray-500'>
                   No sessionStorage entries

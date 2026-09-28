@@ -65,7 +65,9 @@ export async function table_fetch_join({
   level = 1,
   severity = 'I'
 }: table_fetch_join_Props): Promise<TableResult<any[]>> {
-  // Build the SQL with placeholders
+  //
+  //  Build the SQL with placeholders
+  //
   const { sqlQuery: sqlWithPlaceholders, values } = buildSql_Placeholders({
     table,
     whereColumnValuePairs,
@@ -128,7 +130,8 @@ export async function table_fetch_join({
 function injectJoins(sqlQuery: string, table: string, joins: JoinParams[]): string {
   if (joins.length === 0) return sqlQuery
   const joinSql = joins.map(({ table: jt, on }) => `LEFT JOIN ${jt} ON ${on}`).join(' ')
-  return sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
+  const result = sqlQuery.replace(`FROM ${table}`, `FROM ${table} ${joinSql}`)
+  return result
 }
 
 //----------------------------------------------------------------------------------
@@ -189,7 +192,8 @@ async function table_fetch_join_query({
     //
     // Return rows
     //
-    return data.rows.length > 0 ? data.rows : []
+    const result = data.rows.length > 0 ? data.rows : []
+    return result
     //
     // Errors
     //

@@ -49,6 +49,9 @@ export default function FunctionTestPage() {
   const [running, setRunning] = useState(false)
 
   const failCount = results.filter(r => !r.pass).length
+  const runLabel = running ? 'Running...' : 'Run Tests'
+  const hasResults = results.length > 0
+  const summaryClass = failCount === 0 ? 'text-green-700 text-xs' : 'text-red-700 text-xs font-semibold'
 
   return (
     <div className='p-4'>
@@ -59,10 +62,10 @@ export default function FunctionTestPage() {
       </p>
       <div className='flex items-center gap-3 mb-4'>
         <MyButton onClick={runTests} disabled={running}>
-          {running ? 'Running...' : 'Run Tests'}
+          {runLabel}
         </MyButton>
-        {results.length > 0 && (
-          <span className={failCount === 0 ? 'text-green-700 text-xs' : 'text-red-700 text-xs font-semibold'}>
+        {hasResults && (
+          <span className={summaryClass}>
             {results.length} tests, {failCount} failed
           </span>
         )}
@@ -78,15 +81,21 @@ export default function FunctionTestPage() {
           </tr>
         </thead>
         <tbody>
-          {results.map((r, i) => (
-            <tr key={i} className={`border-b border-gray-100 ${r.pass ? '' : 'bg-red-50'}`}>
-              <td className='px-2'>{r.name}</td>
-              <td className='px-2'>{r.expectedOk ? 'ok' : 'fail'}</td>
-              <td className='px-2'>{r.actualOk ? 'ok' : 'fail'}</td>
-              <td className='px-2'>{r.pass ? 'PASS' : 'FAIL'}</td>
-              <td className='px-2'>{r.detail}</td>
-            </tr>
-          ))}
+          {results.map((r, i) => {
+            const rowClass = `border-b border-gray-100 ${r.pass ? '' : 'bg-red-50'}`
+            const expectedText = r.expectedOk ? 'ok' : 'fail'
+            const actualText = r.actualOk ? 'ok' : 'fail'
+            const passText = r.pass ? 'PASS' : 'FAIL'
+            return (
+              <tr key={i} className={rowClass}>
+                <td className='px-2'>{r.name}</td>
+                <td className='px-2'>{expectedText}</td>
+                <td className='px-2'>{actualText}</td>
+                <td className='px-2'>{passText}</td>
+                <td className='px-2'>{r.detail}</td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -146,7 +155,7 @@ export default function FunctionTestPage() {
       //  table_query
       //
       record(list, 'table_query (success)', true, await table_query({ caller: functionName, query: 'SELECT 1 as one' }))
-      record(list, 'table_query (failure)', false, await table_query({ caller: functionName, query: `SELECT * FROM ${BOGUS_TABLE}` }))
+      record(list, 'table_query (failure)', false, await table_query({ caller: functionName, query: `SELECT * FROM ${BOGUS_TABLE}`, table: BOGUS_TABLE }))
 
       //
       //  table_update / table_upsert / table_delete — need the inserted row's id

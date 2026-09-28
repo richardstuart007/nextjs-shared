@@ -14,6 +14,7 @@ import {
   cacheAction_getEntryData
 } from '../tables/cache/cache_actions'
 import type { CacheEntryInfo } from '../tables/cache/userCache_store'
+import { write_logging } from '../tables/tableGeneric/write_logging'
 import { MyInput } from '../components/MyInput'
 import { MyButton } from '../components/MyButton'
 import MyPopup from '../components/MyPopup'
@@ -21,6 +22,7 @@ import MyPaginationFooter from '../components/MyPaginationFooter'
 import {
   OwnerTableCache_tablesBadgeVisibleCount,
   OwnerTableCache_filterDebounceMs,
+  OwnerTableCache_maxDisplayRows,
   MySelectRows_valueDftShared
 } from '../constants'
 
@@ -31,15 +33,15 @@ export default function OwnerTableCache() {
   const [entries, setEntries] = useState<CacheEntryInfo[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [overallSize, setOverallSize] = useState(0)
-  const [keyFilter, setKeyFilter] = useState('')
-  const [tableFilter, setTableFilter] = useState('')
-  const [callerFilter, setCallerFilter] = useState('')
+  const [filter_key, setFilter_key] = useState('')
+  const [filter_table, setFilter_table] = useState('')
+  const [filter_caller, setFilter_caller] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(MySelectRows_valueDftShared)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [popup, setPopup] = useState<PopupState>(null)
-  const prevFilters = useRef({ keyFilter: '', tableFilter: '', callerFilter: '' })
+  const prevFilters = useRef({ filter_key: '', filter_table: '', filter_caller: '' })
 
   const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage))
 
@@ -49,17 +51,23 @@ export default function OwnerTableCache() {
 
   useEffect(() => {
     const filtersChanged =
-      keyFilter !== prevFilters.current.keyFilter ||
-      tableFilter !== prevFilters.current.tableFilter ||
-      callerFilter !== prevFilters.current.callerFilter
+      filter_key !== prevFilters.current.filter_key ||
+      filter_table !== prevFilters.current.filter_table ||
+      filter_caller !== prevFilters.current.filter_caller
     if (filtersChanged) setCurrentPage(1)
     const timeout = filtersChanged ? OwnerTableCache_filterDebounceMs : 1
     const handler = setTimeout(() => {
-      prevFilters.current = { keyFilter, tableFilter, callerFilter }
+      prevFilters.current = { filter_key, filter_table, filter_caller }
       fetchdata()
     }, timeout)
     return () => clearTimeout(handler)
-  }, [keyFilter, tableFilter, callerFilter, currentPage, rowsPerPage])
+  }, [filter_key, filter_table, filter_caller, currentPage, rowsPerPage])
+
+  const clearAllDisabled = loading || overallSize === 0
+  const hasEntries = entries.length > 0
+  const noEntries = !hasEntries
+  const emptyMessage = loading ? 'Loading...' : 'No cache entries'
+  const popupOpen = popup !== null
 
   return (
     <>
@@ -70,7 +78,7 @@ export default function OwnerTableCache() {
         <MyButton
           overrideClass='bg-red-500 hover:bg-red-600'
           onClick={handleClearAll}
-          disabled={loading || overallSize === 0}
+          disabled={clearAllDisabled}
         >
           Clear All
         </MyButton>
@@ -92,23 +100,23 @@ export default function OwnerTableCache() {
                 <th scope='col' className='px-2'></th>
                 <th scope='col' className='px-2'>
                   <MyInput
-                    id='tableFilter'
-                    name='tableFilter'
+                    id='filter_table'
+                    name='filter_table'
                     overrideClass='w-24 font-normal text-xxs'
                     type='text'
-                    value={tableFilter}
-                    onChange={e => setTableFilter(e.target.value)}
+                    value={filter_table}
+                    onChange={e => setFilter_table(e.target.value)}
                     placeholder='filter...'
                   />
                 </th>
                 <th scope='col' className='px-2'>
                   <MyInput
-                    id='callerFilter'
-                    name='callerFilter'
+                    id='filter_caller'
+                    name='filter_caller'
                     overrideClass='w-28 font-normal text-xxs'
                     type='text'
-                    value={callerFilter}
-                    onChange={e => setCallerFilter(e.target.value)}
+                    value={filter_caller}
+                    onChange={e => setFilter_caller(e.target.value)}
                     placeholder='filter...'
                   />
                 </th>
@@ -116,12 +124,12 @@ export default function OwnerTableCache() {
                 <th scope='col' className='px-2'></th>
                 <th scope='col' className='px-2'>
                   <MyInput
-                    id='keyFilter'
-                    name='keyFilter'
+                    id='filter_key'
+                    name='filter_key'
                     overrideClass='w-[800px] font-normal text-xxs'
                     type='text'
-                    value={keyFilter}
-                    onChange={e => setKeyFilter(e.target.value)}
+                    value={filter_key}
+                    onChange={e => setFilter_key(e.target.value)}
                     placeholder='filter by key...'
                   />
                 </th>
@@ -129,39 +137,43 @@ export default function OwnerTableCache() {
               </tr>
             </thead>
             <tbody className='bg-sky-50 text-xxs'>
-              {entries.length > 0 ? (
-                entries.map((entry, idx) => (
-                  <tr
-                    key={entry.sql}
-                    className='w-full border-b border-gray-100 cursor-pointer hover:bg-blue-50'
-                    onClick={() => handleRowClick(entry)}
-                  >
-                    <td className='px-2'>{(currentPage - 1) * rowsPerPage + idx + 1}</td>
-                    <td className='px-2'>
-                      <TablesBadge tables={entry.tables} />
-                    </td>
-                    <td className='px-2'>{entry.caller}</td>
-                    <td className='px-2 text-center'>
-                      {entry.rowCount >= 0 ? entry.rowCount : entry.info}
-                    </td>
-                    <td className='px-2 text-center'>{entry.hitCount}</td>
-                    <td className='px-2 font-mono'>
-                      {entry.sql}
-                    </td>
-                    <td className='px-2' onClick={e => e.stopPropagation()}>
-                      <MyButton
-                        overrideClass='h-5 px-1 text-xxs bg-red-400 hover:bg-red-500'
-                        onClick={() => handleDelete(entry.sql)}
-                      >
-                        Delete
-                      </MyButton>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+              {hasEntries &&
+                entries.map((entry, idx) => {
+                  const rowNumber = (currentPage - 1) * rowsPerPage + idx + 1
+                  const rowCountText = entry.rowCount >= 0 ? entry.rowCount : entry.info
+                  return (
+                    <tr
+                      key={entry.sql}
+                      className='w-full border-b border-gray-100 cursor-pointer hover:bg-blue-50'
+                      onClick={() => handleRowClick(entry)}
+                    >
+                      <td className='px-2'>{rowNumber}</td>
+                      <td className='px-2'>
+                        <TablesBadge tables={entry.tables} />
+                      </td>
+                      <td className='px-2'>{entry.caller}</td>
+                      <td className='px-2 text-center'>
+                        {rowCountText}
+                      </td>
+                      <td className='px-2 text-center'>{entry.hitCount}</td>
+                      <td className='px-2 font-mono'>
+                        {entry.sql}
+                      </td>
+                      <td className='px-2' onClick={e => e.stopPropagation()}>
+                        <MyButton
+                          overrideClass='h-5 px-1 text-xxs bg-red-400 hover:bg-red-500'
+                          onClick={() => handleDelete(entry.sql)}
+                        >
+                          Delete
+                        </MyButton>
+                      </td>
+                    </tr>
+                  )
+                })}
+              {noEntries && (
                 <tr>
                   <td colSpan={7} className='px-2 py-4 text-center text-gray-500'>
-                    {loading ? 'Loading...' : 'No cache entries'}
+                    {emptyMessage}
                   </td>
                 </tr>
               )}
@@ -181,8 +193,8 @@ export default function OwnerTableCache() {
       </div>
       {message && <p className='text-red-600 mt-1 text-xs'>{message}</p>}
 
-      <MyPopup isOpen={popup !== null} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
-        {popup !== null && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
+      <MyPopup isOpen={popupOpen} onClose={() => setPopup(null)} overrideClass='max-w-[95vw] bg-pink-100'>
+        {popup && <CacheEntryDetail entry={popup.entry} data={popup.data} />}
       </MyPopup>
     </>
   )
@@ -192,19 +204,27 @@ export default function OwnerTableCache() {
   //----------------------------------------------------------------------------------------------
   async function fetchdata() {
     setLoading(true)
+    setMessage('')
     try {
       const data = await cacheAction_getEntries({
         limit: rowsPerPage,
         offset: (currentPage - 1) * rowsPerPage,
-        keyFilter,
-        tableFilter,
-        callerFilter
+        keyFilter: filter_key,
+        tableFilter: filter_table,
+        callerFilter: filter_caller
       })
       setEntries(data.entries)
       setTotalCount(data.totalCount)
       setOverallSize(data.overallSize)
     } catch (error) {
-      console.error('Error fetching cache entries:', error)
+      const errorMessage = 'Error fetching cache entries: ' + (error as Error).message
+      setMessage(errorMessage)
+      await write_logging({
+        lg_functionname: 'fetchdata',
+        lg_caller: functionName,
+        lg_msg: errorMessage,
+        lg_severity: 'E'
+      })
     } finally {
       setLoading(false)
     }
@@ -219,9 +239,14 @@ export default function OwnerTableCache() {
       await cacheAction_clearAll(functionName)
       await fetchdata()
     } catch (error) {
-      console.error('Error clearing cache:', error)
-    } finally {
-      setMessage('')
+      const errorMessage = 'Error clearing cache: ' + (error as Error).message
+      setMessage(errorMessage)
+      await write_logging({
+        lg_functionname: 'handleClearAll',
+        lg_caller: functionName,
+        lg_msg: errorMessage,
+        lg_severity: 'E'
+      })
     }
   }
 
@@ -232,8 +257,19 @@ export default function OwnerTableCache() {
   //    entry — the clicked row's summary info
   //----------------------------------------------------------------------------------------------
   async function handleRowClick(entry: CacheEntryInfo) {
-    const data = await cacheAction_getEntryData(entry.sql)
-    setPopup({ entry, data })
+    try {
+      const data = await cacheAction_getEntryData(entry.sql)
+      setPopup({ entry, data })
+    } catch (error) {
+      const errorMessage = 'Error fetching cache entry data: ' + (error as Error).message
+      setMessage(errorMessage)
+      await write_logging({
+        lg_functionname: 'handleRowClick',
+        lg_caller: functionName,
+        lg_msg: errorMessage,
+        lg_severity: 'E'
+      })
+    }
   }
 
   //----------------------------------------------------------------------------------------------
@@ -247,7 +283,14 @@ export default function OwnerTableCache() {
       await cacheAction_deleteEntry(sql, functionName)
       await fetchdata()
     } catch (error) {
-      console.error('Error deleting entry:', error)
+      const errorMessage = 'Error deleting entry: ' + (error as Error).message
+      setMessage(errorMessage)
+      await write_logging({
+        lg_functionname: 'handleDelete',
+        lg_caller: functionName,
+        lg_msg: errorMessage,
+        lg_severity: 'E'
+      })
     }
   }
 }
@@ -262,15 +305,14 @@ function TablesBadge({ tables }: { tables: string[] }) {
   if (tables.length === 0) return <span className='text-gray-400'>—</span>
   const visible = tables.slice(0, OwnerTableCache_tablesBadgeVisibleCount)
   const extra = tables.length - visible.length
+  const hasExtra = extra > 0
   return (
     <>
       {visible.join(', ')}
-      {extra > 0 && <span className='text-gray-400'> +{extra}</span>}
+      {hasExtra && <span className='text-gray-400'> +{extra}</span>}
     </>
   )
 }
-
-const MAX_DISPLAY_ROWS = 100
 
 //----------------------------------------------------------------------------------
 //  CacheEntryDetail — full detail view for one cache entry: metadata, the cache key
@@ -286,6 +328,17 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
   const rows = Array.isArray(data) ? data : null
   const columns = rows && rows.length > 0 ? Object.keys(rows[0]) : []
   const selectedRow = selectedIdx !== null && rows ? rows[selectedIdx] : null
+  const tablesText = entry.tables.length > 0 ? entry.tables.join(', ') : '—'
+  const rowCountText = entry.rowCount >= 0 ? entry.rowCount : entry.info
+  const cachedDataSuffix = rows
+    ? ` (${rows.length} row${rows.length !== 1 ? 's' : ''}${rows.length > OwnerTableCache_maxDisplayRows ? `, showing first ${OwnerTableCache_maxDisplayRows}` : ''})`
+    : ''
+  const hasColumns = columns.length > 0
+  const showRawJson = !rows || !hasColumns
+  const displayRows = rows?.slice(0, OwnerTableCache_maxDisplayRows) ?? []
+  const hasSelectedRow = selectedRow !== null
+  const selectedRowEntries = selectedRow !== null ? Object.entries(selectedRow) : []
+  const selectedRowNumber = selectedIdx !== null ? selectedIdx + 1 : 0
 
   return (
     <div>
@@ -294,7 +347,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
       <div className='grid grid-cols-4 gap-2 mb-3 text-xs'>
         <div>
           <span className='font-medium text-gray-500'>Tables: </span>
-          {entry.tables.length > 0 ? entry.tables.join(', ') : '—'}
+          {tablesText}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Caller: </span>
@@ -302,7 +355,7 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
         </div>
         <div>
           <span className='font-medium text-gray-500'>Rows: </span>
-          {entry.rowCount >= 0 ? entry.rowCount : entry.info}
+          {rowCountText}
         </div>
         <div>
           <span className='font-medium text-gray-500'>Hits: </span>
@@ -320,12 +373,10 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
       <div>
         <p className='text-xs font-medium text-gray-500 mb-1'>
           Cached Data
-          {rows
-            ? ` (${rows.length} row${rows.length !== 1 ? 's' : ''}${rows.length > MAX_DISPLAY_ROWS ? `, showing first ${MAX_DISPLAY_ROWS}` : ''})`
-            : ''}
+          {cachedDataSuffix}
           :
         </p>
-        {rows && columns.length > 0 ? (
+        {rows && hasColumns && (
           <div className='flex gap-4'>
             <div className='flex-1 border rounded overflow-auto'>
               <table className='min-w-full text-xxs text-gray-900'>
@@ -339,52 +390,60 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.slice(0, MAX_DISPLAY_ROWS).map((row: any, i: number) => (
-                    <tr
-                      key={i}
-                      className={`border-t border-gray-100 cursor-pointer ${i === selectedIdx ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
-                      onClick={() => setSelectedIdx(i)}
-                    >
-                      {columns.map(col => (
-                        <td key={col} className='px-2 py-0.5 max-w-xs'>
-                          {row[col] === null || row[col] === undefined ? (
-                            <span className='text-gray-400'>null</span>
-                          ) : (
-                            <div className='truncate'>{fmtCellValue(row[col])}</div>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {displayRows.map((row: any, i: number) => {
+                    const rowClass = `border-t border-gray-100 cursor-pointer ${i === selectedIdx ? 'bg-blue-100' : 'hover:bg-blue-50'}`
+                    return (
+                      <tr
+                        key={i}
+                        className={rowClass}
+                        onClick={() => setSelectedIdx(i)}
+                      >
+                        {columns.map(col => {
+                          const isNullCell = row[col] === null || row[col] === undefined
+                          const hasCellValue = !isNullCell
+                          return (
+                            <td key={col} className='px-2 py-0.5 max-w-xs'>
+                              {isNullCell && <span className='text-gray-400'>null</span>}
+                              {hasCellValue && <div className='truncate'>{fmtCellValue(row[col])}</div>}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {selectedRow !== null && (
+            {hasSelectedRow && (
               <div className='w-80 border-l pl-4 shrink-0'>
                 <p className='text-xs font-medium text-gray-500 mb-2'>
-                  Row {selectedIdx! + 1} of {rows.length}
+                  Row {selectedRowNumber} of {rows.length}
                 </p>
                 <dl className='space-y-2'>
-                  {Object.entries(selectedRow).map(([col, val]) => (
-                    <div key={col} className='text-xs'>
-                      <dt className='font-medium text-gray-500'>{col}</dt>
-                      <dd className='mt-0.5'>
-                        {val === null || val === undefined ? (
-                          <span className='text-gray-400'>null</span>
-                        ) : (
-                          <pre className='rounded px-2 py-0.5 font-mono whitespace-pre-wrap break-all'>
-                            {fmtCellValue(val)}
-                          </pre>
-                        )}
-                      </dd>
-                    </div>
-                  ))}
+                  {selectedRowEntries.map(([col, val]) => {
+                    const isNullValue = val === null || val === undefined
+                    const hasValue = !isNullValue
+                    return (
+                      <div key={col} className='text-xs'>
+                        <dt className='font-medium text-gray-500'>{col}</dt>
+                        <dd className='mt-0.5'>
+                          {isNullValue && <span className='text-gray-400'>null</span>}
+                          {hasValue && (
+                            <pre className='rounded px-2 py-0.5 font-mono whitespace-pre-wrap break-all'>
+                              {fmtCellValue(val)}
+                            </pre>
+                          )}
+                        </dd>
+                      </div>
+                    )
+                  })}
                 </dl>
               </div>
             )}
           </div>
-        ) : (
+        )}
+        {showRawJson && (
           <pre className='rounded p-2 text-xs font-mono whitespace-pre-wrap break-all'>
             {JSON.stringify(data, null, 2)}
           </pre>
@@ -405,6 +464,10 @@ function CacheEntryDetail({ entry, data }: { entry: CacheEntryInfo; data: any })
 //    the display string
 //----------------------------------------------------------------------------------
 function fmtCellValue(val: unknown): string {
-  if (val instanceof Date) return val.toISOString().slice(0, 16).replace('T', ' ')
-  return String(val)
+  if (val instanceof Date) {
+    const dateText = val.toISOString().slice(0, 16).replace('T', ' ')
+    return dateText
+  }
+  const result = String(val)
+  return result
 }

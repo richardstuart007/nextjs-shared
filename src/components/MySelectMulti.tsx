@@ -185,6 +185,7 @@ export default function MySelectMulti({
   }
   const selectedItems = normalized.filter(opt => selected.includes(opt.value))
   const unselectedItems = normalized.filter(opt => !selected.includes(opt.value))
+  const showDivider = selectedItems.length > 0 && unselectedItems.length > 0
 
   return (
     <div className={containerClass}>
@@ -214,31 +215,37 @@ export default function MySelectMulti({
                 {selectAllLabel}
               </label>
             )}
-            {selectedItems.map(opt => (
-              <label key={opt.value} className={rowClassName}>
-                <input
-                  type='checkbox'
-                  checked={allSelected ? false : selected.includes(opt.value)}
-                  onChange={() => toggle(opt.value)}
-                  className={checkboxClassName}
-                />
-                {opt.label}
-              </label>
-            ))}
-            {selectedItems.length > 0 && unselectedItems.length > 0 && (
+            {selectedItems.map(opt => {
+              const isChecked = allSelected ? false : selected.includes(opt.value)
+              return (
+                <label key={opt.value} className={rowClassName}>
+                  <input
+                    type='checkbox'
+                    checked={isChecked}
+                    onChange={() => toggle(opt.value)}
+                    className={checkboxClassName}
+                  />
+                  {opt.label}
+                </label>
+              )
+            })}
+            {showDivider && (
               <div className={MySelectMulti_selectedDividerClass} />
             )}
-            {unselectedItems.map(opt => (
-              <label key={opt.value} className={rowClassName}>
-                <input
-                  type='checkbox'
-                  checked={allSelected ? false : selected.includes(opt.value)}
-                  onChange={() => toggle(opt.value)}
-                  className={checkboxClassName}
-                />
-                {opt.label}
-              </label>
-            ))}
+            {unselectedItems.map(opt => {
+              const isChecked = allSelected ? false : selected.includes(opt.value)
+              return (
+                <label key={opt.value} className={rowClassName}>
+                  <input
+                    type='checkbox'
+                    checked={isChecked}
+                    onChange={() => toggle(opt.value)}
+                    className={checkboxClassName}
+                  />
+                  {opt.label}
+                </label>
+              )
+            })}
           </div>
         )}
       </div>
@@ -300,5 +307,6 @@ export default function MySelectMulti({
 //    the normalized {value,label} pair
 //----------------------------------------------------------------------------------
 function normalize(opt: Option): { value: string; label: string } {
-  return typeof opt === 'string' ? { value: opt, label: opt } : opt
+  const result = typeof opt === 'string' ? { value: opt, label: opt } : opt
+  return result
 }

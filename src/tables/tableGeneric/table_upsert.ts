@@ -29,7 +29,7 @@ import { buildSql_Readable } from './buildSql_Readable'
 //
 // Define the props interface for the upsert function
 //
-interface Props {
+type Props = {
   caller: string
   table: string
   columnValuePairs: WriteColumnValuePair[]

@@ -23,7 +23,7 @@ import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
 //
-interface Props {
+type Props = {
   table: string
   whereColumnValuePairs?: ColumnValuePair[]
   caller?: string
@@ -51,9 +51,13 @@ export async function table_count({
     if (whereColumnValuePairs && whereColumnValuePairs.length > 0) {
       const whereClause = whereColumnValuePairs
         .map(({ column, value, operator = '=' }) => {
-          // Changed destructuring to include operator with default
+          //
+          //  Changed destructuring to include operator with default
+          //
           if (operator === 'IN' || operator === 'NOT IN') {
-            // Added multi-value handling
+            //
+            //  Added multi-value handling
+            //
             if (!Array.isArray(value)) {
               throw new Error(`Value for ${operator} must be an array`)
             }
@@ -61,7 +65,9 @@ export async function table_count({
             values.push(...value)
             return `${column} ${operator} (${placeholders})`
           }
-          // Changed from index-based to paramIndex-based
+          //
+          //  Changed from index-based to paramIndex-based
+          //
           values.push(value as string | number)
           return `${column} ${operator} $${++paramIndex}` // Changed to use operator and paramIndex
         })

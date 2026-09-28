@@ -46,13 +46,14 @@ export default function MyBox({
 }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const className = myMergeClasses(MyBox_dftClass, overrideClass)
+  const chevronClassName = `${chevronClass} ${isOpen ? 'rotate-0' : '-rotate-90'}`
 
   if (collapsible && title) {
     return (
       <div className={className}>
         <button type='button' onClick={() => setIsOpen(prev => !prev)} className={toggleButtonClass}>
           <h3 className={titleClass}>{title}</h3>
-          <ChevronDownIcon className={`${chevronClass} ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
+          <ChevronDownIcon className={chevronClassName} />
         </button>
         {isOpen && children}
       </div>

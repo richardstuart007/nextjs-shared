@@ -20,7 +20,7 @@ import { write_logging } from './write_logging'
 import { buildSql_Readable } from './buildSql_Readable'
 import { TableResult } from '../structures'
 
-interface Props {
+type Props = {
   table_from: string
   table_to: string
   caller?: string
@@ -190,7 +190,7 @@ async function getColumns(
   //
   //  Extract and return the columns
   //
-  interface ColumnRow {
+  type ColumnRow = {
     column_name: string
   }
   const rows: ColumnRow[] = data.rows

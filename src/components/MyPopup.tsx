@@ -16,6 +16,8 @@
 //                              MyPopup_overlayDftClass
 //      closeButtonClass      — close button classes; defaults to
 //                              MyPopup_closeButtonDftClass
+//      closeIconClass        — close icon (XMarkIcon) classes; defaults to
+//                              MyPopup_closeIconDftClass
 //
 //  2) NOTES
 //    closeOnBackdropClick defaults false (not true) so every existing consumer —
@@ -27,7 +29,12 @@ import { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { MyButton } from './MyButton'
 import { myMergeClasses } from './MyMergeClasses'
-import { MyPopup_dftClass, MyPopup_overlayDftClass, MyPopup_closeButtonDftClass } from '../constants'
+import {
+  MyPopup_dftClass,
+  MyPopup_overlayDftClass,
+  MyPopup_closeButtonDftClass,
+  MyPopup_closeIconDftClass
+} from '../constants'
 
 type Props = {
   isOpen: boolean
@@ -37,6 +44,7 @@ type Props = {
   overrideClass?: string
   overlayClass?: string
   closeButtonClass?: string
+  closeIconClass?: string
 }
 
 export default function MyPopup({
@@ -47,16 +55,18 @@ export default function MyPopup({
   overrideClass = '',
   overlayClass = MyPopup_overlayDftClass,
   closeButtonClass = MyPopup_closeButtonDftClass,
+  closeIconClass = MyPopup_closeIconDftClass,
 }: Props) {
   if (!isOpen) return null
 
   const className = myMergeClasses(MyPopup_dftClass, overrideClass)
+  const overlayOnClick = closeOnBackdropClick ? onClose : undefined
 
   return (
-    <div className={overlayClass} onClick={closeOnBackdropClick ? onClose : undefined}>
+    <div className={overlayClass} onClick={overlayOnClick}>
       <div className={className} onClick={e => e.stopPropagation()}>
         <MyButton onClick={onClose} overrideClass={closeButtonClass}>
-          <XMarkIcon className='h-6 w-6' />
+          <XMarkIcon className={closeIconClass} />
         </MyButton>
         <div className='mt-4'>{children}</div>
       </div>

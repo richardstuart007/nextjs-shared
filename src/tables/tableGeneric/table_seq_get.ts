@@ -22,7 +22,7 @@ import { TableResult } from '../structures'
 //
 //  Input values
 //
-interface Props {
+type Props = {
   tableName: string
   caller?: string
   level?: number
@@ -31,7 +31,7 @@ interface Props {
 //
 //  Return values
 //
-interface ReturnValues {
+type ReturnValues = {
   columnName: string
   sequenceName: string
   maxValue: number

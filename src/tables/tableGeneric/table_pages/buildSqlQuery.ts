@@ -1,19 +1,33 @@
+//==============================================================================================
+//  1) DESCRIPTION
+//    buildSqlQuery — builds a base SELECT * query and its WHERE clause.
+//
+//    Parameters:
+//      table   — table name
+//      joins   — optional LEFT JOINs to append
+//      filters — optional WHERE filters (IN/NOT IN/ARRAY_OVERLAP expect an array
+//               value; LIKE/NOT LIKE lower-cases both sides for a case-insensitive
+//               substring match)
+//
+//    Returns:
+//      sqlQuery    — the built 'SELECT * FROM ...' string
+//      queryValues — the values for each placeholder, in order
+//
+//  2) NOTES
+//    This file also re-exports `applyFetchSuffix`/`buildCountQuery` for existing
+//    consumers — see their own files (applyFetchSuffix.ts, buildCountQuery.ts) for
+//    their own headers.
+//
+//  3) CHANGE HISTORY
+//    2026-09-28 — applyFetchSuffix/buildCountQuery moved to their own files;
+//                 re-exported here for existing consumers
+//==============================================================================================
+
 import type { JoinParams, Filter } from '../../structures'
 
-//----------------------------------------------------------------------------------
-// Helper to build SQL query and WHERE clause
-//
-//  Params:
-//    table   — table name
-//    joins   — optional LEFT JOINs to append
-//    filters — optional WHERE filters (IN/NOT IN/ARRAY_OVERLAP expect an array
-//             value; LIKE/NOT LIKE lower-cases both sides for a case-insensitive
-//             substring match)
-//
-//  Returns:
-//    sqlQuery    — the built 'SELECT * FROM ...' string
-//    queryValues — the values for each placeholder, in order
-//----------------------------------------------------------------------------------
+export { applyFetchSuffix } from './applyFetchSuffix'
+export { buildCountQuery } from './buildCountQuery'
+
 export function buildSqlQuery({
   table,
   joins = [],
@@ -89,79 +103,4 @@ export function buildSqlQuery({
   }
 
   return { sqlQuery, queryValues }
-}
-
-//----------------------------------------------------------------------------------
-// Apply DISTINCT ON / ORDER BY / LIMIT / OFFSET to a base SELECT * query — shared by
-// fetchFiltered's cache-key build and table_fetch_pages_filtered's actual query build.
-// LIMIT/OFFSET are bound as $N params (they're values); ORDER BY/DISTINCT ON stay
-// string-interpolated since they're column names/expressions, not bindable values.
-//
-//  Params:
-//    sqlQuery        — a base 'SELECT * FROM ...' query (from buildSqlQuery)
-//    queryValues     — that query's existing placeholder values
-//    distinctColumns — optional columns for SELECT DISTINCT ON
-//    orderBy         — optional ORDER BY clause
-//    limit, offset   — optional pagination
-//
-//  Returns:
-//    finalQuery  — the query with DISTINCT ON/ORDER BY/LIMIT/OFFSET applied
-//    queryValues — queryValues with limit/offset appended, if supplied
-//----------------------------------------------------------------------------------
-export function applyFetchSuffix(
-  sqlQuery: string,
-  queryValues: (string | number)[],
-  {
-    distinctColumns = [],
-    orderBy,
-    limit,
-    offset
-  }: {
-    distinctColumns?: string[]
-    orderBy?: string
-    limit?: number
-    offset?: number
-  }
-): { finalQuery: string; queryValues: (string | number)[] } {
-  let finalQuery = sqlQuery
-  const updatedValues = [...queryValues]
-  if (distinctColumns.length > 0) {
-    finalQuery = finalQuery.replace(
-      'SELECT *',
-      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
-    )
-  }
-  if (orderBy) finalQuery += ` ORDER BY ${orderBy}`
-  if (limit !== undefined) {
-    updatedValues.push(limit)
-    finalQuery += ` LIMIT $${updatedValues.length}`
-  }
-  if (offset !== undefined) {
-    updatedValues.push(offset)
-    finalQuery += ` OFFSET $${updatedValues.length}`
-  }
-  return { finalQuery, queryValues: updatedValues }
-}
-
-//----------------------------------------------------------------------------------
-// Build a COUNT(*) version of a base SELECT * query, wrapping in a subquery when
-// DISTINCT ON is needed for an accurate count — shared by fetchTotalPages's cache-key
-// build and table_fetch_pages_total's actual query build
-//
-//  Params:
-//    sqlQuery        — a base 'SELECT * FROM ...' query (from buildSqlQuery)
-//    distinctColumns — when non-empty, wraps sqlQuery in a DISTINCT ON subquery so
-//                     the count reflects distinct rows, not raw matches
-//
-//  Returns:
-//    the COUNT(*) query
-//----------------------------------------------------------------------------------
-export function buildCountQuery(sqlQuery: string, distinctColumns: string[] = []): string {
-  if (distinctColumns.length > 0) {
-    return `SELECT COUNT(*) FROM (${sqlQuery.replace(
-      'SELECT *',
-      `SELECT DISTINCT ON (${distinctColumns.join(', ')}) *`
-    )}) AS distinct_records`
-  }
-  return sqlQuery.replace('SELECT *', 'SELECT COUNT(*)')
 }

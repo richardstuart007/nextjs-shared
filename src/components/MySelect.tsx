@@ -141,11 +141,15 @@ export default function MySelect({
     return result
   }, [searchEnabled, filteredOptions, updatedOptions, value])
 
+  const showSearch = searchEnabled && options.length > 0
+  const hasOptions = options.length > 0
+  const noOptions = !hasOptions
+
   return (
     <div className={containerClass}>
       {label && <label htmlFor={autoId} className={labelClass}>{label}</label>}
       <div className='flex flex-col gap-1'>
-        {searchEnabled && options.length > 0 && (
+        {showSearch && (
           <MyInput
             overrideClass={searchClass}
             type='text'
@@ -162,20 +166,21 @@ export default function MySelect({
           onChange={onChange}
           {...rest}
         >
-          {options.length > 0
-            ? <>
-                {missingCurrentOption && (
-                  <option key={missingCurrentOption.value} value={missingCurrentOption.value} hidden>
-                    {missingCurrentOption.label}
-                  </option>
-                )}
-                {filteredOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </>
-            : children}
+          {hasOptions && (
+            <>
+              {missingCurrentOption && (
+                <option key={missingCurrentOption.value} value={missingCurrentOption.value} hidden>
+                  {missingCurrentOption.label}
+                </option>
+              )}
+              {filteredOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </>
+          )}
+          {noOptions && children}
         </select>
       </div>
     </div>

@@ -68,6 +68,8 @@ export default function MyPagination({
 }: PaginationProps) {
   const allPages = generatePagination(statecurrentPage, totalPages)
   const className = myMergeClasses(MyPagination_dftClass, overrideClass)
+  const atFirstPage = statecurrentPage <= 1
+  const atLastPage = statecurrentPage >= totalPages
 
   //----------------------------------------------------------------------------------------------
   // Render MyPagination
@@ -79,7 +81,7 @@ export default function MyPagination({
       {/* --------------------------------------------------------------------- */}
       <PaginationArrow
         direction='left'
-        isDisabled={statecurrentPage <= 1}
+        isDisabled={atFirstPage}
         onClick={() => setStateCurrentPage(statecurrentPage - 1)}
         arrowClass={arrowClass}
         arrowDisabledClass={arrowDisabledClass}
@@ -94,7 +96,9 @@ export default function MyPagination({
           const position =
             index === 0 ? 'first' : index === allPages.length - 1 ? 'last' : undefined
 
-          // Handle '...' separately to render non-clickable placeholders
+          //
+          //  Handle '...' separately to render non-clickable placeholders
+          //
           if (pageItem === '...') {
             return (
               <div key={`ellipsis-${index}`} className={ellipsisClass}>
@@ -103,12 +107,14 @@ export default function MyPagination({
             )
           }
 
+          const isActive = statecurrentPage === pageItem
+
           return (
             <PaginationNumber
               key={pageItem}
               page={pageItem}
               position={position}
-              isActive={statecurrentPage === pageItem}
+              isActive={isActive}
               setStateCurrentPage={setStateCurrentPage}
               numberClass={numberClass}
               numberActiveClass={numberActiveClass}
@@ -122,7 +128,7 @@ export default function MyPagination({
       {/* --------------------------------------------------------------------- */}
       <PaginationArrow
         direction='right'
-        isDisabled={statecurrentPage >= totalPages}
+        isDisabled={atLastPage}
         onClick={() => setStateCurrentPage(statecurrentPage + 1)}
         arrowClass={arrowClass}
         arrowDisabledClass={arrowDisabledClass}
@@ -146,7 +152,10 @@ export default function MyPagination({
 //    around currentPage with the first/last page always included
 //----------------------------------------------------------------------------------
 function generatePagination(currentPage: number, totalPages: number): (number | string)[] {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+  if (totalPages <= 7) {
+    const result = Array.from({ length: totalPages }, (_, i) => i + 1)
+    return result
+  }
   if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages]
   if (currentPage >= totalPages - 3)
     return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]

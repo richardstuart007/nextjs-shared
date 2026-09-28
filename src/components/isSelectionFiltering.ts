@@ -61,5 +61,6 @@ export function serializeSelection(
   selected: string[],
   totalOptions: number
 ): typeof SELECTION_ALL | string[] {
-  return isSelectionFiltering(selected, totalOptions) ? selected : SELECTION_ALL
+  const result = isSelectionFiltering(selected, totalOptions) ? selected : SELECTION_ALL
+  return result
 }

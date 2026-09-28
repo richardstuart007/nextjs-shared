@@ -155,26 +155,38 @@ export default function OwnerSyncVersions() {
     return counts
   }, [projects, packages, matrix, installed, latest, targets])
 
+  const refreshLabel = refreshing ? 'Refreshing...' : 'Refresh'
+  const syncSummary = syncResults
+    ? (syncResults.every(r => r.changes.length === 0)
+        ? 'All already at target'
+        : `Updated ${syncResults.filter(r => r.changes.length > 0).length} project(s)`)
+    : ''
+  const syncDisabled = syncing || !matrix
+  const syncLabel = syncing ? 'Syncing...' : 'Sync'
+  const majorChipClass = `px-1.5 py-0.5 rounded border cursor-pointer ${filterMajor ? 'bg-red-100 text-red-800 border-red-300' : 'text-gray-400 border-gray-300'}`
+  const minorChipClass = `px-1.5 py-0.5 rounded border cursor-pointer ${filterMinor ? 'bg-orange-100 text-orange-800 border-orange-300' : 'text-gray-400 border-gray-300'}`
+  const patchChipClass = `px-1.5 py-0.5 rounded border cursor-pointer ${filterPatch ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'text-gray-400 border-gray-300'}`
+  const matrixLoading = !matrix
+  const anySyncChanges = syncResults?.some(r => r.changes.length > 0) ?? false
+
   return (
     <div className='p-4'>
       <div className='w-fit'>
       <div className='flex items-center gap-3 mb-2'>
         <MyButton onClick={handleRefresh} disabled={refreshing}>
-          {refreshing ? 'Refreshing...' : 'Refresh'}
+          {refreshLabel}
         </MyButton>
         {refreshError && (
           <span className='text-xxs text-red-600'>{refreshError}</span>
         )}
         {syncResults && (
           <span className='text-xxs text-gray-500'>
-            {syncResults.every(r => r.changes.length === 0)
-              ? 'All already at target'
-              : `Updated ${syncResults.filter(r => r.changes.length > 0).length} project(s)`}
+            {syncSummary}
           </span>
         )}
         <div className='ml-auto flex items-center gap-1'>
-          <MyButton onClick={handleSync} disabled={syncing || !matrix} overrideClass='bg-red-600 hover:bg-red-700'>
-            {syncing ? 'Syncing...' : 'Sync'}
+          <MyButton onClick={handleSync} disabled={syncDisabled} overrideClass='bg-red-600 hover:bg-red-700'>
+            {syncLabel}
           </MyButton>
           <MyHelp text={HELP_SYNC_ALL} />
         </div>
@@ -184,19 +196,19 @@ export default function OwnerSyncVersions() {
         <span className='text-purple-600'>● Needs npm install</span>
         <button
           onClick={() => setFilterMajor(f => !f)}
-          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterMajor ? 'bg-red-100 text-red-800 border-red-300' : 'text-gray-400 border-gray-300'}`}
+          className={majorChipClass}
         >
           ● Major
         </button>
         <button
           onClick={() => setFilterMinor(f => !f)}
-          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterMinor ? 'bg-orange-100 text-orange-800 border-orange-300' : 'text-gray-400 border-gray-300'}`}
+          className={minorChipClass}
         >
           ● Minor
         </button>
         <button
           onClick={() => setFilterPatch(f => !f)}
-          className={`px-1.5 py-0.5 rounded border cursor-pointer ${filterPatch ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'text-gray-400 border-gray-300'}`}
+          className={patchChipClass}
         >
           ● Patch
         </button>
@@ -206,9 +218,8 @@ export default function OwnerSyncVersions() {
         </span>
       </div>
 
-      {!matrix ? (
-        <p className='text-xxs text-gray-400'>Loading...</p>
-      ) : (
+      {matrixLoading && <p className='text-xxs text-gray-400'>Loading...</p>}
+      {matrix && (
         <div className='overflow-x-auto'>
           <table className='text-xxs table-fixed border-collapse'>
             <thead>
@@ -238,11 +249,16 @@ export default function OwnerSyncVersions() {
                     <MyHelp text={HELP_OVERRIDE} buttonClass={HELP_BUTTON_CLASS} />
                   </span>
                 </th>
-                {projects.map(p => (
-                  <th key={p} className={`w-32 px-2 py-1 font-bold border border-gray-200 ${parseErrors.includes(p) ? 'text-red-600' : 'text-gray-600'}`}>
-                    {p}{parseErrors.includes(p) ? ' !' : ''}
-                  </th>
-                ))}
+                {projects.map(p => {
+                  const hasParseError = parseErrors.includes(p)
+                  const headerClass = `w-32 px-2 py-1 font-bold border border-gray-200 ${hasParseError ? 'text-red-600' : 'text-gray-600'}`
+                  const headerText = `${p}${hasParseError ? ' !' : ''}`
+                  return (
+                    <th key={p} className={headerClass}>
+                      {headerText}
+                    </th>
+                  )
+                })}
                 <th className='w-20 px-2 py-1 font-bold text-gray-600 border border-gray-200'>
                   <span className='inline-flex items-center gap-1'>
                     Sync
@@ -274,11 +290,14 @@ export default function OwnerSyncVersions() {
                 <th className='px-2 py-1 border border-gray-200'></th>
                 <th className='px-2 py-1 border border-gray-200'></th>
                 <th className='px-2 py-1 border border-gray-200'></th>
-                {projects.map(proj => (
-                  <th key={proj} className='px-2 py-1 font-semibold text-purple-600 border border-gray-200'>
-                    {reinstallCounts[proj] > 0 ? `⟳ ${reinstallCounts[proj]}` : ''}
-                  </th>
-                ))}
+                {projects.map(proj => {
+                  const reinstallText = reinstallCounts[proj] > 0 ? `⟳ ${reinstallCounts[proj]}` : ''
+                  return (
+                    <th key={proj} className='px-2 py-1 font-semibold text-purple-600 border border-gray-200'>
+                      {reinstallText}
+                    </th>
+                  )
+                })}
                 <th className='px-2 py-1 border border-gray-200'></th>
               </tr>
             </thead>
@@ -293,6 +312,7 @@ export default function OwnerSyncVersions() {
                 const reference = depTarget ?? overrideTarget ?? latestVer
                 const localVer = localVersions[pkg]
                 const displayLatest = localVer ?? latestVer
+                const sectionColSpan = 6 + projects.length
 
                 //
                 //  Row-level scan of every project cell:
@@ -389,21 +409,23 @@ export default function OwnerSyncVersions() {
                             urlMismatchClass = 'font-bold text-gray-400'
                           }
                         }
+                        const urlCellClass = `px-2 py-0.5 font-mono border border-gray-200 ${sectionMismatch ? 'bg-pink-100' : ''} ${
+                          instVer == null
+                            ? 'text-gray-300'
+                            : upToDate
+                            ? 'text-green-700'
+                            : behind
+                            ? urlMismatchClass
+                            : 'text-gray-400'
+                        }`
+                        const showUrlSectionCode = instVer != null && !!sectionCode
                         return (
                           <td
                             key={proj}
-                            className={`px-2 py-0.5 font-mono border border-gray-200 ${sectionMismatch ? 'bg-pink-100' : ''} ${
-                              instVer == null
-                                ? 'text-gray-300'
-                                : upToDate
-                                ? 'text-green-700'
-                                : behind
-                                ? urlMismatchClass
-                                : 'text-gray-400'
-                            }`}
+                            className={urlCellClass}
                           >
                             {instVer ?? ''}
-                            {instVer != null && sectionCode && (
+                            {showUrlSectionCode && (
                               <span className='ml-1 font-normal text-gray-400'>{sectionCode}</span>
                             )}
                           </td>
@@ -427,21 +449,24 @@ export default function OwnerSyncVersions() {
                           mismatchClass = 'font-bold text-gray-400'
                         }
                       }
+                      const cellClass = `px-2 py-0.5 font-mono border border-gray-200 ${sectionMismatch ? 'bg-pink-100' : ''} ${
+                        ver === null
+                          ? 'text-gray-300'
+                          : !aligned
+                          ? mismatchClass
+                          : isInstalled
+                          ? 'text-green-700'
+                          : 'text-purple-600 font-semibold'
+                      }`
+                      const verText = ver === null ? '' : ver
+                      const showSectionCode = ver !== null && !!sectionCode
                       return (
                         <td
                           key={proj}
-                          className={`px-2 py-0.5 font-mono border border-gray-200 ${sectionMismatch ? 'bg-pink-100' : ''} ${
-                            ver === null
-                              ? 'text-gray-300'
-                              : !aligned
-                              ? mismatchClass
-                              : isInstalled
-                              ? 'text-green-700'
-                              : 'text-purple-600 font-semibold'
-                          }`}
+                          className={cellClass}
                         >
-                          {ver === null ? '' : ver}
-                          {ver !== null && sectionCode && (
+                          {verText}
+                          {showSectionCode && (
                             <span className='ml-1 font-normal text-gray-400'>{sectionCode}</span>
                           )}
                         </td>
@@ -462,7 +487,7 @@ export default function OwnerSyncVersions() {
                 )
                 return showHeader ? [
                   <tr key={`section-${pkgSection}`} className='bg-gray-200'>
-                    <td colSpan={6 + projects.length} className='px-2 py-0.5 font-bold text-gray-600 text-xxs'>
+                    <td colSpan={sectionColSpan} className='px-2 py-0.5 font-bold text-gray-600 text-xxs'>
                       {SECTION_LABELS[pkgSection] ?? pkgSection}
                     </td>
                   </tr>,
@@ -474,7 +499,7 @@ export default function OwnerSyncVersions() {
         </div>
       )}
 
-      {syncResults && syncResults.some(r => r.changes.length > 0) && (
+      {anySyncChanges && (
         <div className='mt-3 text-xxs text-gray-500'>
           In each updated project run: <span className='font-mono'>Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json; npm install</span>
         </div>
@@ -635,7 +660,8 @@ function semverCompare(a: string, b: string): number {
 //    the bare version, e.g. '1.2.3'
 //----------------------------------------------------------------------------------
 function extractBaseVersion(value: string): string {
-  return value.replace(/^[>=<^~\s]+/, '')
+  const result = value.replace(/^[>=<^~\s]+/, '')
+  return result
 }
 
 //----------------------------------------------------------------------------------

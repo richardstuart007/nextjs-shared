@@ -15,5 +15,6 @@ import { POSTGRES_URL_PREFIX } from '../constants'
 
 export async function action_getDbKeyOptions(): Promise<string[]> {
   const keys = Object.keys(process.env).filter(key => key.startsWith(POSTGRES_URL_PREFIX))
-  return keys.length > 0 ? keys : [POSTGRES_URL_PREFIX]
+  const result = keys.length > 0 ? keys : [POSTGRES_URL_PREFIX]
+  return result
 }

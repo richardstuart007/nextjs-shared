@@ -31,27 +31,32 @@ export default function OwnerConstants({ envValues }: Props) {
   const groupNames = Object.keys(constantGroups)
   const [activeGroup, setActiveGroup] = useState(groupNames[0])
   const activeEntries = constantGroups[activeGroup] ?? []
+  const isConstantsTab = subTab === 'constants'
+  const isEnvTab = subTab === 'env'
 
   return (
     <div className='p-4'>
       <div className='flex gap-2 mb-4'>
-        <MyTab active={subTab === 'constants'} onClick={() => setSubTab('constants')}>Constants</MyTab>
-        <MyTab active={subTab === 'env'} onClick={() => setSubTab('env')}>.env</MyTab>
+        <MyTab active={isConstantsTab} onClick={() => setSubTab('constants')}>Constants</MyTab>
+        <MyTab active={isEnvTab} onClick={() => setSubTab('env')}>.env</MyTab>
       </div>
 
-      {subTab === 'constants' && (
+      {isConstantsTab && (
         <div>
           <div className='flex flex-wrap gap-1 mb-4'>
-            {groupNames.map(group => (
-              <MyTab
-                key={group}
-                variant='pill'
-                active={activeGroup === group}
-                onClick={() => setActiveGroup(group)}
-              >
-                {group}
-              </MyTab>
-            ))}
+            {groupNames.map(group => {
+              const isActiveGroup = activeGroup === group
+              return (
+                <MyTab
+                  key={group}
+                  variant='pill'
+                  active={isActiveGroup}
+                  onClick={() => setActiveGroup(group)}
+                >
+                  {group}
+                </MyTab>
+              )
+            })}
           </div>
           <table className='text-xs border-collapse'>
             <tbody>
@@ -66,7 +71,7 @@ export default function OwnerConstants({ envValues }: Props) {
         </div>
       )}
 
-      {subTab === 'env' && (
+      {isEnvTab && (
         <table className='text-xs border-collapse'>
           <tbody>
             {ENV_VARS.map(envVar => (

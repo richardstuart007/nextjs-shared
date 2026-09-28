@@ -73,6 +73,9 @@ export function MyHelp({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [closeOnOutsideClick])
 
+  const noTitle = !title
+  const noText = !text
+
   return (
     <span ref={ref} className='inline-block'>
       <button
@@ -86,23 +89,22 @@ export function MyHelp({
       {open && (
         <div className={panelClass}>
           <div className='flex justify-between items-start'>
-            {title ? <p className='font-semibold text-blue-800'>{title}</p> : <span />}
+            {title && <p className='font-semibold text-blue-800'>{title}</p>}
+            {noTitle && <span />}
             {showCloseButton && (
               <button onClick={() => setOpen(false)} className={closeButtonClass} type='button' aria-label='Close'>
                 ×
               </button>
             )}
           </div>
-          {text ? (
-            <p className='text-gray-600 whitespace-pre-wrap'>{text}</p>
-          ) : (
+          {text && <p className='text-gray-600 whitespace-pre-wrap'>{text}</p>}
+          {noText &&
             items?.map((item, i) => (
               <div key={i}>
                 <p className='font-semibold text-gray-700'>{item.heading}</p>
                 <p className='text-gray-600'>{item.body}</p>
               </div>
-            ))
-          )}
+            ))}
         </div>
       )}
     </span>

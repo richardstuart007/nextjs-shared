@@ -146,7 +146,9 @@ async function getRawHandler(dbKey: string): Promise<RawHandler> {
   // Use Neon Postgres handler (production on Vercel)
   //.........................................................................
   if (process.env.NEXT_PUBLIC_APPENV_DBHANDLER === 'VERCEL_PG') {
-    // Create a single pool per dbKey for serverless environment
+    //
+    //  Create a single pool per dbKey for serverless environment
+    //
     const pool = new Pool({
       connectionString,
       max: 1 // Important for serverless

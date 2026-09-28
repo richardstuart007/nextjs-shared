@@ -50,11 +50,13 @@ export const MyCheckbox_labelDftClass     = 'block text-gray-900 mb-1 text-xs w-
 export const MyCheckbox_searchDftClass    = 'px-2 rounded-md border border-blue-500 py-[6px] text-xs w-72'
 export const MyCheckbox_containerDftClass = 'border border-blue-500 rounded-md p-2 overflow-y-auto w-72'
 export const MyCheckbox_itemDftClass      = 'flex items-center space-x-2 py-1'
+export const MyCheckbox_checkboxDftClass  = 'h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
 
 //
 //  MyConfirmDialog
 //
 export const MyConfirmDialog_iconContainerDftClass = 'bg-red-100 text-red-600 rounded-full p-4 inline-block'
+export const MyConfirmDialog_iconDftClass          = 'h-24 w-24 text-current'
 export const MyConfirmDialog_titleDftClass         = 'text-lg font-semibold mt-2'
 export const MyConfirmDialog_subTitleDftClass      = 'text-sm text-red-600'
 export const MyConfirmDialog_lineDftClass          = 'text-sm text-green-600'
@@ -99,6 +101,7 @@ export const MyHelpField_tooltipDftClass = 'absolute left-0 top-full mt-1 z-50 w
 export const MyHelpStep_buttonDftClass = 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none'
 export const MyHelpStep_panelDftClass  = 'absolute z-20 mt-1 p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs max-w-xl'
 export const MyHelpStep_closeButtonDftClass = 'ml-4 text-gray-400 hover:text-gray-700 text-base leading-none font-bold'
+export const MyHelpStep_labelColumnDftClass = 'w-24'
 
 //
 //  MyHourGlass
@@ -195,6 +198,7 @@ export const MyPopup_dftClass = [
 ].join(' ')
 export const MyPopup_overlayDftClass     = 'fixed inset-0 flex justify-center items-center z-50'
 export const MyPopup_closeButtonDftClass = 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800'
+export const MyPopup_closeIconDftClass   = 'h-6 w-6'
 
 //
 //  MySelect
@@ -294,6 +298,7 @@ export const OwnerSyncVersions_npmRegistryFetchTimeoutMs = 5000
 //
 export const OwnerTableCache_tablesBadgeVisibleCount = 3
 export const OwnerTableCache_filterDebounceMs = 2000
+export const OwnerTableCache_maxDisplayRows = 100
 
 //
 //  OwnerTableLogging
@@ -301,6 +306,7 @@ export const OwnerTableCache_filterDebounceMs = 2000
 export const OwnerTableLogging_filterDebounceMs = 2000
 export const OwnerTableLogging_msgTruncateLen = 200
 export const OwnerTableLogging_rowsOptions = [10, 20, 40, 100] as const
+export const OwnerTableLogging_rowsPerPage = 40
 
 //
 //  Multi-database routing (src/tables/db.ts, OwnerRoutingMaintenance) — every database connection string

@@ -72,29 +72,28 @@ export default function OwnerRoutingMaintenance() {
         <tbody>
           {routingRows.map(row => {
             const isEditing = editRtgid === row.rtg_rtgid
+            const notEditing = !isEditing
             return (
               <tr key={row.rtg_rtgid} className='border-b border-gray-100'>
                 <td className='px-2'>{row.rtg_rtgid}</td>
                 <td className='px-2'>
-                  {isEditing ? (
+                  {isEditing && (
                     <MyInput
                       overrideClass='w-40 text-xs'
                       value={editTable}
                       onChange={e => setEditTable(e.target.value)}
                     />
-                  ) : (
-                    row.rtg_table
                   )}
+                  {notEditing && row.rtg_table}
                 </td>
                 <td className='px-2'>
-                  {isEditing ? (
+                  {isEditing && (
                     <DbKeySelect overrideClass='w-40 text-xs' value={editDbKey} onChange={setEditDbKey} />
-                  ) : (
-                    row.rtg_dbkey
                   )}
+                  {notEditing && row.rtg_dbkey}
                 </td>
                 <td className='px-2 flex gap-1'>
-                  {isEditing ? (
+                  {isEditing && (
                     <>
                       <MyButton overrideClass='text-xxs h-6 px-2' onClick={handleSaveEditRouting}>
                         Save
@@ -106,7 +105,8 @@ export default function OwnerRoutingMaintenance() {
                         Cancel
                       </MyButton>
                     </>
-                  ) : (
+                  )}
+                  {notEditing && (
                     <>
                       <MyButton overrideClass='text-xxs h-6 px-2' onClick={() => handleEditRouting(row)}>
                         Edit

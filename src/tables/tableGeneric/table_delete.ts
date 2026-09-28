@@ -29,7 +29,7 @@ import { buildSql_Readable } from './buildSql_Readable'
 //
 // Props
 //
-interface Props {
+type Props = {
   table: string
   whereColumnValuePairs?: ColumnValuePair[]
   returning?: boolean
@@ -63,9 +63,13 @@ export async function table_delete({
     let paramIndex = 0 // Added to track parameter positions
     if (whereColumnValuePairs.length > 0) {
       const conditions = whereColumnValuePairs.map(({ column, value, operator = '=' }) => {
-        // Changed destructuring
+        //
+        //  Changed destructuring
+        //
         if (operator === 'IN' || operator === 'NOT IN') {
-          // Added multi-value handling
+          //
+          //  Added multi-value handling
+          //
           if (!Array.isArray(value)) {
             throw new Error(`Value for ${operator} must be an array`)
           }
@@ -124,7 +128,9 @@ export async function table_delete({
     //
     return { ok: true, data: returning ? data.rows : [], error: null }
   } catch (error) {
-    // Logging
+    //
+    //  Logging
+    //
     const errorMessage = `Table(${table}) DELETE FAILED`
     console.error(`${functionName}: ${errorMessage}`, error)
     write_logging({

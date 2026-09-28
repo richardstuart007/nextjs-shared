@@ -256,6 +256,9 @@ export default function MySelectTable<T extends string, U extends string>({
   //  renderDropdown — the normal case: label + optional search box + <select>
   //----------------------------------------------------------------------------------------------
   function renderDropdown() {
+    const hasFilteredOptions = filteredOptions.length > 0
+    const noFilteredOptions = !hasFilteredOptions
+
     return (
       <div className='font-medium'>
         {/*  ...................................................................................*/}
@@ -293,13 +296,13 @@ export default function MySelectTable<T extends string, U extends string>({
               setSelectedOption(valueUpdate)
             }}
           >
-            {filteredOptions.length > 0 ? (
+            {hasFilteredOptions &&
               filteredOptions.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
-              ))
-            ) : (
+              ))}
+            {noFilteredOptions && (
               <option className={className_Dropdown} value=''>
                 No options found
               </option>

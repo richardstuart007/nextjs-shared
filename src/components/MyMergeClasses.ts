@@ -68,7 +68,8 @@ export function myMergeClasses(defaultClass: string, overrideClass: string): str
   //----------------------------------------------------------------------------------------------
   function inAnyGroup(cls: string): boolean {
     const core = getCoreClass(cls)
-    return allPatterns.some(p => core.startsWith(p))
+    const inGroup = allPatterns.some(p => core.startsWith(p))
+    return inGroup
   }
 
   //
@@ -135,7 +136,8 @@ function mergeGroup(defaultClasses: string[], overrideClasses: string[], group: 
 //----------------------------------------------------------------------------------
 function getVariantPrefix(cls: string): string {
   const match = cls.match(/^([a-z][a-z0-9-]*:)+/)
-  return match ? match[0] : ''
+  const result = match ? match[0] : ''
+  return result
 }
 
 //----------------------------------------------------------------------------------

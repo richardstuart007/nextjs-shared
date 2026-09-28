@@ -4,7 +4,9 @@ import { sql } from '../../db'
 import { write_logging } from '../write_logging'
 import { ITEMS_PER_PAGE } from './page_constants'
 import { buildSql_Readable } from '../buildSql_Readable'
-import { buildSqlQuery, applyFetchSuffix, buildCountQuery } from './buildSqlQuery'
+import { buildSqlQuery } from './buildSqlQuery'
+import { applyFetchSuffix } from './applyFetchSuffix'
+import { buildCountQuery } from './buildCountQuery'
 import type { JoinParams, Filter } from '../../structures'
 
 //----------------------------------------------------------------------------------
@@ -73,7 +75,8 @@ export async function table_fetch_pages_filtered({
       severity
     })
 
-    return data.rows.length > 0 ? data.rows : []
+    const result = data.rows.length > 0 ? data.rows : []
+    return result
   } catch (error) {
     const errorMessage = `Table(${table}) SQL(${readableSql}) FAILED`
     write_logging({

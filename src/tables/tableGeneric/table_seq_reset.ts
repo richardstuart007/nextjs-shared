@@ -20,7 +20,7 @@ import { table_seqGet } from './table_seq_get'
 import { buildSql_Readable } from './buildSql_Readable'
 import { TableResult } from '../structures'
 
-interface Props {
+type Props = {
   tableName: string
   caller?: string
   level?: number

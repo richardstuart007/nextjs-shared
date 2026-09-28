@@ -10,6 +10,7 @@
 
 import { useState } from 'react'
 import { action_generateLogs, action_generateCache } from '../actions'
+import { MyButton } from '../../components/MyButton'
 
 export default function OwnerGenerateData() {
   const [logMsg, setLogMsg] = useState('')
@@ -18,21 +19,15 @@ export default function OwnerGenerateData() {
   return (
     <div className='p-4 flex gap-6'>
       <div className='flex items-center gap-2'>
-        <button
-          onClick={handleGenerateLogs}
-          className='px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600'
-        >
+        <MyButton onClick={handleGenerateLogs}>
           Generate Logs
-        </button>
+        </MyButton>
         {logMsg && <span className='text-xs text-gray-600'>{logMsg}</span>}
       </div>
       <div className='flex items-center gap-2'>
-        <button
-          onClick={handleGenerateCache}
-          className='px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600'
-        >
+        <MyButton onClick={handleGenerateCache}>
           Generate Cache
-        </button>
+        </MyButton>
         {cacheMsg && <span className='text-xs text-gray-600'>{cacheMsg}</span>}
       </div>
     </div>

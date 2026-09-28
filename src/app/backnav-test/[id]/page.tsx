@@ -10,23 +10,24 @@
 //==============================================================================================
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useBackNav } from '../../../components/useBackNav'
 import { MyBackHomeNav } from '../../../components/MyBackHomeNav'
 import { BACKNAV_DEMO_KEY } from '../../../UI/OwnerBackNavDemo'
 
 export default function Page() {
+  const [isDev, setIsDev] = useState(false)
   const params = useParams<{ id: string }>()
   const backPath = useBackNav(BACKNAV_DEMO_KEY)
-  const [isDev, setIsDev] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APPENV_ISDEV !== 'true') {
-      window.location.href = '/'
+      router.push('/')
       return
     }
     setIsDev(true)
-  }, [])
+  }, [router])
 
   if (!isDev) return null
 

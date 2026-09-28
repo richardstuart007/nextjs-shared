@@ -18,6 +18,9 @@
 //      panelClass           — popover panel classes; defaults to MyHelpStep_panelDftClass
 //      closeButtonClass     — popover close button classes; defaults to
 //                             MyHelpStep_closeButtonDftClass
+//      labelColumnClass     — width class applied to the Input row's label cell, which
+//                             sets the table's label-column width for every row; defaults
+//                             to MyHelpStep_labelColumnDftClass
 //
 //  2) NOTES
 //    See MyHelp.tsx's header for how showCloseButton/closeOnOutsideClick interact with the
@@ -33,6 +36,7 @@ import {
   MyHelpStep_buttonDftClass,
   MyHelpStep_panelDftClass,
   MyHelpStep_closeButtonDftClass,
+  MyHelpStep_labelColumnDftClass,
 } from '../constants';
 
 export type MyHelpStepProps = {
@@ -47,6 +51,7 @@ export type MyHelpStepProps = {
   buttonClass?: string;
   panelClass?: string;
   closeButtonClass?: string;
+  labelColumnClass?: string;
 };
 
 export function MyHelpStep({
@@ -61,6 +66,7 @@ export function MyHelpStep({
   buttonClass = MyHelpStep_buttonDftClass,
   panelClass = MyHelpStep_panelDftClass,
   closeButtonClass = MyHelpStep_closeButtonDftClass,
+  labelColumnClass = MyHelpStep_labelColumnDftClass,
 }: MyHelpStepProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
@@ -80,6 +86,10 @@ export function MyHelpStep({
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [closeOnOutsideClick]);
+
+  const inputLabelClass = `font-semibold text-gray-500 ${labelColumnClass} px-3 py-2 border-b border-gray-100 whitespace-nowrap`;
+  const outputLabelClass = `font-semibold text-gray-500 px-3 py-2 whitespace-nowrap ${consumers ? 'border-b border-gray-100' : ''}`;
+  const outputValueClass = `text-gray-700 px-3 py-2 ${consumers ? 'border-b border-gray-100' : ''}`;
 
   return (
     <span ref={ref} className="inline-block">
@@ -110,15 +120,18 @@ export function MyHelpStep({
             <table className="w-full text-xs border-collapse">
               <tbody>
                 <tr className="align-top">
-                  <td className="font-semibold text-gray-500 w-24 px-3 py-2 border-b border-gray-100 whitespace-nowrap">
+                  <td className={inputLabelClass}>
                     Input
                   </td>
                   <td className="text-gray-700 px-3 py-2 border-b border-gray-100">
-                    {input.map((s, i) => (
-                      <div key={i} className={i > 0 ? 'mt-0.5' : ''}>
-                        {s}
-                      </div>
-                    ))}
+                    {input.map((s, i) => {
+                      const itemClass = i > 0 ? 'mt-0.5' : '';
+                      return (
+                        <div key={i} className={itemClass}>
+                          {s}
+                        </div>
+                      );
+                    })}
                   </td>
                 </tr>
                 <tr className="align-top">
@@ -131,18 +144,21 @@ export function MyHelpStep({
                 </tr>
                 <tr className="align-top">
                   <td
-                    className={`font-semibold text-gray-500 px-3 py-2 whitespace-nowrap ${consumers ? 'border-b border-gray-100' : ''}`}
+                    className={outputLabelClass}
                   >
                     Output
                   </td>
                   <td
-                    className={`text-gray-700 px-3 py-2 ${consumers ? 'border-b border-gray-100' : ''}`}
+                    className={outputValueClass}
                   >
-                    {output.map((s, i) => (
-                      <div key={i} className={i > 0 ? 'mt-0.5' : ''}>
-                        {s}
-                      </div>
-                    ))}
+                    {output.map((s, i) => {
+                      const itemClass = i > 0 ? 'mt-0.5' : '';
+                      return (
+                        <div key={i} className={itemClass}>
+                          {s}
+                        </div>
+                      );
+                    })}
                   </td>
                 </tr>
                 {consumers && (
@@ -151,11 +167,14 @@ export function MyHelpStep({
                       Consumers
                     </td>
                     <td className="text-gray-700 px-3 py-2">
-                      {consumers.map((s, i) => (
-                        <div key={i} className={i > 0 ? 'mt-0.5' : ''}>
-                          {s}
-                        </div>
-                      ))}
+                      {consumers.map((s, i) => {
+                        const itemClass = i > 0 ? 'mt-0.5' : '';
+                        return (
+                          <div key={i} className={itemClass}>
+                            {s}
+                          </div>
+                        );
+                      })}
                     </td>
                   </tr>
                 )}

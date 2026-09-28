@@ -48,6 +48,7 @@ import {
   MySelect_searchDftClass,
   MyToggle_dftClass,
   MyPopup_dftClass,
+  MyPopup_closeIconDftClass,
   MyHourGlass_dftClass,
   MyTab_underlineActiveClass,
   MyTab_underlineInactiveClass,
@@ -75,6 +76,8 @@ import {
   MyCheckbox_searchDftClass,
   MyCheckbox_containerDftClass,
   MyCheckbox_itemDftClass,
+  MyCheckbox_checkboxDftClass,
+  MyConfirmDialog_iconDftClass,
   MyPagination_dftClass,
   MyPagination_numbersContainerClass,
   MyPagination_ellipsisClass,
@@ -87,6 +90,7 @@ import {
   MyPagination_arrowIconClass,
   MyHelp_closeButtonDftClass,
   MyHelpStep_closeButtonDftClass,
+  MyHelpStep_labelColumnDftClass,
 } from '../constants'
 
 //
@@ -411,16 +415,12 @@ function MyInputTab() {
       controls={
         <form onSubmit={handleApply} className='flex flex-col gap-2'>
           <ControlRow label='type'>
-            <select
-              className='text-sm border border-gray-300 rounded px-1 h-9 w-full'
+            <MySelect
+              options={['text', 'number', 'email', 'password']}
               value={draft.type}
               onChange={e => setDraft(d => ({ ...d, type: e.target.value }))}
-            >
-              <option>text</option>
-              <option>number</option>
-              <option>email</option>
-              <option>password</option>
-            </select>
+              overrideClass='w-full'
+            />
           </ControlRow>
           <ControlRow label='placeholder'>
             <MyInput value={draft.placeholder} onChange={e => setDraft(d => ({ ...d, placeholder: e.target.value }))} overrideClass='w-full' />
@@ -516,6 +516,7 @@ function MyInputNumericTab() {
   const maxNum = applied.max === '' ? undefined : Number(applied.max)
   const decimalsNum = applied.decimals === '' ? undefined : Number(applied.decimals)
   const isOutOfRange = value !== '' && ((minNum !== undefined && value < minNum) || (maxNum !== undefined && value > maxNum))
+  const valueText = value === '' ? '(empty)' : String(value)
 
   return (
     <ThreeSection
@@ -575,7 +576,7 @@ function MyInputNumericTab() {
       returns={
         <>
           <ClassInfo constants={[{ name: 'MyInputNumeric_dftClass', value: MyInputNumeric_dftClass }]} overrideClass={applied.overrideClass} />
-          <ReturnRow label='value' value={value === '' ? '(empty)' : String(value)} />
+          <ReturnRow label='value' value={valueText} />
           <ReturnRow label='isOutOfRange' value={String(isOutOfRange)} />
         </>
       }
@@ -799,10 +800,12 @@ type CheckBoxControlProps = {
   defaultClass_Search: string
   defaultClass_Container: string
   defaultClass_CheckboxItem: string
+  defaultClass_Checkbox: string
   overrideClass_Label: string
   overrideClass_Search: string
   overrideClass_Container: string
   overrideClass_CheckboxItem: string
+  overrideClass_Checkbox: string
 }
 const checkboxDefaults: CheckBoxControlProps = {
   label: 'Select items',
@@ -816,10 +819,12 @@ const checkboxDefaults: CheckBoxControlProps = {
   defaultClass_Search: MyCheckbox_searchDftClass,
   defaultClass_Container: MyCheckbox_containerDftClass,
   defaultClass_CheckboxItem: MyCheckbox_itemDftClass,
+  defaultClass_Checkbox: MyCheckbox_checkboxDftClass,
   overrideClass_Label: '',
   overrideClass_Search: '',
   overrideClass_Container: '',
   overrideClass_CheckboxItem: '',
+  overrideClass_Checkbox: '',
 }
 
 //----------------------------------------------------------------------------------
@@ -830,6 +835,12 @@ function MyCheckBoxTab() {
   const [applied, setApplied] = useState<CheckBoxControlProps>(checkboxDefaults)
   const [selected, setSelected] = useState<Array<string | number>>([])
   const [errorMessage, setErrorMessage] = useState('')
+
+  const sortByLabelChecked = draft.sortBy === 'label'
+  const sortByValueChecked = draft.sortBy === 'value'
+  const maxSelectionsNum = applied.maxSelections !== '' ? Number(applied.maxSelections) : undefined
+  const minSelectionsNum = applied.minSelections !== '' ? Number(applied.minSelections) : undefined
+  const selectedText = selected.length > 0 ? selected.join(', ') : '(none)'
 
   return (
     <ThreeSection
@@ -865,10 +876,10 @@ function MyCheckBoxTab() {
           </ControlRow>
           <ControlRow label='sortBy'>
             <label className='mr-3 text-xs'>
-              <input type='radio' name='checkbox-sortBy' checked={draft.sortBy === 'label'} onChange={() => setDraft(d => ({ ...d, sortBy: 'label' }))} /> label
+              <input type='radio' name='checkbox-sortBy' checked={sortByLabelChecked} onChange={() => setDraft(d => ({ ...d, sortBy: 'label' }))} /> label
             </label>
             <label className='text-xs'>
-              <input type='radio' name='checkbox-sortBy' checked={draft.sortBy === 'value'} onChange={() => setDraft(d => ({ ...d, sortBy: 'value' }))} /> value
+              <input type='radio' name='checkbox-sortBy' checked={sortByValueChecked} onChange={() => setDraft(d => ({ ...d, sortBy: 'value' }))} /> value
             </label>
           </ControlRow>
           <ControlRow label='defaultClass_Label'>
@@ -883,6 +894,9 @@ function MyCheckBoxTab() {
           <ControlRow label='defaultClass_CheckboxItem'>
             <MyTextarea value={draft.defaultClass_CheckboxItem} onChange={e => setDraft(d => ({ ...d, defaultClass_CheckboxItem: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='defaultClass_Checkbox'>
+            <MyTextarea value={draft.defaultClass_Checkbox} onChange={e => setDraft(d => ({ ...d, defaultClass_Checkbox: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
           <ControlRow label='overrideClass_Label'>
             <MyTextarea value={draft.overrideClass_Label} onChange={e => setDraft(d => ({ ...d, overrideClass_Label: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
@@ -894,6 +908,9 @@ function MyCheckBoxTab() {
           </ControlRow>
           <ControlRow label='overrideClass_CheckboxItem'>
             <MyTextarea value={draft.overrideClass_CheckboxItem} onChange={e => setDraft(d => ({ ...d, overrideClass_CheckboxItem: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
+          <ControlRow label='overrideClass_Checkbox'>
+            <MyTextarea value={draft.overrideClass_Checkbox} onChange={e => setDraft(d => ({ ...d, overrideClass_Checkbox: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
@@ -910,29 +927,32 @@ function MyCheckBoxTab() {
           searchEnabled={applied.searchEnabled}
           showSelectedCount={applied.showSelectedCount}
           showResortButton={applied.showResortButton}
-          maxSelections={applied.maxSelections !== '' ? Number(applied.maxSelections) : undefined}
-          minSelections={applied.minSelections !== '' ? Number(applied.minSelections) : undefined}
+          maxSelections={maxSelectionsNum}
+          minSelections={minSelectionsNum}
           sortBy={applied.sortBy}
           defaultClass_Label={applied.defaultClass_Label}
           defaultClass_Search={applied.defaultClass_Search}
           defaultClass_Container={applied.defaultClass_Container}
           defaultClass_CheckboxItem={applied.defaultClass_CheckboxItem}
+          defaultClass_Checkbox={applied.defaultClass_Checkbox}
           overrideClass_Label={applied.overrideClass_Label}
           overrideClass_Search={applied.overrideClass_Search}
           overrideClass_Container={applied.overrideClass_Container}
           overrideClass_CheckboxItem={applied.overrideClass_CheckboxItem}
+          overrideClass_Checkbox={applied.overrideClass_Checkbox}
           onError={setErrorMessage}
         />
       }
       returns={
         <>
           <ReturnRow label='count' value={String(selected.length)} />
-          <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
+          <ReturnRow label='selected' value={selectedText} />
           <ReturnRow label='error' value={errorMessage || '(none)'} />
           <ReturnRow label='labelClassName' value={myMergeClasses(applied.defaultClass_Label, applied.overrideClass_Label)} />
           <ReturnRow label='searchClassName' value={myMergeClasses(applied.defaultClass_Search, applied.overrideClass_Search)} />
           <ReturnRow label='containerClassName' value={myMergeClasses(applied.defaultClass_Container, applied.overrideClass_Container)} />
           <ReturnRow label='checkboxItemClassName' value={myMergeClasses(applied.defaultClass_CheckboxItem, applied.overrideClass_CheckboxItem)} />
+          <ReturnRow label='checkboxClassName' value={myMergeClasses(applied.defaultClass_Checkbox, applied.overrideClass_Checkbox)} />
         </>
       }
     />
@@ -986,6 +1006,8 @@ function MyPaginationTab() {
   const [applied, setApplied] = useState<PaginationControlProps>(paginationDefaults)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const totalPagesNum = applied.totalPages !== '' ? Number(applied.totalPages) : 1
+
   return (
     <ThreeSection
       controls={
@@ -1035,7 +1057,7 @@ function MyPaginationTab() {
       }
       preview={
         <MyPagination
-          totalPages={applied.totalPages !== '' ? Number(applied.totalPages) : 1}
+          totalPages={totalPagesNum}
           statecurrentPage={currentPage}
           setStateCurrentPage={setCurrentPage}
           overrideClass={applied.overrideClass}
@@ -1092,6 +1114,7 @@ type DialogControlProps = {
   line5: string
   line6: string
   iconContainerClass: string
+  iconClass: string
   titleClass: string
   subTitleClass: string
   lineClass: string
@@ -1108,6 +1131,7 @@ const dialogDefaults: DialogControlProps = {
   line5: '',
   line6: '',
   iconContainerClass: 'bg-red-100 text-red-600 rounded-full p-4 inline-block',
+  iconClass: MyConfirmDialog_iconDftClass,
   titleClass: 'text-lg font-semibold mt-2',
   subTitleClass: 'text-sm text-red-600',
   lineClass: 'text-sm text-green-600',
@@ -1169,6 +1193,9 @@ function MyConfirmDialogTab() {
           <ControlRow label='iconContainerClass'>
             <MyTextarea value={draft.iconContainerClass} onChange={e => setDraft(d => ({ ...d, iconContainerClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='iconClass'>
+            <MyTextarea value={draft.iconClass} onChange={e => setDraft(d => ({ ...d, iconClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
           <ControlRow label='titleClass'>
             <MyInput value={draft.titleClass} onChange={e => setDraft(d => ({ ...d, titleClass: e.target.value }))} overrideClass='w-full' />
           </ControlRow>
@@ -1196,6 +1223,7 @@ function MyConfirmDialogTab() {
             confirmDialog={confirmDialog}
             setConfirmDialog={setConfirmDialog}
             iconContainerClass={applied.iconContainerClass}
+            iconClass={applied.iconClass}
             titleClass={applied.titleClass}
             subTitleClass={applied.subTitleClass}
             lineClass={applied.lineClass}
@@ -1363,6 +1391,12 @@ function MySelectTab() {
     applied.optionsMode === 'labelValue'
       ? parseLabelValueOptions(applied.labelValueOptions)
       : applied.options.split(',').map(o => o.trim()).filter(Boolean)
+  const optionsModeFlatChecked = draft.optionsMode === 'flat'
+  const optionsModeLabelValueChecked = draft.optionsMode === 'labelValue'
+  const demoOptions = simulatingDelayedLoad ? [] : parsedOptions
+  const delayedLoadStatus = simulatingDelayedLoad
+    ? 'options withheld — selected should NOT clear'
+    : '(idle — click the demo button, with searchEnabled on)'
 
   return (
     <ThreeSection
@@ -1377,7 +1411,7 @@ function MySelectTab() {
                 <input
                   type='radio'
                   name='optionsMode'
-                  checked={draft.optionsMode === 'flat'}
+                  checked={optionsModeFlatChecked}
                   onChange={() => setDraft(d => ({ ...d, optionsMode: 'flat' }))}
                 />
                 flat
@@ -1386,7 +1420,7 @@ function MySelectTab() {
                 <input
                   type='radio'
                   name='optionsMode'
-                  checked={draft.optionsMode === 'labelValue'}
+                  checked={optionsModeLabelValueChecked}
                   onChange={() => setDraft(d => ({ ...d, optionsMode: 'labelValue' }))}
                 />
                 labelValue
@@ -1428,7 +1462,7 @@ function MySelectTab() {
       preview={
         <MySelect
           label={applied.label}
-          options={simulatingDelayedLoad ? [] : parsedOptions}
+          options={demoOptions}
           overrideClass={applied.overrideClass}
           labelClass={applied.labelClass || undefined}
           containerClass={applied.containerClass || undefined}
@@ -1446,11 +1480,7 @@ function MySelectTab() {
           <ReturnRow label='searchClassName' value={myMergeClasses(MySelect_searchDftClass, applied.searchClass)} />
           <ReturnRow
             label='delayed-load demo'
-            value={
-              simulatingDelayedLoad
-                ? 'options withheld — selected should NOT clear'
-                : '(idle — click the demo button, with searchEnabled on)'
-            }
+            value={delayedLoadStatus}
           />
         </>
       }
@@ -1540,6 +1570,9 @@ function MySelectTableTab() {
     ].filter(pair => pair.column && pair.value)
     return pairs.length > 0 ? pairs : undefined
   }, [applied.whereColumn1, applied.whereValue1, applied.whereColumn2, applied.whereValue2])
+
+  const selectedOptionText = selectedOption !== '' ? String(selectedOption) : '(none)'
+  const selectedOptionType = selectedOption !== '' ? typeof selectedOption : '—'
 
   return (
     <ThreeSection
@@ -1648,8 +1681,8 @@ function MySelectTableTab() {
       returns={
         <>
           <ClassInfo constants={[{ name: 'MyDropdown_dftClass', value: MyDropdown_dftClass }]} overrideClass={applied.overrideClass_Dropdown} />
-          <ReturnRow label='selectedOption' value={selectedOption !== '' ? String(selectedOption) : '(none)'} />
-          <ReturnRow label='type' value={selectedOption !== '' ? typeof selectedOption : '—'} />
+          <ReturnRow label='selectedOption' value={selectedOptionText} />
+          <ReturnRow label='type' value={selectedOptionType} />
           <ReturnRow
             label='reload demo'
             value='select a value above, then click "Simulate reload" — it should still be selected once the table re-fetches'
@@ -1672,6 +1705,58 @@ function MySelectTableTab() {
   }
 }
 
+//
+//  Static option sets for MySelectMulti — 6 fruits and 20 fruits, so the demo panel's
+//  max-height/scroll behavior can be exercised with both a short and a long list
+//
+const selectMultiFruitOptions6 = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig']
+const selectMultiFruitOptions20 = [
+  'Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig', 'Grape', 'Honeydew', 'Kiwi', 'Lemon',
+  'Mango', 'Nectarine', 'Orange', 'Papaya', 'Quince', 'Raspberry', 'Strawberry', 'Tangerine',
+  'Ugli Fruit', 'Watermelon',
+]
+
+type SelectMultiControlProps = {
+  //
+  //  Data / behavior
+  //
+  label: string
+  optionSet: '6 fruits' | '20 fruits'
+  id: string
+  selectAllLabel: string
+  minSelected: string
+  maxSelected: string
+  //
+  //  Style
+  //
+  overrideClass: string
+  labelClass: string
+  containerClass: string
+  panelClass: string
+  mergePanelWidthClass: string
+  mergePanelMaxHeightClass: string
+  mergeRowClass: string
+  mergeSelectAllRowClass: string
+  mergeCheckboxClass: string
+}
+const selectMultiDefaults: SelectMultiControlProps = {
+  label: 'Fruits',
+  optionSet: '6 fruits',
+  id: '',
+  selectAllLabel: 'All',
+  minSelected: '',
+  maxSelected: '',
+  overrideClass: '',
+  labelClass: MySelectMulti_labelDftClass,
+  containerClass: MySelectMulti_containerDftClass,
+  panelClass: MySelectMulti_panelDftClass,
+  mergePanelWidthClass: '',
+  mergePanelMaxHeightClass: '',
+  mergeRowClass: '',
+  mergeSelectAllRowClass: '',
+  mergeCheckboxClass: '',
+}
+
 //----------------------------------------------------------------------------------
 //  MySelectMultiTab — interactive demo of MySelectMulti: props, live preview, and returns
 //----------------------------------------------------------------------------------
@@ -1688,6 +1773,11 @@ function MySelectMultiTab() {
   const computedRowClass = myMergeClasses(MySelectMulti_rowDftClass, applied.mergeRowClass)
   const computedSelectAllRowClass = myMergeClasses(MySelectMulti_selectAllRowDftClass, applied.mergeSelectAllRowClass)
   const computedCheckboxClass = myMergeClasses(MySelectMulti_checkboxDftClass, applied.mergeCheckboxClass)
+  const minSelectedNum = applied.minSelected !== '' ? Number(applied.minSelected) : undefined
+  const maxSelectedNum = applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined
+  const mergePanelWidthClassProp = applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : undefined
+  const mergePanelMaxHeightClassProp = applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : undefined
+  const selectedText = selected.length > 0 ? selected.join(', ') : '(none)'
 
   return (
     <ThreeSection
@@ -1759,14 +1849,14 @@ function MySelectMultiTab() {
           onChange={setSelected}
           id={applied.id || undefined}
           selectAllLabel={applied.selectAllLabel}
-          minSelected={applied.minSelected !== '' ? Number(applied.minSelected) : undefined}
-          maxSelected={applied.maxSelected !== '' ? Number(applied.maxSelected) : undefined}
+          minSelected={minSelectedNum}
+          maxSelected={maxSelectedNum}
           overrideClass={applied.overrideClass}
           labelClass={applied.labelClass || undefined}
           containerClass={applied.containerClass || undefined}
           panelClass={applied.panelClass || undefined}
-          mergePanelWidthClass={applied.mergePanelWidthClass !== '' ? applied.mergePanelWidthClass : undefined}
-          mergePanelMaxHeightClass={applied.mergePanelMaxHeightClass !== '' ? applied.mergePanelMaxHeightClass : undefined}
+          mergePanelWidthClass={mergePanelWidthClassProp}
+          mergePanelMaxHeightClass={mergePanelMaxHeightClassProp}
           mergeRowClass={applied.mergeRowClass}
           mergeSelectAllRowClass={applied.mergeSelectAllRowClass}
           mergeCheckboxClass={applied.mergeCheckboxClass}
@@ -1776,7 +1866,7 @@ function MySelectMultiTab() {
         <>
           <ClassInfo constants={[{ name: 'MySelectMulti_dftClass', value: MySelectMulti_dftClass }]} overrideClass={applied.overrideClass} />
           <ReturnRow label='count' value={String(selected.length)} />
-          <ReturnRow label='selected' value={selected.length > 0 ? selected.join(', ') : '(none)'} />
+          <ReturnRow label='selected' value={selectedText} />
           <ReturnRow label='id (auto)' value={applied.id || applied.label.toLowerCase().replace(/\s+/g, '-')} />
           <ReturnRow label='labelClass' value={applied.labelClass} />
           <ReturnRow label='containerClass' value={applied.containerClass} />
@@ -1802,6 +1892,23 @@ function MySelectMultiTab() {
     setApplied({ ...draft })
     setSelected([])
   }
+}
+
+type SelectRowsControlProps = {
+  label: string
+  options: string
+  id: string
+  overrideClass: string
+  labelClass: string
+  containerClass: string
+}
+const selectRowsDefaults: SelectRowsControlProps = {
+  label: 'Rows',
+  options: '10,20,50,100',
+  id: '',
+  overrideClass: '',
+  labelClass: MySelect_labelDftClass,
+  containerClass: MySelect_containerDftClass,
 }
 
 //----------------------------------------------------------------------------------
@@ -1885,6 +1992,14 @@ function MySelectRowsTab() {
     e.preventDefault()
     setApplied({ ...draft })
   }
+}
+
+type ToggleControlProps = { inputName: string; inputValue: boolean; overrideClass: string; labelClass: string }
+const toggleDefaults: ToggleControlProps = {
+  inputName: 'my-toggle',
+  inputValue: false,
+  overrideClass: '',
+  labelClass: 'inline-flex items-center cursor-pointer',
 }
 
 //----------------------------------------------------------------------------------
@@ -2014,19 +2129,12 @@ function MyLoadingMessageTab() {
   }
 }
 
-type ToggleControlProps = { inputName: string; inputValue: boolean; overrideClass: string; labelClass: string }
-const toggleDefaults: ToggleControlProps = {
-  inputName: 'my-toggle',
-  inputValue: false,
-  overrideClass: '',
-  labelClass: 'inline-flex items-center cursor-pointer',
-}
-
-type PopupControlProps = { overrideClass: string; overlayClass: string; closeButtonClass: string; closeOnBackdropClick: boolean }
+type PopupControlProps = { overrideClass: string; overlayClass: string; closeButtonClass: string; closeIconClass: string; closeOnBackdropClick: boolean }
 const popupDefaults: PopupControlProps = {
   overrideClass: '',
   overlayClass: 'fixed inset-0 flex justify-center items-center z-50',
   closeButtonClass: 'absolute top-3 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800',
+  closeIconClass: MyPopup_closeIconDftClass,
   closeOnBackdropClick: false,
 }
 
@@ -2051,6 +2159,9 @@ function MyPopupTab() {
           <ControlRow label='closeButtonClass'>
             <MyTextarea value={draft.closeButtonClass} onChange={e => setDraft(d => ({ ...d, closeButtonClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='closeIconClass'>
+            <MyTextarea value={draft.closeIconClass} onChange={e => setDraft(d => ({ ...d, closeIconClass: e.target.value }))} overrideClass='w-full h-16' />
+          </ControlRow>
           <ControlRow label='closeOnBackdropClick'>
             <input type='checkbox' checked={draft.closeOnBackdropClick} onChange={e => setDraft(d => ({ ...d, closeOnBackdropClick: e.target.checked }))} />
           </ControlRow>
@@ -2068,6 +2179,7 @@ function MyPopupTab() {
             overrideClass={applied.overrideClass}
             overlayClass={applied.overlayClass || undefined}
             closeButtonClass={applied.closeButtonClass || undefined}
+            closeIconClass={applied.closeIconClass || undefined}
             closeOnBackdropClick={applied.closeOnBackdropClick}
           >
             <p className='text-sm text-gray-700'>Popup content goes here.</p>
@@ -2167,6 +2279,12 @@ function MyHelpTab() {
   const [draft, setDraft] = useState<HelpControlProps>(helpDefaults)
   const [applied, setApplied] = useState<HelpControlProps>(helpDefaults)
 
+  const helpModeTextChecked = draft.mode === 'text'
+  const helpModeItemsChecked = draft.mode === 'items'
+  const helpText = applied.mode === 'text' ? applied.text : undefined
+  const helpItems = applied.mode === 'items' ? parseHelpItems(applied.itemsText) : undefined
+  const helpItemsText = applied.mode === 'items' ? JSON.stringify(parseHelpItems(applied.itemsText)) : '(unused)'
+
   return (
     <ThreeSection
       controls={
@@ -2179,10 +2297,10 @@ function MyHelpTab() {
           </ControlRow>
           <ControlRow label='mode'>
             <label className='mr-3 text-xs'>
-              <input type='radio' name='help-mode' checked={draft.mode === 'text'} onChange={() => setDraft(d => ({ ...d, mode: 'text' }))} /> text
+              <input type='radio' name='help-mode' checked={helpModeTextChecked} onChange={() => setDraft(d => ({ ...d, mode: 'text' }))} /> text
             </label>
             <label className='text-xs'>
-              <input type='radio' name='help-mode' checked={draft.mode === 'items'} onChange={() => setDraft(d => ({ ...d, mode: 'items' }))} /> items
+              <input type='radio' name='help-mode' checked={helpModeItemsChecked} onChange={() => setDraft(d => ({ ...d, mode: 'items' }))} /> items
             </label>
           </ControlRow>
           <ControlRow label='text (mode=text)'>
@@ -2216,8 +2334,8 @@ function MyHelpTab() {
           <MyHelp
             label={applied.label}
             title={applied.title}
-            text={applied.mode === 'text' ? applied.text : undefined}
-            items={applied.mode === 'items' ? parseHelpItems(applied.itemsText) : undefined}
+            text={helpText}
+            items={helpItems}
             showCloseButton={applied.showCloseButton}
             closeOnOutsideClick={applied.closeOnOutsideClick}
             buttonClass={applied.buttonClass}
@@ -2234,7 +2352,7 @@ function MyHelpTab() {
           <ReturnRow label='mode' value={applied.mode} />
           <ReturnRow
             label='items'
-            value={applied.mode === 'items' ? JSON.stringify(parseHelpItems(applied.itemsText)) : '(unused)'}
+            value={helpItemsText}
           />
           <ReturnRow label='showCloseButton' value={String(applied.showCloseButton)} />
           <ReturnRow label='closeOnOutsideClick' value={String(applied.closeOnOutsideClick)} />
@@ -2330,6 +2448,7 @@ type HelpStepControlProps = {
   buttonClass: string
   panelClass: string
   closeButtonClass: string
+  labelColumnClass: string
 }
 const helpStepDefaults: HelpStepControlProps = {
   title: 'Process name',
@@ -2343,6 +2462,7 @@ const helpStepDefaults: HelpStepControlProps = {
   buttonClass: 'text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-1.5 py-0.5 leading-none',
   panelClass: 'absolute z-20 mt-1 p-4 bg-blue-50 border border-blue-200 rounded-md shadow-xl text-xs max-w-xl',
   closeButtonClass: MyHelpStep_closeButtonDftClass,
+  labelColumnClass: MyHelpStep_labelColumnDftClass,
 }
 
 //----------------------------------------------------------------------------------
@@ -2351,6 +2471,10 @@ const helpStepDefaults: HelpStepControlProps = {
 function MyHelpStepTab() {
   const [draft, setDraft] = useState<HelpStepControlProps>(helpStepDefaults)
   const [applied, setApplied] = useState<HelpStepControlProps>(helpStepDefaults)
+
+  const consumersParsed = parseList(applied.consumers)
+  const consumersProp = consumersParsed.length > 0 ? consumersParsed : undefined
+  const consumersText = consumersParsed.length > 0 ? consumersParsed.join(', ') : '(none)'
 
   return (
     <ThreeSection
@@ -2389,6 +2513,9 @@ function MyHelpStepTab() {
           <ControlRow label='closeButtonClass'>
             <MyTextarea value={draft.closeButtonClass} onChange={e => setDraft(d => ({ ...d, closeButtonClass: e.target.value }))} overrideClass='w-full h-16' />
           </ControlRow>
+          <ControlRow label='labelColumnClass'>
+            <MyInput value={draft.labelColumnClass} onChange={e => setDraft(d => ({ ...d, labelColumnClass: e.target.value }))} overrideClass='w-full' />
+          </ControlRow>
           <div className='mt-3'>
             <MyButton type='submit'>Apply</MyButton>
           </div>
@@ -2401,13 +2528,14 @@ function MyHelpStepTab() {
             input={parseList(applied.input)}
             processing={applied.processing}
             output={parseList(applied.output)}
-            consumers={parseList(applied.consumers).length > 0 ? parseList(applied.consumers) : undefined}
+            consumers={consumersProp}
             label={applied.label}
             showCloseButton={applied.showCloseButton}
             closeOnOutsideClick={applied.closeOnOutsideClick}
             buttonClass={applied.buttonClass}
             panelClass={applied.panelClass}
             closeButtonClass={applied.closeButtonClass}
+            labelColumnClass={applied.labelColumnClass}
           />
           <span className='ml-2 text-xs text-gray-500'>click to toggle</span>
         </div>
@@ -2418,7 +2546,7 @@ function MyHelpStepTab() {
           <ReturnRow label='input' value={parseList(applied.input).join(', ')} />
           <ReturnRow label='processing' value={applied.processing} />
           <ReturnRow label='output' value={parseList(applied.output).join(', ')} />
-          <ReturnRow label='consumers' value={parseList(applied.consumers).length > 0 ? parseList(applied.consumers).join(', ') : '(none)'} />
+          <ReturnRow label='consumers' value={consumersText} />
           <ReturnRow label='showCloseButton' value={String(applied.showCloseButton)} />
           <ReturnRow label='closeOnOutsideClick' value={String(applied.closeOnOutsideClick)} />
         </>
@@ -2574,75 +2702,6 @@ function MyTabTab() {
   }
 }
 
-//
-//  Static option sets for MySelectMulti — 6 fruits and 20 fruits, so the demo panel's
-//  max-height/scroll behavior can be exercised with both a short and a long list
-//
-const selectMultiFruitOptions6 = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig']
-const selectMultiFruitOptions20 = [
-  'Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig', 'Grape', 'Honeydew', 'Kiwi', 'Lemon',
-  'Mango', 'Nectarine', 'Orange', 'Papaya', 'Quince', 'Raspberry', 'Strawberry', 'Tangerine',
-  'Ugli Fruit', 'Watermelon',
-]
-
-type SelectMultiControlProps = {
-  //
-  //  Data / behavior
-  //
-  label: string
-  optionSet: '6 fruits' | '20 fruits'
-  id: string
-  selectAllLabel: string
-  minSelected: string
-  maxSelected: string
-  //
-  //  Style
-  //
-  overrideClass: string
-  labelClass: string
-  containerClass: string
-  panelClass: string
-  mergePanelWidthClass: string
-  mergePanelMaxHeightClass: string
-  mergeRowClass: string
-  mergeSelectAllRowClass: string
-  mergeCheckboxClass: string
-}
-const selectMultiDefaults: SelectMultiControlProps = {
-  label: 'Fruits',
-  optionSet: '6 fruits',
-  id: '',
-  selectAllLabel: 'All',
-  minSelected: '',
-  maxSelected: '',
-  overrideClass: '',
-  labelClass: MySelectMulti_labelDftClass,
-  containerClass: MySelectMulti_containerDftClass,
-  panelClass: MySelectMulti_panelDftClass,
-  mergePanelWidthClass: '',
-  mergePanelMaxHeightClass: '',
-  mergeRowClass: '',
-  mergeSelectAllRowClass: '',
-  mergeCheckboxClass: '',
-}
-
-type SelectRowsControlProps = {
-  label: string
-  options: string
-  id: string
-  overrideClass: string
-  labelClass: string
-  containerClass: string
-}
-const selectRowsDefaults: SelectRowsControlProps = {
-  label: 'Rows',
-  options: '10,20,50,100',
-  id: '',
-  overrideClass: '',
-  labelClass: MySelect_labelDftClass,
-  containerClass: MySelect_containerDftClass,
-}
-
 type PaginationFooterControlProps = {
   totalPages: string
   rowsOptions: string
@@ -2673,6 +2732,8 @@ function MyPaginationFooterTab() {
 
   const parsedRowsOptions = parseNumberList(applied.rowsOptions)
   const displayRows = applied.totalRows !== '' ? Number(applied.totalRows) : (applied.totalPages !== '' ? Number(applied.totalPages) : 1) * rowsPerPage
+  const totalPagesNum = applied.totalPages !== '' ? Number(applied.totalPages) : 1
+  const totalRowsNum = applied.totalRows !== '' ? Number(applied.totalRows) : undefined
 
   return (
     <ThreeSection
@@ -2715,13 +2776,13 @@ function MyPaginationFooterTab() {
       }
       preview={
         <MyPaginationFooter
-          totalPages={applied.totalPages !== '' ? Number(applied.totalPages) : 1}
+          totalPages={totalPagesNum}
           statecurrentPage={currentPage}
           setStateCurrentPage={setCurrentPage}
           rowsPerPage={rowsPerPage}
           setRowsPerPage={setRowsPerPage}
           rowsOptions={parsedRowsOptions}
-          totalRows={applied.totalRows !== '' ? Number(applied.totalRows) : undefined}
+          totalRows={totalRowsNum}
           overrideClass={applied.overrideClass}
           paginationOverrideClass={applied.paginationOverrideClass}
           selectRowsOverrideClass={applied.selectRowsOverrideClass}
@@ -2769,6 +2830,8 @@ function MyBackHomeNavTab() {
   const [draft, setDraft] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
   const [applied, setApplied] = useState<BackHomeNavControlProps>(backHomeNavDefaults)
 
+  const backLinkShown = String(Boolean(applied.backPath) && applied.backPath !== applied.homePath)
+
   return (
     <ThreeSection
       controls={
@@ -2809,7 +2872,7 @@ function MyBackHomeNavTab() {
           <ReturnRow label='homePath' value={applied.homePath} />
           <ReturnRow
             label='backLinkShown'
-            value={String(Boolean(applied.backPath) && applied.backPath !== applied.homePath)}
+            value={backLinkShown}
           />
         </>
       }
